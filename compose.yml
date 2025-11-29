@@ -1,0 +1,21 @@
+name: abyss
+
+volumes:
+  abyss-db-data:
+
+networks:
+  abyss-network:
+
+services:
+  database:
+    image: postgres:16.6-alpine3.19
+    environment:
+      - POSTGRES_USER=${ABYSS_DB_USER}
+      - POSTGRES_PASSWORD=${ABYSS_DB_PASSWORD}
+      - POSTGRES_DB=${ABYSS_DB_NAME}
+    ports:
+      - 5432:${ABYSS_DB_PORT}
+    volumes:
+      - abyss-db-data:/var/lib/postgresql/data
+    networks:
+      - abyss-network

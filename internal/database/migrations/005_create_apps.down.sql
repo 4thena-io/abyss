@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS "main"."apps" CASCADE;
+

@@ -1,0 +1,5 @@
+project: abyss
+name: abyss-api
+type: api
+language: go
+

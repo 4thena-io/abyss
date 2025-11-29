@@ -1,0 +1,26 @@
+when:
+  event: tag
+
+steps:
+  - name: run unit tests
+    image: golang:1.24-alpine3.22
+    commands:
+      - ./scripts/test.sh
+
+  - name: build binary
+    image: golang:1.24-alpine3.22
+    commands:
+      - ./scripts/build.sh
+
+  - name: build and push docker image
+    image: woodpeckerci/plugin-docker-buildx:6.0.3
+    settings:
+      registry: git.4thena.io
+      repo: 'git.4thena.io/${CI_REPO}'
+      platforms: linux/amd64,linux/arm64/v8
+      tags: '${CI_COMMIT_TAG},latest'
+      dockerfile: Containerfile
+      username:
+       from_secret: GITEA_USERNAME
+      password:
+       from_secret: GITEA_ACCESS_TOKEN
