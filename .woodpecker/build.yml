@@ -8,7 +8,7 @@ steps:
       - ./scripts/test.sh
 
   - name: build binary
-    image: golang:1.24-alpine3.22
+    image: techknowlogick/xgo:go-1.24.x
     commands:
       - ./scripts/build.sh
 

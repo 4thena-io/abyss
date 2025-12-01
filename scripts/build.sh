@@ -1,17 +1,22 @@
 #!/bin/sh
 
-echo "Building the app"
+echo "Building the app with xgo"
 
 mkdir -p build
 
-for arch in amd64 arm64; do
-    echo "Building $arch binary"
-    CGO_ENABLED=0 GOOS=linux GOARCH=$arch \
-        go build -o ./build/app-$arch.out ./cmd/api
-    if [ $? -ne 0 ]; then
-        echo "Error: Build for $arch failed."
-        exit 1
-    fi
-done
+if ! command -v xgo &> /dev/null; then
+    go install src.techknowlogick.com/xgo@latest
+fi
+
+# Build for both architectures with CGO support
+xgo -out app \
+    -targets 'linux/amd64,linux/arm64' \
+    -dest ./build \
+    -ldflags '-s -w' \
+    ./cmd/api
+
+# Rename outputs to match your naming convention
+mv ./build/app-linux-amd64 ./build/app-amd64.out
+mv ./build/app-linux-arm64 ./build/app-arm64.out
 
 echo "Build Complete"
