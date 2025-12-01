@@ -8,7 +8,7 @@ steps:
       - ./scripts/test.sh
 
   - name: build binary
-    image: techknowlogick/xgo:go-1.24.x
+    image: docker.io/techknowlogick/xgo:go-1.24.x
     commands:
       - ./scripts/build.sh
 
