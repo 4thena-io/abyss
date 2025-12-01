@@ -31,6 +31,9 @@ go.work
 # Idea IDE
 .idea/
 
+# SQLite files
+*.db
+
 # Vscode
 .vscode/
 
