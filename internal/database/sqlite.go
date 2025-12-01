@@ -2,7 +2,6 @@ package database
 
 import (
 	"gorm.io/gorm"
-	_ "modernc.org/sqlite"
 	"gorm.io/driver/sqlite"
 )
 
