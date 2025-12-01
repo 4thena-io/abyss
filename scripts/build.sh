@@ -11,7 +11,7 @@ for arch in amd64 arm64; do
     CGO_ENABLED=0 GOOS=linux GOARCH=$arch \
         go build \
         -ldflags="-s -w -X 'main.Version=${VERSION}'" \
-        -o ./build/abyss-$arch \
+        -o ./build/app-$arch \
         ./cmd/api
 done
 
