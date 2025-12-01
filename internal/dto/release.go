@@ -1,4 +1,4 @@
-package release
+package dto
 
 type CreateReleaseRequestDto struct {
 	Tag string `json:"tag"`

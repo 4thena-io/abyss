@@ -1,4 +1,4 @@
-package app
+package handler
 
 import (
 	"encoding/json"
@@ -6,27 +6,34 @@ import (
 	"net/http"
 
 	"git.d4ramirez.com/project-abyss/abys-api/internal/database"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/integration/git"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/release"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/dto"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/ci"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/forge"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/repository"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/service"
 	"github.com/gorilla/mux"
 )
 
-type Handler struct {
-	service Service
+type AppHandler struct {
+	service service.AppService
 }
 
-func NewHandler() *Handler {
-	repository := NewRepository(database.Connection)
-	gitProvider, err := git.NewGitProvider("gitea")
+func NewAppHandler() *AppHandler {
+	repository := repository.NewAppRepository(database.Connection)
+	forge, err := forge.NewForge()
 	if err != nil {
 		log.Fatalf("failed to create a git provider: %s", err)
 	}
-	service := NewService(*repository, gitProvider)
-	return &Handler{*service}
+	ciProvider, err := ci.NewCi()
+	if err != nil {
+		log.Fatalf("failed to create a ci provider: %s", err)
+	}
+	service := service.NewAppService(*repository, forge, ciProvider)
+	return &AppHandler{*service}
 }
 
-func (h *Handler) CreateApp(w http.ResponseWriter, r *http.Request) {
-	var req CreateAppRequestDto
+func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateAppRequestDto
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -44,7 +51,7 @@ func (h *Handler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(app)
 }
 
-func (h *Handler) GetAllApps(w http.ResponseWriter, r *http.Request) {
+func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 	apps, err := h.service.GetAllApps(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -55,7 +62,7 @@ func (h *Handler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apps)
 }
 
-func (h *Handler) GetAppByName(w http.ResponseWriter, r *http.Request) {
+func (h *AppHandler) GetAppByName(w http.ResponseWriter, r *http.Request) {
 	name := mux.Vars(r)["name"]
 
 	app, err := h.service.GetAppByName(r.Context(), name)
@@ -72,7 +79,7 @@ func (h *Handler) GetAppByName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(app)
 }
 
-func (h *Handler) RegisterRoutes(router *mux.Router) {
+func (h *AppHandler) RegisterAppRoutes(router *mux.Router) {
 	appRouter := router.PathPrefix("/apps").Subrouter()
 
 	appRouter.HandleFunc("", h.CreateApp).Methods("POST")
@@ -80,5 +87,5 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	appRouter.HandleFunc("/{name}", h.GetAppByName).Methods("GET")
 
 	appWithNameRouter := appRouter.PathPrefix("/{name}").Subrouter()
-	release.NewHandler().RegisterRoutes(appWithNameRouter)
+	NewReleaseHandler().RegisterReleaseRoutes(appWithNameRouter)
 }

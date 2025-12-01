@@ -1,11 +1,12 @@
-package project
+package dto
 
-type CreateProjectRequestDto struct {
+type CreateAppRequestDto struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Project     string `json:"project"`
 }
 
-type CreateProjectRecordDto struct {
+type CreateAppRecordDto struct {
 	Name        string
 	Description string
 	RepoId      int64

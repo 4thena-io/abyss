@@ -1,25 +1,28 @@
-package release
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
 
 	"git.d4ramirez.com/project-abyss/abys-api/internal/database"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/dto"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/repository"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/service"
 	"github.com/gorilla/mux"
 )
 
-type Handler struct {
-	service Service
+type ReleaseHandler struct {
+	service service.ReleaseService
 }
 
-func NewHandler() *Handler {
-	repository := NewRepository(database.Connection)
-	service := NewService(*repository)
-	return &Handler{*service}
+func NewReleaseHandler() *ReleaseHandler {
+	repository := repository.NewReleaseRepository(database.Connection)
+	service := service.NewReleaseService(*repository)
+	return &ReleaseHandler{*service}
 }
 
-func (h *Handler) SaveRelease(w http.ResponseWriter, r *http.Request) {
-	var req CreateReleaseRequestDto
+func (h *ReleaseHandler) SaveRelease(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateReleaseRequestDto
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -37,7 +40,7 @@ func (h *Handler) SaveRelease(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(version)
 }
 
-func (h *Handler) GetAllReleases(w http.ResponseWriter, r *http.Request) {
+func (h *ReleaseHandler) GetAllReleases(w http.ResponseWriter, r *http.Request) {
 	version, err := h.service.GetAllReleases(r.Context(), mux.Vars(r)["name"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -49,7 +52,7 @@ func (h *Handler) GetAllReleases(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(version)
 }
 
-func (h *Handler) GetReleaseByTag(w http.ResponseWriter, r *http.Request) {
+func (h *ReleaseHandler) GetReleaseByTag(w http.ResponseWriter, r *http.Request) {
 	name := mux.Vars(r)["name"]
 	tag := mux.Vars(r)["tag"]
 
@@ -67,10 +70,10 @@ func (h *Handler) GetReleaseByTag(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(project)
 }
 
-func (handler *Handler) RegisterRoutes(router *mux.Router) {
+func (h *ReleaseHandler) RegisterReleaseRoutes(router *mux.Router) {
 	appRouter := router.PathPrefix("/releases").Subrouter()
 
-	appRouter.HandleFunc("", handler.SaveRelease).Methods("POST")
-	appRouter.HandleFunc("", handler.GetAllReleases).Methods("GET")
-	appRouter.HandleFunc("/{tag}", handler.GetReleaseByTag).Methods("GET")
+	appRouter.HandleFunc("", h.SaveRelease).Methods("POST")
+	appRouter.HandleFunc("", h.GetAllReleases).Methods("GET")
+	appRouter.HandleFunc("/{tag}", h.GetReleaseByTag).Methods("GET")
 }

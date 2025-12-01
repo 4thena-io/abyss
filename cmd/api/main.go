@@ -4,15 +4,14 @@ import (
 	"log"
 	"net/http"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/app"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/project"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/handler"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	router := mux.NewRouter()
-	project.NewHandler().RegisterRoutes(router)
-	app.NewHandler().RegisterRoutes(router)
+	handler.NewAppHandler().RegisterAppRoutes(router)
+	handler.NewProjectHandler().RegisterProjectRoutes(router)
 
 	var host = "0.0.0.0:8000"
 
