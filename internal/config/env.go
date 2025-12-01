@@ -7,34 +7,36 @@ import (
 )
 
 type Config struct {
-	Address         string
-	DbSchema        string
+	DbType        	string
 	DbHost          string
 	DbPort          string
 	DbUser          string
 	DbPassword      string
 	DbName          string
-	GiteaHost       string
-	GiteaToken      string
-	WoodpeckerHost  string
-	WoodpeckerToken string
+	ForgeType				string
+	ForgeHost       string
+	ForgeToken      string
+	CiType					string
+	CiHost  				string
+	CiToken 				string
 }
 
 var Environment = initConfig()
 
 func initConfig() Config {
 	return Config{
-		Address:         getEnv("ABYSS_ADDR", "http://127.0.0.1:8000"),
 		DbHost:          getEnv("ABYSS_DB_HOST", "127.0.0.1"),
 		DbPort:          getEnv("ABYSS_DB_PORT", "5432"),
-		DbSchema:        getEnv("ABYSS_DB_SCHEMA", "public"),
+		DbType:        	 getEnv("ABYSS_DB_TYPE", "sqlite"),
 		DbUser:          getEnv("ABYSS_DB_USER", "postgres"),
 		DbPassword:      getEnv("ABYSS_DB_PASSWORD", ""),
 		DbName:          getEnv("ABYSS_DB_NAME", "postgres"),
-		GiteaHost:       getEnv("GITEA_HOST", "http://127.0.0.1:3000"),
-		GiteaToken:      getEnv("GITEA_TOKEN", ""),
-		WoodpeckerHost:  getEnv("WOODPECKER_HOST", "http://127.0.0.1:3000"),
-		WoodpeckerToken: getEnv("WOODPECKER_TOKEN", ""),
+		ForgeType: 			 getEnv("FORGE_TYPE", "github"),
+		ForgeHost:       getEnv("FORGE_HOST", "http://127.0.0.1:3000"),
+		ForgeToken:      getEnv("FORGE_TOKEN", ""),
+		CiType: 				 getEnv("CI_TYPE", "jenkins"),
+		CiHost:  				 getEnv("CI_HOST", "http://127.0.0.1:3000"),
+		CiToken: 				 getEnv("CI_TOKEN", ""),
 	}
 }
 
