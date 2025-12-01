@@ -18,7 +18,7 @@ CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
 # --- Build linux/arm64 binary (Cross-Compilation) ---
 echo "Building linux/arm64 binary"
 CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
-    CC=aarch64-linux-gnu-gcc \
+    CC=gcc-aarch64-none-elf \
     go build \
     -tags 'sqlite sqlite_unlock_notify' \
     -ldflags '-s -w' \
