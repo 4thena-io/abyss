@@ -5,7 +5,7 @@ RUN apk add --no-cache git ca-certificates
 WORKDIR /opt/app
 
 ARG TARGETARCH
-COPY build/app-linux-${TARGETARCH}.out ./app.out
+COPY build/app-${TARGETARCH}.out ./app.out
 
 EXPOSE 8000
 

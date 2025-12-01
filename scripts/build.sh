@@ -1,14 +1,25 @@
 #!/bin/sh
 
-echo "Building the app with xgo"
+set -ex  # Exit on error, print commands
+
+echo "Building the app"
 
 mkdir -p build
 
-xgo -out app \
-    -targets 'linux/amd64,linux/arm64' \
-    -dest ./build \
-		-tags 'sqlite sqlite_unlock_notify' \
-    -ldflags '-s -w' \
-    ./cmd/api
+for arch in amd64 arm64; do
+    echo "Building linux/$arch binary"
+    CGO_ENABLED=1 GOOS=linux GOARCH=$arch \
+        go build \
+        -tags 'sqlite sqlite_unlock_notify' \
+        -ldflags '-s -w' \
+        -o ./build/app-$arch.out \
+        ./cmd/api
+    
+    if [ $? -ne 0 ]; then
+        echo "Error: Build for $arch failed."
+        exit 1
+    fi
+done
 
 echo "Build Complete"
+ls -lh ./build/
