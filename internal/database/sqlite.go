@@ -1,8 +1,9 @@
 package database
 
 import (
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	_ "modernc.org/sqlite"
+	"gorm.io/driver/sqlite"
 )
 
 type SQLiteProvider struct {
