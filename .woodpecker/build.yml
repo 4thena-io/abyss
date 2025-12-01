@@ -3,13 +3,12 @@ when:
 
 steps:
   - name: run unit tests
-    image: docker.io/golang:1.24-alpine3.22
+    image: golang:1.24-alpine3.22
     commands:
       - ./scripts/test.sh
 
   - name: build binary
-    image: docker.io/techknowlogick/xgo:go-1.24.x
-    pull: true
+    image: ghcr.io/techknowlogick/xgo:go-1.24.x
     commands:
       - ./scripts/build.sh
 
