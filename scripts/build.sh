@@ -2,28 +2,17 @@
 
 set -ex
 
-echo "Building the app"
+echo "Building Abyss"
 
 mkdir -p build
 
-# --- Build linux/amd64 binary ---
-echo "Building linux/amd64 binary"
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-    go build \
-    -tags 'sqlite sqlite_unlock_notify' \
-    -ldflags '-s -w' \
-    -o ./build/app-amd64.out \
-    ./cmd/api
-
-# --- Build linux/arm64 binary (Cross-Compilation) ---
-echo "Building linux/arm64 binary"
-CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
-    CC=gcc-aarch64-none-elf \
-    go build \
-    -tags 'sqlite sqlite_unlock_notify' \
-    -ldflags '-s -w' \
-    -o ./build/app-arm64.out \
-    ./cmd/api
+for arch in amd64 arm64; do
+    echo "Building linux/$arch binary"
+    CGO_ENABLED=0 GOOS=linux GOARCH=$arch \
+        go build \
+        -ldflags="-s -w -X 'main.Version=${VERSION}'" \
+        -o ./build/abyss-$arch \
+        ./cmd/api
+done
 
 echo "Build Complete"
-ls -lh ./build/
