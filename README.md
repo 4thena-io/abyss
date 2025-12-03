@@ -1,7 +1,7 @@
 <h3 align="center">
-  <img alt="Logo" width="100px" src="./.gitea/img/logo.svg">
+  <img alt="Logo" width="100px" src="./.github/img/logo.svg">
   <br/>
-  Abyss API
+  Abyss
 </h3>
 
 ## Introduction
