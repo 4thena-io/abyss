@@ -3,6 +3,7 @@ package ci
 import (
 	"fmt"
 
+	"git.d4ramirez.com/project-abyss/abys-api/internal/ci/woodpecker"
 	"git.d4ramirez.com/project-abyss/abys-api/internal/config"
 )
 
@@ -15,7 +16,7 @@ var (
 func NewCi() (Ci, error) {
 	switch kind {
 		case "woodpecker":
-			return NewWoodpeckerCi(host, token)
+			return woodpecker.NewWoodpeckerCi(host, token)
 		default:
 			return nil, fmt.Errorf("unkwown ci ptovider %s", kind) 
 	}

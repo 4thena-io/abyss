@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"git.d4ramirez.com/project-abyss/abys-api/internal/config"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/forge/gitea"
 )
 
 var (
@@ -15,7 +16,7 @@ var (
 func NewForge() (Forge, error) {
 	switch kind {
 		case "gitea":
-			return NewGiteaForge(host, token)
+			return gitea.NewGiteaForge(host, token)
 		default:
 			return nil, fmt.Errorf("unknown forge type %s", kind) 
 	}

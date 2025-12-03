@@ -1,4 +1,4 @@
-package forge
+package gitea 
 
 import (
 	"context"
@@ -12,7 +12,7 @@ type GiteaForge struct {
 	client *gt.Client
 }
 
-func NewGiteaForge(url, secret string) (Forge, error) {
+func NewGiteaForge(url, secret string) (*GiteaForge, error) {
 	client, err := gt.NewClient(url, gt.SetToken(secret))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gitea client: %w", err)

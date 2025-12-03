@@ -1,4 +1,4 @@
-package ci
+package woodpecker
 
 import (
 	"context"
