@@ -1,16 +1,20 @@
 package database
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type SQLiteProvider struct {
-	path string
+	dbFile string
 }
 
 func NewSQLiteProvider() *SQLiteProvider {
-	return &SQLiteProvider{path: "abyss.db"}
+	dbFile := "abyss.db"
+
+	return &SQLiteProvider{
+		dbFile: dbFile,
+	}
 }
 
 func (p *SQLiteProvider) Connect() (*gorm.DB, error) {
@@ -18,6 +22,5 @@ func (p *SQLiteProvider) Connect() (*gorm.DB, error) {
 }
 
 func (p *SQLiteProvider) GetDialector() gorm.Dialector {
-	return sqlite.Open(p.path)
+	return sqlite.Open(p.dbFile)
 }
-
