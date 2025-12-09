@@ -28,6 +28,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
+          bun install
           bun run build
 
       - name: Build final binary
