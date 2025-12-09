@@ -10,9 +10,12 @@ import (
 
 func main() {
 	router := mux.NewRouter()
+
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	handler.NewAppHandler().RegisterAppRoutes(apiRouter)
 	handler.NewProjectHandler().RegisterProjectRoutes(apiRouter)
+
+	handler.NewFrontendHandler().RegisterFrontendRoutes(router)
 
 	var host = "0.0.0.0:8000"
 
