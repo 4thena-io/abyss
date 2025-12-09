@@ -5,6 +5,7 @@ import (
 
 	"git.d4ramirez.com/project-abyss/abys-api/internal/config"
 	"git.d4ramirez.com/project-abyss/abys-api/internal/forge/gitea"
+	"git.d4ramirez.com/project-abyss/abys-api/internal/forge/github"
 )
 
 var (
@@ -15,6 +16,8 @@ var (
 
 func NewForge() (Forge, error) {
 	switch kind {
+		case "github":
+			return github.NewGithubForge(host, token)
 		case "gitea":
 			return gitea.NewGiteaForge(host, token)
 		default:
