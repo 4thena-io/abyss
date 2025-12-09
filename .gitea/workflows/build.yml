@@ -16,7 +16,7 @@ jobs:
       - run: cd frontend
 
       - name: Setup Bun
-        uses: actions/setup-bun@v2
+        uses: https://github.com/oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
