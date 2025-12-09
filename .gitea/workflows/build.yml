@@ -8,7 +8,7 @@ on:
 jobs:
   prepare:
     name: Prepare Environment
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Clone the repository
         uses: actions/checkout@v5
@@ -50,11 +50,11 @@ jobs:
       - build-binary
     
     steps:
-      - name: Login into GHCR
+      - name: Login into registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
+          registry: git.4thena.io
+          username: ${{ gitea.actor }}
           password: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Setup QEMU
@@ -71,5 +71,5 @@ jobs:
           file: Containerfile
           context: .
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.version }}
+            git.4thena.io/${{ gitea.repository }}:latest
+            git.4thena.io/${{ gitea.repository }}:${{ steps.tag.outputs.version }}
