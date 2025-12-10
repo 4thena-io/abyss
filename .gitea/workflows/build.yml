@@ -46,28 +46,25 @@ jobs:
       - name: Clone the repository
         uses: actions/checkout@v5
 
-      - name: Setup Golang
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-
       - name: Download frontend artifacts
         uses: actions/download-artifact@v3-node20
         with:
           name: frontend-dist
           path: frontend/dist
 
-      - name: Install XGO
-        run: go install src.techknowlogick.com/xgo@latest
-
-      - name: Build final binary
-        run: |
-          xgo \
-          --targets=linux/amd64,linux/arm64 \
-          --dest build \
-          --pkg cmd/api \
-          --out abyss \
-          .
+      - name: Build
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: 1.24
+          pkg: cmd/api
+          dest: build
+          prefix: abyss
+          targets: linux/amd64,linux/arm64
+          v: true
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true
 
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v3-node20
