@@ -64,7 +64,6 @@ jobs:
           v: true
           ldflags: -s -w
           buildmode: default
-          trimpath: true
 
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v3-node20
