@@ -65,8 +65,8 @@ jobs:
           xgo \
           --targets=linux/amd64,linux/arm64 \
           --dest build \
-          --out abyss \
-          ./cmd/api/main.go
+          --pkg cmd/api \
+          --out abyss
 
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v3-node20
