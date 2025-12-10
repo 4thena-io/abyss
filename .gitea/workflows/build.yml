@@ -13,6 +13,11 @@ jobs:
       - name: Clone the repository
         uses: actions/checkout@v5
 
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: "22"
+
       - name: Setup Bun
         uses: https://github.com/oven-sh/setup-bun@v2
         with:
