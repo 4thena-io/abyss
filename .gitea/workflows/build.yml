@@ -2,8 +2,7 @@ name: Release Abyss
 
 on:
   push:
-    tags:
-      - "*.*.*"
+    tags: ["*"]
 
 jobs:
   build-frontend:
@@ -11,25 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone the repository
-        uses: https://github.com/actions/checkout@v5
+        uses: actions/checkout@v5
 
       - name: Setup Bun
-        uses: https://github.com/oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.3
 
       - name: Install dependencies
         run: |
+          pwd
           cd frontend
           bun install
 
       - name: Build for production
         run: |
+          pwd
           cd frontend
           bun run build
 
       - name: Upload frontend artifacts
-        uses: https://github.com/actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
@@ -40,15 +41,15 @@ jobs:
     needs: build-frontend
     steps:
       - name: Clone the repository
-        uses: https://github.com/actions/checkout@v5
+        uses: actions/checkout@v5
 
       - name: Setup Golang
-        uses: https://github.com/actions/setup-go@v6
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
       - name: Download frontend artifacts
-        uses: https://github.com/actions/download-artifact@v4
+        uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
@@ -65,7 +66,7 @@ jobs:
           ./cmd/api/main.go
 
       - name: Upload binary artifacts
-        uses: https://github.com/actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: build/
@@ -76,29 +77,29 @@ jobs:
     needs: [build-binary]
     steps:
       - name: Clone the repository
-        uses: https://github.com/actions/checkout@v5
+        uses: actions/checkout@v5
 
       - name: Download binary artifacts
-        uses: https://github.com/actions/download-artifact@v4
+        uses: actions/download-artifact@v4
         with:
           name: binaries
           path: build/
 
       - name: Login into registry
-        uses: https://github.com/docker/login-action@v3
+        uses: docker/login-action@v3
         with:
           registry: git.4thena.io
           username: ${{ gitea.actor }}
           password: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Setup QEMU
-        uses: https://github.com/docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v3
 
       - name: Setup Buildx
-        uses: https://github.com/docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push image
-        uses: https://github.com/docker/build-push-action@v6
+        uses: docker/build-push-action@v6
         with:
           push: true
           platforms: linux/amd64,linux/arm64
@@ -106,4 +107,3 @@ jobs:
           context: .
           tags: |
             git.4thena.io/${{ gitea.repository }}:latest
-            git.4thena.io/${{ gitea.repository }}:${{ steps.tag.outputs.version }}
