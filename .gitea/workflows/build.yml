@@ -5,8 +5,8 @@ on:
     tags: ["*"]
 
 jobs:
-  build-frontend:
-    name: Build Frontend
+  build-binary:
+    name: Build Binary
     runs-on: ubuntu-latest
     steps:
       - name: Clone the repository
@@ -15,58 +15,26 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 22.17.0
+          node-version: '22.17.0'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.3
+          bun-version: '1.3.3'
 
-      - name: Install dependencies
-        run: |
-          cd frontend
-          bun install
-
-      - name: Build for production
-        run: |
-          cd frontend
-          bun run build
-
-      - name: Upload frontend artifacts
-        uses: actions/upload-artifact@v3-node20
+      - name: Setup Golang
+        uses: actions/setup-go@v6
         with:
-          name: frontend-dist
-          path: frontend/dist
+          go-version: '1.24'
 
-  build-binary:
-    name: Build Binary
-    runs-on: ubuntu-latest
-    needs: build-frontend
-    steps:
-      - name: Clone the repository
-        uses: actions/checkout@v5
+      - name: Build binary
+        run: ./scripts/build.sh
 
-      - name: Download frontend artifacts
-        uses: actions/download-artifact@v3-node20
-        with:
-          name: frontend-dist
-          path: frontend/dist
-
-      - name: Build
-        uses: crazy-max/ghaction-xgo@v3
-        with:
-          xgo_version: latest
-          go_version: 1.24
-          pkg: cmd/api
-          dest: build
-          prefix: abyss
-          targets: linux/amd64,linux/arm64
-          v: true
-          ldflags: -s -w
-          buildmode: default
+      - name: List build artifacts (debug)
+        run: ls -la build/
 
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v3-node20
+        uses: actions/upload-artifact@v3
         with:
           name: binaries
           path: build/
