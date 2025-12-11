@@ -98,7 +98,8 @@ if xgo \
   --targets=linux/amd64,linux/arm64 \
   --dest=build \
   --out=abyss \
-  ./cmd/api; then
+  --pkg cmd/api \
+  .; then
     log_success "Cross-compilation completed successfully"
 else
     log_error "Cross-compilation failed"
