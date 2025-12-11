@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/constant"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/dto"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/model"
+	"git.4thena.io/4thena/abys/internal/constant"
+	"git.4thena.io/4thena/abys/internal/dto"
+	"git.4thena.io/4thena/abys/internal/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/database"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/dto"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/ci"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/forge"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/repository"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/service"
+	"git.4thena.io/4thena/abys/internal/ci"
+	"git.4thena.io/4thena/abys/internal/database"
+	"git.4thena.io/4thena/abys/internal/dto"
+	"git.4thena.io/4thena/abys/internal/forge"
+	"git.4thena.io/4thena/abys/internal/repository"
+	"git.4thena.io/4thena/abys/internal/service"
 	"github.com/gorilla/mux"
 )
 

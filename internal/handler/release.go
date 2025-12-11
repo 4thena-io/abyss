@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/database"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/dto"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/repository"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/service"
+	"git.4thena.io/4thena/abys/internal/database"
+	"git.4thena.io/4thena/abys/internal/dto"
+	"git.4thena.io/4thena/abys/internal/repository"
+	"git.4thena.io/4thena/abys/internal/service"
 	"github.com/gorilla/mux"
 )
 

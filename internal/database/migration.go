@@ -1,7 +1,7 @@
 package database
 
 import (
-	"git.d4ramirez.com/project-abyss/abys-api/internal/model"
+	"git.4thena.io/4thena/abys/internal/model"
 	"gorm.io/gorm"
 )
 

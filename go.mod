@@ -1,4 +1,4 @@
-module git.d4ramirez.com/project-abyss/abys-api
+module git.4thena.io/4thena/abys
 
 go 1.24.4
 

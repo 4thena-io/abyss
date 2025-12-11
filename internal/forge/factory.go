@@ -3,9 +3,9 @@ package forge
 import (
 	"fmt"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/config"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/forge/gitea"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/forge/github"
+	"git.4thena.io/4thena/abys/internal/config"
+	"git.4thena.io/4thena/abys/internal/forge/gitea"
+	"git.4thena.io/4thena/abys/internal/forge/github"
 )
 
 var (

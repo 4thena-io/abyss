@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/handler"
+	"git.4thena.io/4thena/abys/internal/handler"
 	"github.com/gorilla/mux"
 )
 

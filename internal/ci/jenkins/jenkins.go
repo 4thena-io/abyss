@@ -3,7 +3,7 @@ package jenkins
 import (
 	"context"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/dto"
+	"git.4thena.io/4thena/abys/internal/dto"
 )
 
 type JenkinsCi struct{}

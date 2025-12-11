@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"git.d4ramirez.com/project-abyss/abys-api/frontend"
+	"git.4thena.io/4thena/abys/frontend"
 	"github.com/gorilla/mux"
 )
 

@@ -3,9 +3,9 @@ package ci
 import (
 	"fmt"
 
-	"git.d4ramirez.com/project-abyss/abys-api/internal/ci/jenkins"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/ci/woodpecker"
-	"git.d4ramirez.com/project-abyss/abys-api/internal/config"
+	"git.4thena.io/4thena/abys/internal/ci/jenkins"
+	"git.4thena.io/4thena/abys/internal/ci/woodpecker"
+	"git.4thena.io/4thena/abys/internal/config"
 )
 
 var (
