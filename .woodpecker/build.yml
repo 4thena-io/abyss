@@ -15,6 +15,7 @@ steps:
     image: ghcr.io/techknowlogick/xgo:latest
     commands:
       - xgo --targets=linux/amd64,linux/arm64 --dest=build --out=abyss --pkg=cmd/api .
+      - ls -la build/
 
   build-docker:
     depends_on:
