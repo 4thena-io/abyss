@@ -14,11 +14,9 @@ steps:
       - build-frontend
     image: ghcr.io/techknowlogick/xgo:latest
     commands:
-      - apt update
-      - apt install -y tree
       - mkdir -p build
-      - xgo --targets=linux/amd64,linux/arm64 --dest=build --out=abyss --pkg=cmd/api .
-      - tree
+      - xgo -targets 'linux/amd64,linux/arm64' -dest build -out app -pkg cmd/api .
+      - mv /build/* ./build
 
   build-docker:
     depends_on:
