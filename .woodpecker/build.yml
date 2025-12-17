@@ -15,20 +15,20 @@ steps:
     image: ghcr.io/techknowlogick/xgo:latest
     commands:
       - mkdir -p build
-      - xgo -targets 'linux/amd64,linux/arm64' -dest build -out app -pkg cmd/api .
-      - mv /build/* ./build
+      - xgo -v -x -targets 'linux/amd64,linux/arm64' -dest build -out app -pkg cmd/api .
+      - ls -la /build 
 
-  build-docker:
-    depends_on:
-      - build-binary
-    image: woodpeckerci/plugin-docker-buildx:6.0.3
-    settings:
-      registry: git.4thena.io
-      repo: "git.4thena.io/${CI_REPO}"
-      platforms: linux/amd64,linux/arm64/v8
-      tags: "${CI_COMMIT_TAG},latest"
-      dockerfile: Containerfile
-      username:
-        from_secret: GITEA_USERNAME
-      password:
-        from_secret: GITEA_ACCESS_TOKEN
+  # build-docker:
+  #   depends_on:
+  #     - build-binary
+  #   image: woodpeckerci/plugin-docker-buildx:6.0.3
+  #   settings:
+  #     registry: git.4thena.io
+  #     repo: "git.4thena.io/${CI_REPO}"
+  #     platforms: linux/amd64,linux/arm64/v8
+  #     tags: "${CI_COMMIT_TAG},latest"
+  #     dockerfile: Containerfile
+  #     username:
+  #       from_secret: GITEA_USERNAME
+  #     password:
+  #       from_secret: GITEA_ACCESS_TOKEN
