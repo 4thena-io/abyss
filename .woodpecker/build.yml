@@ -1,0 +1,31 @@
+when:
+  event: tag
+
+steps:
+  build-frontend:
+    name: Build frontent 
+    image: oven/bun:1.3.3-alpine
+    directory: frontend/
+    commands:
+      - bun install
+      - bun run build
+  
+  build-binary:
+    name: build binary
+    image: ghcr.io/techknowlogick/xgo:latest
+    commands:
+      - xgo --targets=linux/amd64,linux/arm64 --dest=build --out=abyss --pkg=cmd/api .
+  
+  build-docker:
+    name: build and push docker image
+    image: woodpeckerci/plugin-docker-buildx:6.0.3
+    settings:
+      registry: git.4thena.io
+      repo: 'git.4thena.io/${CI_REPO}'
+      platforms: linux/amd64,linux/arm64/v8
+      tags: '${CI_COMMIT_TAG},latest'
+      dockerfile: Containerfile
+      username:
+       from_secret: GITEA_USERNAME
+      password:
+       from_secret: GITEA_ACCESS_TOKEN
