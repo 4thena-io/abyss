@@ -3,7 +3,6 @@ when:
 
 steps:
   build-frontend:
-    name: build frontend
     image: oven/bun:1.3.3-alpine
     directory: frontend/
     commands:
@@ -11,7 +10,6 @@ steps:
       - bun run build
 
   build-binary:
-    name: build binary
     depends_on:
       - build-frontend
     image: ghcr.io/techknowlogick/xgo:latest
@@ -19,7 +17,6 @@ steps:
       - xgo --targets=linux/amd64,linux/arm64 --dest=build --out=abyss --pkg=cmd/api .
 
   build-docker:
-    name: build and push docker image
     depends_on:
       - build-binary
     image: woodpeckerci/plugin-docker-buildx:6.0.3
