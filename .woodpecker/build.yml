@@ -17,7 +17,7 @@ steps:
       - apt update
       - apt install tree
       - mkdir -p build
-      - xgo -targets 'linux/amd64,linux/arm64' -dest build -out abyss -pkg cmd/api .
+      - xgo -targets 'linux/amd64,linux/arm64' -dest build -tags 'sqlite' -out abyss -pkg cmd/api .
       - mv /build/abyss* ./build
       - tree ./build
 
