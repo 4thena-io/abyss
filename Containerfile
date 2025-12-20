@@ -1,15 +1,13 @@
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.22
+FROM docker.io/library/alpine:3.22
 
 RUN apk add --no-cache \
   ca-certificates \
   git \
   sqlite
 
-WORKDIR /opt/app
-
-ARG TARGETARCH
-COPY build/abyss-linux-${TARGETARCH} ./abyss
+ARG TARGETOS TARGETARCH
+COPY build/abyss-${TARGETOS}-${TARGETARCH} /usr/bin/abyss
 
 EXPOSE 8000
 
-CMD [ "./abyss" ]
+CMD [ "/usr/bin/abyss" ]
