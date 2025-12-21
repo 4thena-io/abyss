@@ -10,8 +10,6 @@ func NewDatabaseProvider(providerType string) (Provider, error) {
 		return NewPostgresProvider(), nil
 	case "mysql":
 		return NewMySQLProvider(), nil
-	case "sqlite", "":
-		return NewSQLiteProvider(), nil
 	default:
 		return nil, fmt.Errorf("unknown database provider: %s", providerType)
 	}

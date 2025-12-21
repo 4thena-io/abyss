@@ -16,20 +16,13 @@ steps:
 
   build-linux-amd64:
     image: golang:1.24.4-alpine3.22 
-    depends_on: build-frontend
+    depends_on:
+      - build-frontend
+      - vendor
     commands:
-      - apk add zig
-      - CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC="zig cc -target x86_64-linux-musl" CXX="zig c++ -target x86_64-linux-musl" go build -tags "sqlite_omit_load_extension" -ldflags="-s -w -linkmode external -extldflags '-static'" -o build/abyss-linux-amd64 ./cmd/api
-      - ls -la build
+      - GOOS=linux GOARCH=amd64 go build -tags -ldflags="-s -w" -o build/abyss-linux-amd64 ./cmd/api
+      - GOOS=linux GOARCH=arm64 go build -tags -ldflags="-s -w" -o build/abyss-linux-arm64 ./cmd/api
   
-  build-linux-arm64:
-    image: golang:1.24.4-alpine3.22
-    depends_on: build-frontend
-    commands:
-      - apk add zig
-      - CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC="zig cc -target aarch64-linux-musl" CXX="zig c++ -target aarch64-linux-musl" go build -tags "sqlite_omit_load_extension" -ldflags="-s -w -linkmode external -extldflags '-static'" -o build/abyss-linux-arm64 ./cmd/api
-      - ls -la build
-
   build-docker:
     depends_on:
       - build-linux-amd64
