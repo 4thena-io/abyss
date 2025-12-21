@@ -29,8 +29,8 @@ steps:
   #     - tree ./build
 
   build-docker:
-    depends_on:
-      - build-binary
+    # depends_on:
+    #   - build-binary
     image: woodpeckerci/plugin-docker-buildx:6.0.3
     settings:
       registry: git.4thena.io
