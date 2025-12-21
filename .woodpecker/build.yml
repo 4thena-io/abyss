@@ -8,10 +8,16 @@ steps:
     commands:
       - bun install
       - bun run build
+  
+  vendor:
+    image: golang:1.24.4-alpine3.22
+    commands:
+      - go mod vendor
 
   build-binary:
     depends_on:
       - build-frontend
+      - vendor
     image: ghcr.io/techknowlogick/xgo:latest
     commands:
       - apt update
