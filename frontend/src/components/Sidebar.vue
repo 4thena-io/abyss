@@ -39,7 +39,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { 
-  AcademicCapIcon, 
   CubeIcon, 
   DocumentDuplicateIcon, 
   FolderIcon, 
@@ -55,6 +54,5 @@ const navItems = [
   { to: '/projects', label: 'Projects', icon: FolderIcon },
   { to: '/apps', label: 'Applications', icon: CubeIcon },
   { to: '/templates', label: 'Templates', icon: DocumentDuplicateIcon },
-  { to: '/learn', label: 'Learn', icon: AcademicCapIcon },
 ];
 </script>
