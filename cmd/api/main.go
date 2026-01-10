@@ -14,6 +14,7 @@ func main() {
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	handler.NewAppHandler().RegisterAppRoutes(apiRouter)
 	handler.NewProjectHandler().RegisterProjectRoutes(apiRouter)
+	handler.NewTemplateHandler().RegisterTemplateRoutes(apiRouter)
 
 	handler.NewFrontendHandler().RegisterFrontendRoutes(router)
 
