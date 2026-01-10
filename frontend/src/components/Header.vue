@@ -1,8 +1,11 @@
 <template>
   <header class="bg-gray-950 h-12 flex items-center justify-between">
     <div class="flex w-12 items-center justify-center shrink-0">
-      <button class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
-        aria-label="Toggle navigation menu">
+      <button 
+        @click="$emit('toggle-sidebar')"
+        class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
+        aria-label="Toggle navigation menu"
+      >
         <Bars3Icon class="w-5 h-5" />
       </button>
     </div>
@@ -32,4 +35,8 @@
 <script setup lang="ts">
 import logo from '../assets/logo-white.svg'
 import { Bars3Icon, BellIcon, Cog6ToothIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
+
+defineEmits<{
+  'toggle-sidebar': []
+}>();
 </script>
