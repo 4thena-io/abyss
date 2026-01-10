@@ -7,18 +7,19 @@ import (
 )
 
 type App struct {
-	Id          string          `json:"id" gorm:"primaryKey"`
-	Name        string          `json:"name" gorm:"not null,uniqueIndex"`
-	Description string          `json:"description" gorm:"not null"`
-	Kind        string          `json:"kind"`
-	Language    string          `json:"language"`
-	RepoId      int64           `json:"repo_id" gorm:"not null"`
-	RepoUrl     string          `json:"repo_url" gorm:"not null"`
-	CloneUrl    string          `json:"clone_url" gorm:"not null"`
-	CiId        int64           `json:"ci_id" gorm:"not null"`
-	CiUrl       string          `json:"ci_url" gorm:"not null"`
-	Project     string          `json:"project" gorm:"not null"`
-	Status      constant.Status `json:"status"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Name        string `gorm:"not null,uniqueIndex"`
+	Description string `gorm:"not null"`
+	Kind        string
+	Language    string
+	RepoID      int64  `gorm:"not null"`
+	RepoURL     string `gorm:"not null"`
+	CloneURL    string `gorm:"not null"`
+	CiID        int64  `gorm:"not null"`
+	CiURL       string `gorm:"not null"`
+	ProjectID   uint   `gorm:"not null"`
+	TemplateID  uint   `gorm:"not null"`
+	Status      constant.Status
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }

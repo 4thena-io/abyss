@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"git.4thena.io/4thena/abys/internal/ci"
+	"git.4thena.io/4thena/abys/internal/constant"
 	"git.4thena.io/4thena/abys/internal/dto"
 	"git.4thena.io/4thena/abys/internal/forge"
 	"git.4thena.io/4thena/abys/internal/model"
@@ -14,9 +15,9 @@ import (
 )
 
 type AppService struct {
-	repository        repository.AppRepository
-	forge      				forge.Forge
-	ci								ci.Ci
+	repository repository.AppRepository
+	forge      forge.Forge
+	ci         ci.Ci
 }
 
 func NewAppService(repository repository.AppRepository, forge forge.Forge, ci ci.Ci) *AppService {
@@ -39,8 +40,8 @@ func (s *AppService) GetAppByName(ctx context.Context, name string) (*model.App,
 	return s.repository.GetAppByName(ctx, name)
 }
 
-func (s *AppService) CreateApp(ctx context.Context, request dto.CreateAppRequestDto) (*model.App, error) {
-	existing, err := s.repository.GetAppByName(ctx, request.Name)
+func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	existing, err := s.repository.GetAppByName(ctx, app.Name)
 	if err != gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
@@ -48,32 +49,33 @@ func (s *AppService) CreateApp(ctx context.Context, request dto.CreateAppRequest
 		return nil, errors.New("app already exists")
 	}
 
-	gitResponse, err := s.forge.CreateRepo(ctx, "4thena", request.Name)
+	gitResponse, err := s.forge.CreateRepo(ctx, "4thena", app.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create the app: %w", err)
 	}
 
 	ciResponse, err := s.ci.ActivateRepo(ctx, dto.ActivateRepoRequestDTO{
-		Owner: "4thena",
-		Name: request.Name,
-		CloneUrl: gitResponse.CloneUrl,
+		Owner:         "4thena",
+		Name:          app.Name,
+		CloneUrl:      gitResponse.CloneUrl,
 		ForgeRemoteId: gitResponse.RepoId,
 	})
 	if err != nil {
-		s.forge.DeleteRepo(ctx, "4thena", request.Name)
+		s.forge.DeleteRepo(ctx, "4thena", app.Name)
 		return nil, fmt.Errorf("failed to activate ci repo: %w", err)
 	}
 
-	data := dto.CreateAppRecordDto{
-		Name:        request.Name,
-		Description: request.Description,
-		RepoId:      gitResponse.RepoId,
-		RepoUrl:     gitResponse.HtmlUrl,
-		CloneUrl:    gitResponse.CloneUrl,
-		CiId:        ciResponse.RepoId,
-		CiUrl:       ciResponse.RepoUrl,
-		Project:     request.Project,
+	app.RepoID = gitResponse.RepoId
+	app.RepoURL = gitResponse.HtmlUrl
+	app.CloneURL = gitResponse.CloneUrl
+	app.CiID = ciResponse.RepoId
+	app.CiURL = ciResponse.RepoUrl
+	app.Status = constant.StatusNew
+
+	err = s.repository.SaveApp(ctx, app)
+	if err != nil {
+		return nil, err
 	}
 
-	return s.repository.SaveApp(ctx, &data)
+	return app, nil
 }

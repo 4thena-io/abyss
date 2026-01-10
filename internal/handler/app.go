@@ -7,8 +7,10 @@ import (
 
 	"git.4thena.io/4thena/abys/internal/ci"
 	"git.4thena.io/4thena/abys/internal/database"
-	"git.4thena.io/4thena/abys/internal/dto"
+	"git.4thena.io/4thena/abys/internal/dto/request"
+	"git.4thena.io/4thena/abys/internal/dto/response"
 	"git.4thena.io/4thena/abys/internal/forge"
+	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
 	"github.com/gorilla/mux"
@@ -33,14 +35,23 @@ func NewAppHandler() *AppHandler {
 }
 
 func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
-	var req dto.CreateAppRequestDto
+	var req request.CreateApp
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
-	app, err := h.service.CreateApp(r.Context(), req)
+	appModel := &model.App{
+		Name:        req.Name,
+		Description: req.Description,
+		Kind:        req.Kind,
+		Language:    req.Language,
+		ProjectID:   req.ProjectID,
+		TemplateID:  req.TemplateID,
+	}
+
+	app, err := h.service.CreateApp(r.Context(), appModel)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -48,7 +59,15 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(app)
+	json.NewEncoder(w).Encode(response.CreateApp{
+		ID: app.ID,
+		Name: app.Name,
+		Description: app.Description,
+		Kind: app.Kind,
+		Language: app.Language,
+		RepoURL: app.RepoURL,
+		CiURL: app.CiURL,
+	})
 }
 
 func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +104,4 @@ func (h *AppHandler) RegisterAppRoutes(router *mux.Router) {
 	appRouter.HandleFunc("", h.CreateApp).Methods("POST")
 	appRouter.HandleFunc("", h.GetAllApps).Methods("GET")
 	appRouter.HandleFunc("/{name}", h.GetAppByName).Methods("GET")
-
-	appWithNameRouter := appRouter.PathPrefix("/{name}").Subrouter()
-	NewReleaseHandler().RegisterReleaseRoutes(appWithNameRouter)
 }

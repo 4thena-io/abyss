@@ -2,12 +2,8 @@ package repository
 
 import (
 	"context"
-	"time"
 
-	"git.4thena.io/4thena/abys/internal/constant"
-	"git.4thena.io/4thena/abys/internal/dto"
 	"git.4thena.io/4thena/abys/internal/model"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,27 +17,12 @@ func NewAppRepository(db *gorm.DB) *AppRepository {
 	}
 }
 
-func (r *AppRepository) SaveApp(ctx context.Context, app *dto.CreateAppRecordDto) (*model.App, error) {
-	newApp := model.App{
-		Id:          uuid.NewString(),
-		Name:        app.Name,
-		Description: app.Description,
-		RepoId:      app.RepoId,
-		RepoUrl:     app.RepoUrl,
-		CloneUrl:    app.CloneUrl,
-		CiId:        app.CiId,
-		CiUrl:       app.CiUrl,
-		Project:     app.Project,
-		Status:      constant.StatusNew,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	result := r.db.WithContext(ctx).Create(newApp)
+func (r *AppRepository) SaveApp(ctx context.Context, app *model.App) error {
+	result := r.db.WithContext(ctx).Create(app)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return &newApp, nil
+	return nil
 }
 
 func (r *AppRepository) GetAllApps(ctx context.Context) ([]model.App, error) {
