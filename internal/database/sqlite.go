@@ -1,0 +1,27 @@
+package database
+
+import (
+	"git.4thena.io/4thena/abys/internal/config"
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+)
+
+type SQLiteProvider struct {
+	path string
+}
+
+func NewSQLiteProvider() *SQLiteProvider {
+	path := config.Environment.DbPath
+	if path == "" {
+		path = "abyss.db"
+	}
+	return &SQLiteProvider{path: path}
+}
+
+func (p *SQLiteProvider) Connect() (*gorm.DB, error) {
+	return gorm.Open(p.GetDialector(), &gorm.Config{})
+}
+
+func (p *SQLiteProvider) GetDialector() gorm.Dialector {
+	return sqlite.Open(p.path)
+}

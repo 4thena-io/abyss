@@ -38,7 +38,7 @@ func (r *ReleaseRepository) SaveRelease(ctx context.Context, version *dto.Create
 	return &newRelease, nil
 }
 
-func (r *ReleaseRepository) GetAllReleasesByApp(ctx context.Context ,name string) ([]model.Release, error) {
+func (r *ReleaseRepository) GetAllReleasesByApp(ctx context.Context, name string) ([]model.Release, error) {
 	var releases []model.Release
 	result := r.db.WithContext(ctx).Where("app = ?", name).Find(&releases)
 	if result.Error != nil {

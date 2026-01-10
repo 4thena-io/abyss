@@ -7,8 +7,8 @@ import (
 
 func RunMigrations(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&model.App{},
 		&model.Project{},
+		&model.App{},
 		&model.Release{},
 	)
 }

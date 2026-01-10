@@ -17,7 +17,7 @@ type App struct {
 	CloneUrl    string          `json:"clone_url" gorm:"not null"`
 	CiId        int64           `json:"ci_id" gorm:"not null"`
 	CiUrl       string          `json:"ci_url" gorm:"not null"`
-	Project     string          `json:"project" gorm:"not null,foreignKey"`
+	Project     string          `json:"project" gorm:"not null"`
 	Status      constant.Status `json:"status"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
