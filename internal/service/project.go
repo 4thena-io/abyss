@@ -43,7 +43,6 @@ func (s *ProjectService) GetProjectByName(ctx context.Context, name string) (*mo
 func (s *ProjectService) SaveProject(ctx context.Context, req dto.CreateProjectRequestDto) (*model.Project, error) {
 	existing, err := s.repository.GetProjectByName(ctx, req.Name)
 	if err != gorm.ErrRecordNotFound {
-		fmt.Println("sapo")
 		return nil, err
 	}
 	if existing != nil {
