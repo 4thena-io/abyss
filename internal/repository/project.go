@@ -2,12 +2,8 @@ package repository
 
 import (
 	"context"
-	"time"
 
-	"git.4thena.io/4thena/abys/internal/constant"
-	"git.4thena.io/4thena/abys/internal/dto"
 	"git.4thena.io/4thena/abys/internal/model"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,21 +17,12 @@ func NewProjectRepository(db *gorm.DB) *ProjectRepository {
 	}
 }
 
-func (r *ProjectRepository) SaveProject(ctx context.Context, project *dto.CreateProjectRecordDto) (*model.Project, error) {
-	newProject := model.Project{
-		Id:          uuid.NewString(),
-		Name:        project.Name,
-		Description: project.Description,
-		Status:      constant.StatusNew,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	result := r.db.WithContext(ctx).Create(newProject)
+func (r *ProjectRepository) SaveProject(ctx context.Context, project *model.Project) error {
+	result := r.db.WithContext(ctx).Create(project)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return &newProject, nil
+	return nil
 }
 
 func (r *ProjectRepository) GetAllProjects(ctx context.Context) ([]model.Project, error) {

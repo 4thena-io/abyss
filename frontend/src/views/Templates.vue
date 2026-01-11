@@ -107,15 +107,12 @@
           </span>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
-          <a :href="template.repo_url" target="_blank"
+        <div class="mt-4 pt-4 border-t border-gray-700">
+          <a :href="template.repoUrl" target="_blank"
             class="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
             <CodeBracketIcon class="w-4 h-4" />
             <span>View repo</span>
           </a>
-          <span class="text-gray-500 text-xs">
-            Added {{ formatDate(template.created_at) }}
-          </span>
         </div>
       </div>
     </div>
@@ -287,18 +284,6 @@ const filteredRepos = computed(() => {
   ).slice(0, 10);
 });
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString();
-};
-
 const resetForm = () => {
   form.value = { name: '', description: '', kind: '', language: '' };
   selectedRepo.value = null;
@@ -363,9 +348,11 @@ const createTemplate = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...form.value,
-        repo_url: selectedRepo.value.html_url,
-        clone_url: selectedRepo.value.clone_url,
+        name: form.value.name,
+        description: form.value.description,
+        kind: form.value.kind,
+        language: form.value.language,
+        repoUrl: selectedRepo.value.html_url,
       }),
     });
 

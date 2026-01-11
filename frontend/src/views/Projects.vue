@@ -19,13 +19,6 @@
         <input v-model="search" type="text" placeholder="Filter projects..." class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 
             text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600" />
       </div>
-      <select v-model="statusFilter" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 
-          focus:outline-none focus:border-gray-600">
-        <option value="">All statuses</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-        <option value="archived">Archived</option>
-      </select>
     </div>
 
     <!-- Loading -->
@@ -39,13 +32,13 @@
       <FolderIcon class="w-12 h-12 text-gray-600 mx-auto" />
       <h3 class="mt-4 text-lg font-medium text-white">No projects found</h3>
       <p class="mt-2 text-gray-400 text-sm">
-        {{ search || statusFilter ? 'Try adjusting your filters' : 'Create your first project to get started' }}
+        {{ search ? 'Try adjusting your search' : 'Create your first project to get started' }}
       </p>
     </div>
 
     <!-- Project Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <router-link v-for="project in filteredProjects" :key="project.id" :to="`/projects/${project.id}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
+      <router-link v-for="project in filteredProjects" :key="project.id" :to="`/projects/${project.name}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
           hover:border-gray-600 transition-all group">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-3">
@@ -56,20 +49,8 @@
               <h3 class="text-white font-medium group-hover:text-blue-400 transition-colors">
                 {{ project.name }}
               </h3>
-              <p class="text-gray-500 text-xs mt-0.5">
-                Created {{ formatDate(project.created_at) }}
-              </p>
             </div>
           </div>
-          <span :class="[
-            'px-2 py-1 rounded text-xs font-medium',
-            project.status === 'active' ? 'bg-green-500/20 text-green-400' :
-              project.status === 'inactive' ? 'bg-gray-500/20 text-gray-400' :
-                project.status === 'archived' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-gray-500/20 text-gray-400'
-          ]">
-            {{ project.status }}
-          </span>
         </div>
 
         <p v-if="project.description" class="mt-4 text-gray-400 text-sm line-clamp-2">
@@ -78,16 +59,6 @@
         <p v-else class="mt-4 text-gray-500 text-sm italic">
           No description
         </p>
-
-        <div class="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
-          <div class="flex items-center gap-2 text-gray-500 text-sm">
-            <CubeIcon class="w-4 h-4" />
-            <span>{{ getAppCount(project.id) }} apps</span>
-          </div>
-          <span class="text-gray-500 text-xs">
-            Updated {{ formatDate(project.updated_at) }}
-          </span>
-        </div>
       </router-link>
     </div>
   </div>
@@ -98,44 +69,21 @@ import { ref, computed, onMounted } from 'vue';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
-  FolderIcon,
-  CubeIcon
+  FolderIcon
 } from '@heroicons/vue/24/outline';
 import type { Project } from '../types/Project';
 
 const projectList = ref<Project[]>([]);
 const loading = ref(true);
 const search = ref('');
-const statusFilter = ref('');
-
-// TODO: Replace with actual app counts from API
-const appCounts = ref<Record<string, number>>({});
 
 const filteredProjects = computed(() => {
   return projectList.value.filter(project => {
-    const matchesSearch = !search.value ||
+    return !search.value ||
       project.name.toLowerCase().includes(search.value.toLowerCase()) ||
       project.description.toLowerCase().includes(search.value.toLowerCase());
-    const matchesStatus = !statusFilter.value || project.status === statusFilter.value;
-    return matchesSearch && matchesStatus;
   });
 });
-
-const getAppCount = (projectId: string): number => {
-  return appCounts.value[projectId] || 0;
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString();
-};
 
 const fetchProjects = async () => {
   try {

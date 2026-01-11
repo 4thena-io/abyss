@@ -2,12 +2,8 @@ package repository
 
 import (
 	"context"
-	"time"
 
-	"git.4thena.io/4thena/abys/internal/constant"
-	"git.4thena.io/4thena/abys/internal/dto/request"
 	"git.4thena.io/4thena/abys/internal/model"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,25 +17,12 @@ func NewTemplateRepository(db *gorm.DB) *TemplateRepository {
 	}
 }
 
-func (r *TemplateRepository) SaveTemplate(ctx context.Context, app *request.CreateTemplate) (*model.Template, error) {
-	newTemplate := model.Template{
-		Id:          uuid.NewString(),
-		Name:        app.Name,
-		Description: app.Description,
-		Kind:        app.Kind,
-		Language:    app.Language,
-		RepoUrl:     app.RepoUrl,
-		CloneUrl:    app.CloneUrl,
-		Status:      constant.StatusNew,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	result := r.db.WithContext(ctx).Create(newTemplate)
+func (r *TemplateRepository) SaveTemplate(ctx context.Context, template *model.Template) error {
+	result := r.db.WithContext(ctx).Create(template)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return &newTemplate, nil
+	return nil
 }
 
 func (r *TemplateRepository) GetAllTemplates(ctx context.Context) ([]model.Template, error) {

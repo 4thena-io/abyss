@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/dto/request"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"gorm.io/gorm"
@@ -40,8 +39,8 @@ func (s *TemplateService) GetTemplateByName(ctx context.Context, name string) (*
 	return data, nil
 }
 
-func (s *TemplateService) SaveTemplate(ctx context.Context, req request.CreateTemplate) (*model.Template, error) {
-	existing, err := s.repository.GetTemplateByName(ctx, req.Name)
+func (s *TemplateService) SaveTemplate(ctx context.Context, template *model.Template) (*model.Template, error) {
+	existing, err := s.repository.GetTemplateByName(ctx, template.Name)
 	if err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -49,10 +48,10 @@ func (s *TemplateService) SaveTemplate(ctx context.Context, req request.CreateTe
 		return nil, fmt.Errorf("the template already exists")
 	}
 
-	data, err := s.repository.SaveTemplate(ctx, &req)
+	err = s.repository.SaveTemplate(ctx, template)
 	if err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	return template, nil
 }

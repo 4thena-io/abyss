@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"git.4thena.io/4thena/abys/internal/ci"
 	"git.4thena.io/4thena/abys/internal/database"
@@ -59,14 +60,16 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response.CreateApp{
-		ID: app.ID,
-		Name: app.Name,
+	json.NewEncoder(w).Encode(response.App{
+		ID:          app.ID,
+		Name:        app.Name,
 		Description: app.Description,
-		Kind: app.Kind,
-		Language: app.Language,
-		RepoURL: app.RepoURL,
-		CiURL: app.CiURL,
+		Kind:        app.Kind,
+		Language:    app.Language,
+		RepoURL:     app.RepoURL,
+		CiURL:       app.CiURL,
+		ProjectID:   app.ProjectID,
+		TemplateID:  app.TemplateID,
 	})
 }
 
@@ -77,14 +80,33 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := make([]response.App, len(apps))
+	for i, app := range apps {
+		res[i] = response.App{
+			ID:          app.ID,
+			Name:        app.Name,
+			Description: app.Description,
+			Kind:        app.Kind,
+			Language:    app.Language,
+			RepoURL:     app.RepoURL,
+			CiURL:       app.CiURL,
+			ProjectID:   app.ProjectID,
+			TemplateID:  app.TemplateID,
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(apps)
+	json.NewEncoder(w).Encode(res)
 }
 
-func (h *AppHandler) GetAppByName(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
+func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
 
-	app, err := h.service.GetAppByName(r.Context(), name)
+	app, err := h.service.GetAppByID(r.Context(), uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -95,7 +117,34 @@ func (h *AppHandler) GetAppByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(app)
+	json.NewEncoder(w).Encode(response.App{
+		ID:          app.ID,
+		Name:        app.Name,
+		Description: app.Description,
+		Kind:        app.Kind,
+		Language:    app.Language,
+		RepoURL:     app.RepoURL,
+		CiURL:       app.CiURL,
+		ProjectID:   app.ProjectID,
+		TemplateID:  app.TemplateID,
+	})
+}
+
+func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	builds, err := h.service.GetAppBuilds(r.Context(), uint(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(builds)
 }
 
 func (h *AppHandler) RegisterAppRoutes(router *mux.Router) {
@@ -103,5 +152,6 @@ func (h *AppHandler) RegisterAppRoutes(router *mux.Router) {
 
 	appRouter.HandleFunc("", h.CreateApp).Methods("POST")
 	appRouter.HandleFunc("", h.GetAllApps).Methods("GET")
-	appRouter.HandleFunc("/{name}", h.GetAppByName).Methods("GET")
+	appRouter.HandleFunc("/{id}", h.GetAppByID).Methods("GET")
+	appRouter.HandleFunc("/{id}/builds", h.GetAppBuilds).Methods("GET")
 }

@@ -1,6 +1,6 @@
 package response
 
-type CreateApp struct {
+type App struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -8,4 +8,6 @@ type CreateApp struct {
 	Language    string `json:"language"`
 	RepoURL     string `json:"repoUrl"`
 	CiURL       string `json:"ciUrl"`
+	ProjectID   uint   `json:"projectId"`
+	TemplateID  uint   `json:"templateId"`
 }

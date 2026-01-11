@@ -7,7 +7,8 @@ import (
 
 	"git.4thena.io/4thena/abys/internal/ci"
 	"git.4thena.io/4thena/abys/internal/constant"
-	"git.4thena.io/4thena/abys/internal/dto"
+	"git.4thena.io/4thena/abys/internal/dto/request"
+	"git.4thena.io/4thena/abys/internal/dto/response"
 	"git.4thena.io/4thena/abys/internal/forge"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
@@ -36,8 +37,8 @@ func (s *AppService) GetAllApps(ctx context.Context) ([]model.App, error) {
 	return data, nil
 }
 
-func (s *AppService) GetAppByName(ctx context.Context, name string) (*model.App, error) {
-	return s.repository.GetAppByName(ctx, name)
+func (s *AppService) GetAppByID(ctx context.Context, id uint) (*model.App, error) {
+	return s.repository.GetAppById(ctx, id)
 }
 
 func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
@@ -54,7 +55,7 @@ func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 		return nil, fmt.Errorf("failed to create the app: %w", err)
 	}
 
-	ciResponse, err := s.ci.ActivateRepo(ctx, dto.ActivateRepoRequestDTO{
+	ciResponse, err := s.ci.ActivateRepo(ctx, request.ActivateRepo{
 		Owner:         "4thena",
 		Name:          app.Name,
 		CloneUrl:      gitResponse.CloneUrl,
@@ -78,4 +79,12 @@ func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 	}
 
 	return app, nil
+}
+
+func (s *AppService) GetAppBuilds(ctx context.Context, appID uint) ([]response.Build, error) {
+	app, err := s.repository.GetAppById(ctx, appID)
+	if err != nil {
+		return nil, err
+	}
+	return s.ci.GetBuilds(ctx, app.CiID)
 }

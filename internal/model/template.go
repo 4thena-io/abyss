@@ -7,14 +7,14 @@ import (
 )
 
 type Template struct {
-	Id          string          `json:"id" gorm:"primaryKey"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Kind        string          `json:"kind"`
-	Language    string          `json:"language"`
-	RepoUrl     string          `json:"repo_url"`
-	CloneUrl    string          `json:"clone_url"`
-	Status      constant.Status `json:"status"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID          uint `gorm:"primaryKey;autoIncrement"`
+	Name        string
+	Description string
+	Kind        string
+	Language    string
+	RepoURL     string
+	CloneURL    string
+	Status      constant.Status
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }

@@ -6,6 +6,8 @@ import (
 
 	"git.4thena.io/4thena/abys/internal/database"
 	"git.4thena.io/4thena/abys/internal/dto/request"
+	"git.4thena.io/4thena/abys/internal/dto/response"
+	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
 	"github.com/gorilla/mux"
@@ -29,7 +31,13 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 	}
 	defer r.Body.Close()
 
-	app, err := h.service.SaveTemplate(r.Context(), req)
+	template, err := h.service.SaveTemplate(r.Context(), &model.Template{
+		Name:        req.Name,
+		Description: req.Description,
+		Kind:        req.Kind,
+		Language:    req.Language,
+		RepoURL:     req.RepoURL,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -37,18 +45,37 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(app)
+	json.NewEncoder(w).Encode(response.Template{
+		ID:          template.ID,
+		Name:        template.Name,
+		Description: template.Description,
+		Kind:        template.Kind,
+		Language:    template.Language,
+		RepoURL:     template.RepoURL,
+	})
 }
 
 func (h *TemplateHandler) GetAllTemplates(w http.ResponseWriter, r *http.Request) {
-	apps, err := h.service.GetAllTemplates(r.Context())
+	templates, err := h.service.GetAllTemplates(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	res := make([]response.Template, len(templates))
+	for i, template := range templates {
+		res[i] = response.Template{
+			ID:          template.ID,
+			Name:        template.Name,
+			Description: template.Description,
+			Kind:        template.Kind,
+			Language:    template.Language,
+			RepoURL:     template.RepoURL,
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(apps)
+	json.NewEncoder(w).Encode(res)
 }
 
 func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +92,14 @@ func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(template)
+	json.NewEncoder(w).Encode(response.Template{
+		ID:          template.ID,
+		Name:        template.Name,
+		Description: template.Description,
+		Kind:        template.Kind,
+		Language:    template.Language,
+		RepoURL:     template.RepoURL,
+	})
 }
 
 func (h *TemplateHandler) RegisterTemplateRoutes(router *mux.Router) {

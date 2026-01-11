@@ -3,11 +3,13 @@ import Home from './views/Home.vue'
 import Apps from "./views/Apps.vue";
 import Projects from "./views/Projects.vue";
 import Templates from "./views/Templates.vue";
+import AppDetail from "./views/AppDetail.vue";
 
 
 const routes = [
 	{ path: "/", component: Home },
   { path: "/apps", component: Apps },
+  { path: "/apps/:id", component: AppDetail },
   { path: "/projects", component: Projects },
   { path: "/templates", component: Templates }
 ];

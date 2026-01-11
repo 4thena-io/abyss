@@ -19,21 +19,47 @@
         <input v-model="search" type="text" placeholder="Filter applications..." class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 
             text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600" />
       </div>
-      <select v-model="statusFilter" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 
-          focus:outline-none focus:border-gray-600">
-        <option value="">All statuses</option>
-        <option value="running">Running</option>
-        <option value="stopped">Stopped</option>
-        <option value="error">Error</option>
-      </select>
-      <select v-model="kindFilter" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 
-          focus:outline-none focus:border-gray-600">
-        <option value="">All types</option>
-        <option value="service">Service</option>
-        <option value="database">Database</option>
-        <option value="frontend">Frontend</option>
-        <option value="worker">Worker</option>
-      </select>
+
+      <!-- Kind Dropdown -->
+      <div class="relative">
+        <button @click="showKindDropdown = !showKindDropdown" class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 
+            text-sm text-gray-300 hover:border-gray-600 transition-colors min-w-32">
+          <span>{{ kindFilter || 'All kinds' }}</span>
+          <ChevronDownIcon class="w-4 h-4 ml-auto" />
+        </button>
+        <div v-if="showKindDropdown"
+          class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+          <button @click="kindFilter = ''; showKindDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
+            !kindFilter ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
+            All kinds
+          </button>
+          <button v-for="kind in uniqueKinds" :key="kind" @click="kindFilter = kind; showKindDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
+            kindFilter === kind ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
+            {{ kind }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Language Dropdown -->
+      <div class="relative">
+        <button @click="showLanguageDropdown = !showLanguageDropdown" class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 
+            text-sm text-gray-300 hover:border-gray-600 transition-colors min-w-32">
+          <span>{{ languageFilter || 'All languages' }}</span>
+          <ChevronDownIcon class="w-4 h-4 ml-auto" />
+        </button>
+        <div v-if="showLanguageDropdown"
+          class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+          <button @click="languageFilter = ''; showLanguageDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
+            !languageFilter ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
+            All languages
+          </button>
+          <button v-for="lang in uniqueLanguages" :key="lang"
+            @click="languageFilter = lang; showLanguageDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
+              languageFilter === lang ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
+            {{ lang }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -46,7 +72,7 @@
       <CubeIcon class="w-12 h-12 text-gray-600 mx-auto" />
       <h3 class="mt-4 text-lg font-medium text-white">No applications found</h3>
       <p class="mt-2 text-gray-400 text-sm">
-        {{ search || statusFilter || kindFilter ? 'Try adjusting your filters' : 'Create your first application to get started' }}
+        {{ search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Create your first application to get started' }}
       </p>
     </div>
 
@@ -57,21 +83,15 @@
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
-              <component :is="getKindIcon(app.kind)" class="w-5 h-5 text-gray-400" />
+              <CubeIcon class="w-5 h-5 text-gray-400" />
             </div>
             <div>
               <h3 class="text-white font-medium group-hover:text-blue-400 transition-colors">
                 {{ app.name }}
               </h3>
-              <p class="text-gray-500 text-sm">{{ app.project }}</p>
+              <p class="text-gray-500 text-sm">{{ app.kind }}</p>
             </div>
           </div>
-          <span :class="[
-            'w-2 h-2 rounded-full',
-            app.status === 'running' ? 'bg-green-500' :
-              app.status === 'stopped' ? 'bg-gray-500' :
-                app.status === 'error' ? 'bg-red-500' : 'bg-yellow-500'
-          ]" />
         </div>
 
         <p v-if="app.description" class="mt-3 text-gray-400 text-sm line-clamp-2">
@@ -86,79 +106,47 @@
             {{ app.language }}
           </span>
         </div>
-
-        <div class="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <a :href="app.repo_url" target="_blank" @click.stop
-              class="text-gray-500 hover:text-white transition-colors">
-              <CodeBracketIcon class="w-4 h-4" />
-            </a>
-            <a v-if="app.ci_url" :href="app.ci_url" target="_blank" @click.stop
-              class="text-gray-500 hover:text-white transition-colors">
-              <WrenchScrewdriverIcon class="w-4 h-4" />
-            </a>
-          </div>
-          <span class="text-gray-500 text-xs">
-            Updated {{ formatDate(app.updated_at) }}
-          </span>
-        </div>
       </router-link>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   CubeIcon,
-  CircleStackIcon,
-  ComputerDesktopIcon,
-  CogIcon,
-  CodeBracketIcon,
-  WrenchScrewdriverIcon
+  ChevronDownIcon
 } from '@heroicons/vue/24/outline';
 import type { App } from '../types/App';
 
 const appList = ref<App[]>([]);
 const loading = ref(true);
 const search = ref('');
-const statusFilter = ref('');
 const kindFilter = ref('');
+const languageFilter = ref('');
+const showKindDropdown = ref(false);
+const showLanguageDropdown = ref(false);
 
 const filteredApps = computed(() => {
   return appList.value.filter(app => {
     const matchesSearch = !search.value ||
       app.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      app.project.toLowerCase().includes(search.value.toLowerCase());
-    const matchesStatus = !statusFilter.value || app.status === statusFilter.value;
+      app.description.toLowerCase().includes(search.value.toLowerCase());
     const matchesKind = !kindFilter.value || app.kind === kindFilter.value;
-    return matchesSearch && matchesStatus && matchesKind;
+    const matchesLanguage = !languageFilter.value || app.language === languageFilter.value;
+    return matchesSearch && matchesKind && matchesLanguage;
   });
 });
 
-const getKindIcon = (kind: string) => {
-  const icons: Record<string, any> = {
-    service: CubeIcon,
-    database: CircleStackIcon,
-    frontend: ComputerDesktopIcon,
-    worker: CogIcon,
-  };
-  return icons[kind] || CubeIcon;
-};
+const uniqueKinds = computed(() => {
+  return [...new Set(appList.value.map(a => a.kind).filter(Boolean))].sort();
+});
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString();
-};
+const uniqueLanguages = computed(() => {
+  return [...new Set(appList.value.map(a => a.language).filter(Boolean))].sort();
+});
 
 const fetchApps = async () => {
   try {
@@ -173,5 +161,20 @@ const fetchApps = async () => {
   }
 };
 
-onMounted(fetchApps);
+const closeDropdowns = (e: Event) => {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.relative')) {
+    showKindDropdown.value = false;
+    showLanguageDropdown.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchApps();
+  document.addEventListener('click', closeDropdowns);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdowns);
+});
 </script>

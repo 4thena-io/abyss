@@ -7,10 +7,10 @@ import (
 )
 
 type Project struct {
-	Id          string          `json:"id" gorm:"primaryKey"`
-	Name        string          `json:"name" gorm:"uniqueIndex"`
-	Description string          `json:"description" gorm:"not null"`
-	Status      constant.Status `json:"status"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Name        string `gorm:"uniqueIndex"`
+	Description string `gorm:"not null"`
+	Status      constant.Status
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }

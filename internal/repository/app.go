@@ -34,7 +34,7 @@ func (r *AppRepository) GetAllApps(ctx context.Context) ([]model.App, error) {
 	return applications, nil
 }
 
-func (r *AppRepository) GetAppById(ctx context.Context, id string) (*model.App, error) {
+func (r *AppRepository) GetAppById(ctx context.Context, id uint) (*model.App, error) {
 	var application model.App
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&application)
 	if result.Error != nil {

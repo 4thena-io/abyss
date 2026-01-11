@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/dto"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"gorm.io/gorm"
@@ -40,8 +39,8 @@ func (s *ProjectService) GetProjectByName(ctx context.Context, name string) (*mo
 	return data, nil
 }
 
-func (s *ProjectService) SaveProject(ctx context.Context, req dto.CreateProjectRequestDto) (*model.Project, error) {
-	existing, err := s.repository.GetProjectByName(ctx, req.Name)
+func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project) (*model.Project, error) {
+	existing, err := s.repository.GetProjectByName(ctx, project.Name)
 	if err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -49,13 +48,10 @@ func (s *ProjectService) SaveProject(ctx context.Context, req dto.CreateProjectR
 		return nil, fmt.Errorf("the project already exists")
 	}
 
-	data, err := s.repository.SaveProject(ctx, &dto.CreateProjectRecordDto{
-		Name:        req.Name,
-		Description: req.Description,
-	})
+ 	err = s.repository.SaveProject(ctx, project)
 	if err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	return project, nil
 }

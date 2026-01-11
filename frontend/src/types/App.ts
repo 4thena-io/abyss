@@ -4,13 +4,8 @@ export interface App {
   description: string;
   kind: string;
   language: string;
-  repo_id: number;
-  repo_url: string;
-  clone_url: string;
-  ci_id: number;
-  ci_url: string;
-  project: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  repoUrl: string;
+  ciUrl: string;
+  projectId: string;
+  templateId: string;
 }

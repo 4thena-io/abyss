@@ -17,8 +17,8 @@ type App struct {
 	CloneURL    string `gorm:"not null"`
 	CiID        int64  `gorm:"not null"`
 	CiURL       string `gorm:"not null"`
-	ProjectID   uint   `gorm:"not null"`
-	TemplateID  uint   `gorm:"not null"`
+	ProjectID   uint
+	TemplateID  uint `gorm:"not null"`
 	Status      constant.Status
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
