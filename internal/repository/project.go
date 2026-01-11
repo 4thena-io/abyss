@@ -34,7 +34,7 @@ func (r *ProjectRepository) GetAllProjects(ctx context.Context) ([]model.Project
 	return projects, nil
 }
 
-func (r *ProjectRepository) GetProjectById(ctx context.Context, id string) (*model.Project, error) {
+func (r *ProjectRepository) GetProjectByID(ctx context.Context, id uint) (*model.Project, error) {
 	var project model.Project
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&project)
 	if result.Error != nil {

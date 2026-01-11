@@ -2,11 +2,15 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 
+	"git.4thena.io/4thena/abys/internal/ci"
 	"git.4thena.io/4thena/abys/internal/database"
 	"git.4thena.io/4thena/abys/internal/dto/request"
 	"git.4thena.io/4thena/abys/internal/dto/response"
+	"git.4thena.io/4thena/abys/internal/forge"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
@@ -14,13 +18,27 @@ import (
 )
 
 type ProjectHandler struct {
-	service service.ProjectService
+	projectService service.ProjectService
+	appService     service.AppService
 }
 
 func NewProjectHandler() *ProjectHandler {
-	repository := repository.NewProjectRepository(database.Connection)
-	service := service.NewProjectService(*repository)
-	return &ProjectHandler{*service}
+	projectRepository := repository.NewProjectRepository(database.Connection)
+	projectService := service.NewProjectService(*projectRepository)
+	appRepository := repository.NewAppRepository(database.Connection)
+	forge, err := forge.NewForge()
+	if err != nil {
+		log.Fatalf("failed to create a git provider: %s", err)
+	}
+	ciProvider, err := ci.NewCi()
+	if err != nil {
+		log.Fatalf("failed to create a ci provider: %s", err)
+	}
+	appService := service.NewAppService(*appRepository, forge, ciProvider)
+	return &ProjectHandler{
+		projectService: *projectService,
+		appService:     *appService,
+	}
 }
 
 func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +49,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	project, err := h.service.SaveProject(r.Context(), &model.Project{
+	project, err := h.projectService.SaveProject(r.Context(), &model.Project{
 		Name:        req.Name,
 		Description: req.Description,
 	})
@@ -50,7 +68,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
-	projects, err := h.service.GetAllProjects(r.Context())
+	projects, err := h.projectService.GetAllProjects(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -69,10 +87,13 @@ func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(res)
 }
 
-func (h *ProjectHandler) GetProjectByName(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
-
-	project, err := h.service.GetProjectByName(r.Context(), name)
+func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+	project, err := h.projectService.GetProjectByID(r.Context(), uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -90,10 +111,41 @@ func (h *ProjectHandler) GetProjectByName(w http.ResponseWriter, r *http.Request
 	})
 }
 
-func (h *ProjectHandler) RegisterProjectRoutes(router *mux.Router) {
-	userRouter := router.PathPrefix("/projects").Subrouter()
+func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+	apps, err := h.appService.GetAppsByProject(r.Context(), uint(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	res := make([]response.App, len(apps))
+	for i, app := range apps {
+		res[i] = response.App{
+			ID:          app.ID,
+			Name:        app.Name,
+			Description: app.Description,
+			Kind:        app.Kind,
+			Language:    app.Language,
+			RepoURL:     app.RepoURL,
+			CiURL:       app.CiURL,
+			ProjectID:   app.ProjectID,
+			TemplateID:  app.TemplateID,
+		}
+	}
 
-	userRouter.HandleFunc("", h.CreateProject).Methods("POST")
-	userRouter.HandleFunc("", h.GetAllProjects).Methods("GET")
-	userRouter.HandleFunc("/{value}", h.GetProjectByName).Methods("GET")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *ProjectHandler) RegisterProjectRoutes(router *mux.Router) {
+	projectRouter := router.PathPrefix("/projects").Subrouter()
+
+	projectRouter.HandleFunc("", h.CreateProject).Methods("POST")
+	projectRouter.HandleFunc("", h.GetAllProjects).Methods("GET")
+	projectRouter.HandleFunc("/{id}", h.GetProjectByID).Methods("GET")
+	projectRouter.HandleFunc("/{id}/apps", h.GetProjectApps).Methods("GET")
 }

@@ -81,10 +81,18 @@ func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 	return app, nil
 }
 
-func (s *AppService) GetAppBuilds(ctx context.Context, appID uint) ([]response.Build, error) {
-	app, err := s.repository.GetAppById(ctx, appID)
+func (s *AppService) GetAppBuilds(ctx context.Context, id uint) ([]response.Build, error) {
+	app, err := s.repository.GetAppById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return s.ci.GetBuilds(ctx, app.CiID)
+}
+
+func (s *AppService) GetAppsByProject(ctx context.Context, id uint) ([]model.App, error) {
+	data, err := s.repository.GetAppsByProject(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

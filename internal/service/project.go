@@ -27,8 +27,8 @@ func (s *ProjectService) GetAllProjects(ctx context.Context) ([]model.Project, e
 	return data, nil
 }
 
-func (s *ProjectService) GetProjectByName(ctx context.Context, name string) (*model.Project, error) {
-	data, err := s.repository.GetProjectByName(ctx, name)
+func (s *ProjectService) GetProjectByID(ctx context.Context, id uint) (*model.Project, error) {
+	data, err := s.repository.GetProjectByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

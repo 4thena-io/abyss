@@ -52,6 +52,15 @@ func (r *AppRepository) GetAppByName(ctx context.Context, name string) (*model.A
 	return &application, nil
 }
 
+func (r *AppRepository) GetAppsByProject(ctx context.Context, id uint) ([]model.App, error) {
+	var applications []model.App
+	result := r.db.WithContext(ctx).Where("project_id = ?", id).Find(&applications)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return applications, nil
+}
+
 func (r *AppRepository) DeleteApp(ctx context.Context, app *model.App) error {
 	return r.db.WithContext(ctx).Delete(&app).Error
 }

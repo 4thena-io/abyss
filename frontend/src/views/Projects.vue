@@ -38,7 +38,7 @@
 
     <!-- Project Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <router-link v-for="project in filteredProjects" :key="project.id" :to="`/projects/${project.name}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
+      <router-link v-for="project in filteredProjects" :key="project.id" :to="`/projects/${project.id}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
           hover:border-gray-600 transition-all group">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-3">
