@@ -4,25 +4,16 @@ import (
 	"log"
 	"net/http"
 
-	"git.4thena.io/4thena/abys/internal/handler"
-	"github.com/gorilla/mux"
+	"git.4thena.io/4thena/abys/internal/server"
 )
 
 func main() {
-	router := mux.NewRouter()
+	srv := server.New(server.Config{
+		Host: "0.0.0.0",
+		Port: "8000",
+	})
 
-	apiRouter := router.PathPrefix("/api").Subrouter()
-	handler.NewAppHandler().RegisterAppRoutes(apiRouter)
-	handler.NewProjectHandler().RegisterProjectRoutes(apiRouter)
-	handler.NewTemplateHandler().RegisterTemplateRoutes(apiRouter)
-
-	handler.NewFrontendHandler().RegisterFrontendRoutes(router)
-
-	var host = "0.0.0.0:8000"
-
-	log.Printf("Running on http://%s\n", host)
-
-	if err := http.ListenAndServe(host, router); err != nil {
-		log.Fatal("Failed to start http server")
+	if err := srv.Start(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("server error: %v", err)
 	}
 }
