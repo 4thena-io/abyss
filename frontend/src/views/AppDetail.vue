@@ -141,7 +141,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-700">
-                <tr v-for="build in builds" :key="build.id" class="hover:bg-gray-750 transition-colors">
+                <tr v-for="build in paginatedBuilds" :key="build.id" class="hover:bg-gray-750 transition-colors">
                   <td class="px-5 py-4">
                     <a :href="build.link" target="_blank" rel="noopener noreferrer"
                       class="text-blue-400 hover:text-blue-300 font-medium transition-colors">
@@ -176,6 +176,42 @@
                 </tr>
               </tbody>
             </table>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-700">
+              <span class="text-sm text-gray-400">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, builds.length) }}
+                of {{ builds.length }}
+              </span>
+
+              <div class="flex items-center gap-1">
+                <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 
+               disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  <ChevronLeftIcon class="w-4 h-4" />
+                </button>
+
+                <template v-for="page in totalPages" :key="page">
+                  <button
+                    v-if="page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)"
+                    @click="goToPage(page)" :class="[
+                      'px-3 py-1 rounded text-sm transition-colors',
+                      page === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    ]">
+                    {{ page }}
+                  </button>
+                  <span v-else-if="page === currentPage - 2 || page === currentPage + 2" class="px-2 text-gray-500">
+                    ...
+                  </span>
+                </template>
+
+                <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 
+               disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  <ChevronRightIcon class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -184,13 +220,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   CubeIcon,
   CodeBracketIcon,
   WrenchScrewdriverIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/vue/24/outline';
 import type { App } from '../types/App';
 import type { Build } from '../types/Build';
@@ -253,10 +291,28 @@ const fetchApp = async () => {
   }
 };
 
+const currentPage = ref(1);
+const pageSize = 5;
+
+const paginatedBuilds = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return builds.value.slice(start, start + pageSize);
+});
+
+const totalPages = computed(() => Math.ceil(builds.value.length / pageSize));
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+// Reset to page 1 when builds refresh
 const fetchBuilds = async () => {
   if (!app.value) return;
   try {
     loadingBuilds.value = true;
+    currentPage.value = 1; // Add this line
     const response = await fetch(`/api/apps/${app.value.id}/builds`);
     if (!response.ok) throw new Error('Failed to fetch builds');
     builds.value = await response.json();
