@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"git.4thena.io/4thena/abys/internal/ci"
 	"git.4thena.io/4thena/abys/internal/database"
 	"git.4thena.io/4thena/abys/internal/dto/request"
 	"git.4thena.io/4thena/abys/internal/dto/response"
-	"git.4thena.io/4thena/abys/internal/forge"
+	"git.4thena.io/4thena/abys/internal/integration/ci"
+	"git.4thena.io/4thena/abys/internal/integration/forge"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
@@ -24,8 +24,10 @@ type ProjectHandler struct {
 
 func NewProjectHandler() *ProjectHandler {
 	projectRepository := repository.NewProjectRepository(database.Connection)
-	projectService := service.NewProjectService(*projectRepository)
 	appRepository := repository.NewAppRepository(database.Connection)
+
+	projectService := service.NewProjectService(*projectRepository)
+
 	forge, err := forge.NewForge()
 	if err != nil {
 		log.Fatalf("failed to create a git provider: %s", err)
@@ -34,7 +36,9 @@ func NewProjectHandler() *ProjectHandler {
 	if err != nil {
 		log.Fatalf("failed to create a ci provider: %s", err)
 	}
-	appService := service.NewAppService(*appRepository, forge, ciProvider)
+
+	appService := service.NewAppService(*appRepository, *projectRepository, forge, ciProvider)
+
 	return &ProjectHandler{
 		projectService: *projectService,
 		appService:     *appService,
@@ -141,7 +145,7 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(res)
 }
 
-func (h *ProjectHandler) RegisterProjectRoutes(router *mux.Router) {
+func (h *ProjectHandler) RegisterRoutes(router *mux.Router) {
 	projectRouter := router.PathPrefix("/projects").Subrouter()
 
 	projectRouter.HandleFunc("", h.CreateProject).Methods("POST")

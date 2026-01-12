@@ -5,32 +5,39 @@ import (
 	"errors"
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/ci"
 	"git.4thena.io/4thena/abys/internal/constant"
 	"git.4thena.io/4thena/abys/internal/dto/request"
 	"git.4thena.io/4thena/abys/internal/dto/response"
-	"git.4thena.io/4thena/abys/internal/forge"
+	"git.4thena.io/4thena/abys/internal/integration/ci"
+	"git.4thena.io/4thena/abys/internal/integration/forge"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"gorm.io/gorm"
 )
 
 type AppService struct {
-	repository repository.AppRepository
-	forge      forge.Forge
-	ci         ci.Ci
+	appRepository     repository.AppRepository
+	projectRepository repository.ProjectRepository
+	forge             forge.Forge
+	ci                ci.Ci
 }
 
-func NewAppService(repository repository.AppRepository, forge forge.Forge, ci ci.Ci) *AppService {
+func NewAppService(
+	appRepository repository.AppRepository,
+	projectRepository repository.ProjectRepository,
+	forge forge.Forge,
+	ci ci.Ci,
+) *AppService {
 	return &AppService{
-		repository,
+		appRepository,
+		projectRepository,
 		forge,
 		ci,
 	}
 }
 
 func (s *AppService) GetAllApps(ctx context.Context) ([]model.App, error) {
-	data, err := s.repository.GetAllApps(ctx)
+	data, err := s.appRepository.GetAllApps(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,11 +45,11 @@ func (s *AppService) GetAllApps(ctx context.Context) ([]model.App, error) {
 }
 
 func (s *AppService) GetAppByID(ctx context.Context, id uint) (*model.App, error) {
-	return s.repository.GetAppById(ctx, id)
+	return s.appRepository.GetAppById(ctx, id)
 }
 
 func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
-	existing, err := s.repository.GetAppByName(ctx, app.Name)
+	existing, err := s.appRepository.GetAppByName(ctx, app.Name)
 	if err != gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
@@ -73,7 +80,7 @@ func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 	app.CiURL = ciResponse.RepoUrl
 	app.Status = constant.StatusNew
 
-	err = s.repository.SaveApp(ctx, app)
+	err = s.appRepository.SaveApp(ctx, app)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +89,7 @@ func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 }
 
 func (s *AppService) GetAppBuilds(ctx context.Context, id uint) ([]response.Build, error) {
-	app, err := s.repository.GetAppById(ctx, id)
+	app, err := s.appRepository.GetAppById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +97,11 @@ func (s *AppService) GetAppBuilds(ctx context.Context, id uint) ([]response.Buil
 }
 
 func (s *AppService) GetAppsByProject(ctx context.Context, id uint) ([]model.App, error) {
-	data, err := s.repository.GetAppsByProject(ctx, id)
+	_, err := s.projectRepository.GetProjectByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	data, err := s.appRepository.GetAppsByProject(ctx, id)
 	if err != nil {
 		return nil, err
 	}
