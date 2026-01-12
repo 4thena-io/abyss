@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"git.4thena.io/4thena/abys/internal/config"
-	"git.4thena.io/4thena/abys/internal/forge/gitea"
-	"git.4thena.io/4thena/abys/internal/forge/github"
+	"git.4thena.io/4thena/abys/internal/integration/forge/gitea"
+	"git.4thena.io/4thena/abys/internal/integration/forge/github"
 )
 
 var (
