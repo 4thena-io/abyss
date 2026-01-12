@@ -146,10 +146,8 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *ProjectHandler) RegisterRoutes(router *mux.Router) {
-	projectRouter := router.PathPrefix("/projects").Subrouter()
-
-	projectRouter.HandleFunc("", h.CreateProject).Methods("POST")
-	projectRouter.HandleFunc("", h.GetAllProjects).Methods("GET")
-	projectRouter.HandleFunc("/{id}", h.GetProjectByID).Methods("GET")
-	projectRouter.HandleFunc("/{id}/apps", h.GetProjectApps).Methods("GET")
+	router.HandleFunc("", h.CreateProject).Methods("POST")
+	router.HandleFunc("", h.GetAllProjects).Methods("GET")
+	router.HandleFunc("/{id}", h.GetProjectByID).Methods("GET")
+	router.HandleFunc("/{id}/apps", h.GetProjectApps).Methods("GET")
 }

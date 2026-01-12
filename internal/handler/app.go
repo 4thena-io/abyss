@@ -152,10 +152,8 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AppHandler) RegisterRoutes(router *mux.Router) {
-	appRouter := router.PathPrefix("/apps").Subrouter()
-
-	appRouter.HandleFunc("", h.CreateApp).Methods("POST")
-	appRouter.HandleFunc("", h.GetAllApps).Methods("GET")
-	appRouter.HandleFunc("/{id}", h.GetAppByID).Methods("GET")
-	appRouter.HandleFunc("/{id}/builds", h.GetAppBuilds).Methods("GET")
+	router.HandleFunc("", h.CreateApp).Methods("POST")
+	router.HandleFunc("", h.GetAllApps).Methods("GET")
+	router.HandleFunc("/{id}", h.GetAppByID).Methods("GET")
+	router.HandleFunc("/{id}/builds", h.GetAppBuilds).Methods("GET")
 }

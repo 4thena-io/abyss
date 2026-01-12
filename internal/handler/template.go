@@ -103,9 +103,7 @@ func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *TemplateHandler) RegisterRoutes(router *mux.Router) {
-	userRouter := router.PathPrefix("/templates").Subrouter()
-
-	userRouter.HandleFunc("", h.CreateTemplate).Methods("POST")
-	userRouter.HandleFunc("", h.GetAllTemplates).Methods("GET")
-	userRouter.HandleFunc("/{value}", h.GetTemplateByName).Methods("GET")
+	router.HandleFunc("", h.CreateTemplate).Methods("POST")
+	router.HandleFunc("", h.GetAllTemplates).Methods("GET")
+	router.HandleFunc("/{value}", h.GetTemplateByName).Methods("GET")
 }
