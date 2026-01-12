@@ -30,12 +30,7 @@
           <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 
               rounded-lg text-gray-300 hover:text-white hover:border-gray-600 transition-colors">
             <CodeBracketIcon class="w-4 h-4" />
-            <span>Repository</span>
-          </a>
-          <a v-if="app.ciUrl" :href="formatUrl(app.ciUrl)" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 
-              rounded-lg text-gray-300 hover:text-white hover:border-gray-600 transition-colors">
-            <WrenchScrewdriverIcon class="w-4 h-4" />
-            <span>Pipelines</span>
+            <span>Source Code</span>
           </a>
         </div>
       </div>
@@ -108,7 +103,7 @@
         <!-- Builds Tab -->
         <div v-if="activeTab === 'builds'" class="space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-medium text-white">CI Builds</h2>
+            <h2 class="text-lg font-medium text-white">Builds</h2>
             <button @click="fetchBuilds" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 
                 hover:text-white transition-colors">
               <ArrowPathIcon :class="['w-4 h-4', loadingBuilds ? 'animate-spin' : '']" />
@@ -237,7 +232,7 @@ const route = useRoute();
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
-  { id: 'builds', label: 'Builds' },
+  { id: 'builds', label: 'CI/CD' },
 ];
 
 const app = ref<App | null>(null);
