@@ -1,5 +1,5 @@
 export interface Template {
-  id: string;
+  id: number;
   name: string;
   description: string;
   kind: string;

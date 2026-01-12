@@ -17,7 +17,7 @@ func NewAppRepository(db *gorm.DB) *AppRepository {
 	}
 }
 
-func (r *AppRepository) SaveApp(ctx context.Context, app *model.App) error {
+func (r *AppRepository) Save(ctx context.Context, app *model.App) error {
 	result := r.db.WithContext(ctx).Create(app)
 	if result.Error != nil {
 		return result.Error
@@ -25,7 +25,7 @@ func (r *AppRepository) SaveApp(ctx context.Context, app *model.App) error {
 	return nil
 }
 
-func (r *AppRepository) GetAllApps(ctx context.Context) ([]model.App, error) {
+func (r *AppRepository) GetAll(ctx context.Context) ([]model.App, error) {
 	var applications []model.App
 	result := r.db.WithContext(ctx).Find(&applications)
 	if result.Error != nil {
@@ -34,7 +34,7 @@ func (r *AppRepository) GetAllApps(ctx context.Context) ([]model.App, error) {
 	return applications, nil
 }
 
-func (r *AppRepository) GetAppById(ctx context.Context, id uint) (*model.App, error) {
+func (r *AppRepository) GetByID(ctx context.Context, id uint) (*model.App, error) {
 	var application model.App
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&application)
 	if result.Error != nil {
@@ -43,7 +43,7 @@ func (r *AppRepository) GetAppById(ctx context.Context, id uint) (*model.App, er
 	return &application, nil
 }
 
-func (r *AppRepository) GetAppByName(ctx context.Context, name string) (*model.App, error) {
+func (r *AppRepository) GetByName(ctx context.Context, name string) (*model.App, error) {
 	var application model.App
 	result := r.db.WithContext(ctx).Where("name = ?", name).First(&application)
 	if result.Error != nil {
@@ -52,7 +52,7 @@ func (r *AppRepository) GetAppByName(ctx context.Context, name string) (*model.A
 	return &application, nil
 }
 
-func (r *AppRepository) GetAppsByProject(ctx context.Context, id uint) ([]model.App, error) {
+func (r *AppRepository) GetByProject(ctx context.Context, id uint) ([]model.App, error) {
 	var applications []model.App
 	result := r.db.WithContext(ctx).Where("project_id = ?", id).Find(&applications)
 	if result.Error != nil {
@@ -61,6 +61,15 @@ func (r *AppRepository) GetAppsByProject(ctx context.Context, id uint) ([]model.
 	return applications, nil
 }
 
-func (r *AppRepository) DeleteApp(ctx context.Context, app *model.App) error {
+func (r *AppRepository) GetByTemplate(ctx context.Context, id uint) ([]model.App, error) {
+	var applications []model.App
+	result := r.db.WithContext(ctx).Where("template_id = ?", id).Find(&applications)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return applications, nil
+}
+
+func (r *AppRepository) Delete(ctx context.Context, app *model.App) error {
 	return r.db.WithContext(ctx).Delete(&app).Error
 }

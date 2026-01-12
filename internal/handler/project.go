@@ -2,15 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
 	"git.4thena.io/4thena/abys/internal/database"
 	"git.4thena.io/4thena/abys/internal/dto/request"
 	"git.4thena.io/4thena/abys/internal/dto/response"
-	"git.4thena.io/4thena/abys/internal/integration/ci"
-	"git.4thena.io/4thena/abys/internal/integration/forge"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
@@ -25,19 +22,10 @@ type ProjectHandler struct {
 func NewProjectHandler() *ProjectHandler {
 	projectRepository := repository.NewProjectRepository(database.Connection)
 	appRepository := repository.NewAppRepository(database.Connection)
+	templateRepository := repository.NewTemplateRepository(database.Connection)
 
 	projectService := service.NewProjectService(*projectRepository)
-
-	forge, err := forge.NewForge()
-	if err != nil {
-		log.Fatalf("failed to create a git provider: %s", err)
-	}
-	ciProvider, err := ci.NewCi()
-	if err != nil {
-		log.Fatalf("failed to create a ci provider: %s", err)
-	}
-
-	appService := service.NewAppService(*appRepository, *projectRepository, forge, ciProvider)
+	appService := service.NewAppServiceReadOnly(*appRepository, *projectRepository, *templateRepository)
 
 	return &ProjectHandler{
 		projectService: *projectService,
@@ -145,9 +133,23 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(res)
 }
 
+func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+
+	err = h.projectService.DeleteProject(r.Context(), uint(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *ProjectHandler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("", h.CreateProject).Methods("POST")
 	router.HandleFunc("", h.GetAllProjects).Methods("GET")
 	router.HandleFunc("/{id}", h.GetProjectByID).Methods("GET")
 	router.HandleFunc("/{id}/apps", h.GetProjectApps).Methods("GET")
+	router.HandleFunc("/{id}", h.DeleteProject).Methods("DELETE")
 }

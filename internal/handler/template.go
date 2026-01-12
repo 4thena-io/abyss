@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"git.4thena.io/4thena/abys/internal/database"
 	"git.4thena.io/4thena/abys/internal/dto/request"
@@ -102,8 +103,21 @@ func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Reque
 	})
 }
 
+func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+
+	err = h.service.DeleteTemplate(r.Context(), uint(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+}
+
 func (h *TemplateHandler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("", h.CreateTemplate).Methods("POST")
 	router.HandleFunc("", h.GetAllTemplates).Methods("GET")
 	router.HandleFunc("/{value}", h.GetTemplateByName).Methods("GET")
+	router.HandleFunc("/{id}", h.DeleteTemplate).Methods("DELETE")
 }

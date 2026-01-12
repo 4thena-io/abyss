@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import logo from '../assets/logo-white.svg'
+import logo from '../../assets/logo-white.svg'
 import { Bars3Icon, BellIcon, Cog6ToothIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
 
 defineEmits<{

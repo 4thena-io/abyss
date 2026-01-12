@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	gt "code.gitea.io/sdk/gitea"
-	"git.4thena.io/4thena/abys/internal/dto"
+	"git.4thena.io/4thena/abys/internal/model"
 )
 
 type GiteaForge struct {
@@ -20,22 +20,44 @@ func NewGiteaForge(url, secret string) (*GiteaForge, error) {
 	return &GiteaForge{client}, nil
 }
 
-func (f *GiteaForge) CreateRepo(ctx context.Context, owner, name string) (*dto.CreateRepoResponseDTO, error) {
+func (f *GiteaForge) CreateRepo(ctx context.Context, owner, name string) (*model.Repo, error) {
 	repo, _, err := f.client.CreateOrgRepo(owner, gt.CreateRepoOption{
-		Name: name,
+		Name:    name,
 		Private: false,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repository: %w", err)
 	}
-	return &dto.CreateRepoResponseDTO{
-		RepoId: repo.ID,
-		CloneUrl: repo.CloneURL,
-		HtmlUrl: repo.HTMLURL,
+	return &model.Repo{
+		ID:       repo.ID,
+		Name:     repo.Name,
+		FullName: repo.FullName,
+		URL:      repo.HTMLURL,
+		CloneURL: repo.CloneURL,
 	}, nil
 }
 
-func (f *GiteaForge) DeleteRepo(ctx context.Context, owner, name string) (error) {
+func (f *GiteaForge) GetOrgRepos(ctx context.Context, name string) ([]model.Repo, error) {
+	repos, _, err := f.client.ListOrgRepos(name, gt.ListOrgReposOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]model.Repo, len(repos))
+	for i, repo := range repos {
+		res[i] = model.Repo{
+			ID:       repo.ID,
+			Name:     repo.Name,
+			FullName: repo.FullName,
+			URL:      repo.HTMLURL,
+			CloneURL: repo.CloneURL,
+		}
+	}
+
+	return res, nil
+}
+
+func (f *GiteaForge) DeleteRepo(ctx context.Context, owner, name string) error {
 	_, err := f.client.DeleteRepo(owner, name)
 	if err != nil {
 		return fmt.Errorf("failed to delete repository: %w", err)

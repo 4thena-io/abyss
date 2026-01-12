@@ -7,15 +7,23 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div v-for="stat in stats" :key="stat.label" class="bg-gray-800 rounded-lg p-5 border border-gray-700">
+      <router-link 
+        v-for="stat in stats" 
+        :key="stat.label" 
+        :to="stat.to"
+        class="bg-gray-800 rounded-lg p-5 border border-gray-700 hover:border-gray-600 transition-colors"
+      >
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm">{{ stat.label }}</p>
-            <p class="text-2xl font-semibold text-white mt-1">{{ stat.value }}</p>
+            <p class="text-2xl font-semibold text-white mt-1">
+              <span v-if="loading" class="inline-block w-8 h-6 bg-gray-700 rounded animate-pulse"></span>
+              <span v-else>{{ stat.value }}</span>
+            </p>
           </div>
           <component :is="stat.icon" class="w-8 h-8 text-gray-600" />
         </div>
-      </div>
+      </router-link>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -25,23 +33,33 @@
           <h2 class="text-lg font-medium text-white">Recent Activity</h2>
         </div>
         <div class="divide-y divide-gray-700">
-          <div v-for="activity in recentActivity" :key="activity.id"
-            class="px-5 py-4 flex items-start gap-4 hover:bg-gray-750 transition-colors">
-            <div :class="[
-              'w-2 h-2 rounded-full mt-2 shrink-0',
-              activity.type === 'deploy' ? 'bg-green-500' :
-                activity.type === 'build' ? 'bg-blue-500' :
-                  activity.type === 'error' ? 'bg-red-500' : 'bg-gray-500'
-            ]" />
-            <div class="flex-1 min-w-0">
-              <p class="text-white text-sm">
-                <span class="font-medium">{{ activity.app }}</span>
-                <span class="text-gray-400"> {{ activity.message }}</span>
-              </p>
-              <p class="text-gray-500 text-xs mt-1">{{ activity.time }}</p>
-            </div>
+          <div v-if="loadingActivity" class="px-5 py-8 flex justify-center">
+            <div class="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
           </div>
-          <div v-if="recentActivity.length === 0" class="px-5 py-8 text-center text-gray-500">
+          <template v-else-if="recentActivity.length > 0">
+            <div 
+              v-for="activity in recentActivity" 
+              :key="activity.id"
+              class="px-5 py-4 flex items-start gap-4 hover:bg-gray-750 transition-colors"
+            >
+              <div :class="[
+                'w-2 h-2 rounded-full mt-2 shrink-0',
+                activity.status === 'success' ? 'bg-green-500' :
+                activity.status === 'running' ? 'bg-blue-500' :
+                activity.status === 'failure' ? 'bg-red-500' : 'bg-gray-500'
+              ]" />
+              <div class="flex-1 min-w-0">
+                <p class="text-white text-sm">
+                  <router-link :to="`/apps/${activity.appId}`" class="font-medium hover:text-blue-400">
+                    {{ activity.appName }}
+                  </router-link>
+                  <span class="text-gray-400"> {{ activity.message }}</span>
+                </p>
+                <p class="text-gray-500 text-xs mt-1">{{ activity.time }}</p>
+              </div>
+            </div>
+          </template>
+          <div v-else class="px-5 py-8 text-center text-gray-500">
             No recent activity
           </div>
         </div>
@@ -53,8 +71,13 @@
           <h2 class="text-lg font-medium text-white">Quick Actions</h2>
         </div>
         <div class="p-4 space-y-2">
-          <button v-for="action in quickActions" :key="action.label" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left
-              bg-gray-700/50 hover:bg-gray-700 transition-colors group">
+          <button 
+            v-for="action in quickActions" 
+            :key="action.label" 
+            @click="action.onClick"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left
+                   bg-gray-700/50 hover:bg-gray-700 transition-colors group"
+          >
             <component :is="action.icon" class="w-5 h-5 text-gray-400 group-hover:text-white" />
             <span class="text-gray-300 group-hover:text-white text-sm">{{ action.label }}</span>
           </button>
@@ -62,17 +85,27 @@
       </div>
     </div>
 
-    <!-- Build Status -->
+    <!-- Recent Builds -->
     <div class="bg-gray-800 rounded-lg border border-gray-700">
       <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
         <h2 class="text-lg font-medium text-white">Recent Builds</h2>
         <router-link to="/apps" class="text-sm text-blue-400 hover:text-blue-300">View all</router-link>
       </div>
-      <div class="overflow-x-auto">
+      
+      <div v-if="loadingBuilds" class="px-5 py-8 flex justify-center">
+        <div class="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+      </div>
+      
+      <div v-else-if="recentBuilds.length === 0" class="px-5 py-8 text-center text-gray-500">
+        No recent builds
+      </div>
+      
+      <div v-else class="overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="text-left text-gray-400 text-sm border-b border-gray-700">
               <th class="px-5 py-3 font-medium">Application</th>
+              <th class="px-5 py-3 font-medium">Build</th>
               <th class="px-5 py-3 font-medium">Status</th>
               <th class="px-5 py-3 font-medium">Branch</th>
               <th class="px-5 py-3 font-medium">Duration</th>
@@ -80,60 +113,589 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-700">
-            <tr v-for="build in recentBuilds" :key="build.id" class="hover:bg-gray-750 transition-colors">
+            <tr 
+              v-for="build in recentBuilds" 
+              :key="`${build.appId}-${build.id}`" 
+              class="hover:bg-gray-750 transition-colors"
+            >
               <td class="px-5 py-4">
-                <span class="text-white text-sm">{{ build.app }}</span>
+                <router-link :to="`/apps/${build.appId}`" class="text-white text-sm hover:text-blue-400">
+                  {{ build.appName }}
+                </router-link>
+              </td>
+              <td class="px-5 py-4">
+                <a 
+                  :href="build.link" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  class="text-blue-400 hover:text-blue-300 text-sm"
+                >
+                  #{{ build.number }}
+                </a>
               </td>
               <td class="px-5 py-4">
                 <span :class="[
-                  'inline-flex items-center px-2 py-1 rounded text-xs font-medium',
+                  'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium',
                   build.status === 'success' ? 'bg-green-500/20 text-green-400' :
-                    build.status === 'running' ? 'bg-blue-500/20 text-blue-400' :
-                      build.status === 'failed' ? 'bg-red-500/20 text-red-400' :
-                        'bg-gray-500/20 text-gray-400'
+                  build.status === 'running' ? 'bg-blue-500/20 text-blue-400' :
+                  build.status === 'failure' ? 'bg-red-500/20 text-red-400' :
+                  build.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-gray-500/20 text-gray-400'
                 ]">
+                  <span :class="[
+                    'w-1.5 h-1.5 rounded-full',
+                    build.status === 'success' ? 'bg-green-400' :
+                    build.status === 'running' ? 'bg-blue-400 animate-pulse' :
+                    build.status === 'failure' ? 'bg-red-400' :
+                    build.status === 'pending' ? 'bg-yellow-400' : 'bg-gray-400'
+                  ]" />
                   {{ build.status }}
                 </span>
               </td>
-              <td class="px-5 py-4 text-gray-400 text-sm">{{ build.branch }}</td>
-              <td class="px-5 py-4 text-gray-400 text-sm">{{ build.duration }}</td>
-              <td class="px-5 py-4 text-gray-500 text-sm">{{ build.time }}</td>
+              <td class="px-5 py-4 text-gray-400 text-sm">{{ build.branch || '-' }}</td>
+              <td class="px-5 py-4 text-gray-400 text-sm">{{ formatDuration(build.duration) }}</td>
+              <td class="px-5 py-4 text-gray-500 text-sm">{{ formatTime(build.startedAt) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Create Project Modal -->
+    <Modal :open="showProjectModal" title="New Project" @close="showProjectModal = false">
+      <form @submit.prevent="createProject" class="space-y-4">
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Name *</label>
+          <input 
+            v-model="projectForm.name" 
+            type="text" 
+            placeholder="my-project"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600" 
+          />
+        </div>
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Description</label>
+          <textarea 
+            v-model="projectForm.description" 
+            rows="3"
+            placeholder="Project description..."
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" 
+          />
+        </div>
+        <div v-if="projectError" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+          <p class="text-red-400 text-sm">{{ projectError }}</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" @click="showProjectModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            :disabled="!projectForm.name || savingProject"
+            :class="[
+              'px-4 py-2 rounded-lg font-medium transition-colors',
+              projectForm.name && !savingProject
+                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            ]"
+          >
+            {{ savingProject ? 'Creating...' : 'Create Project' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
+
+    <!-- Create App Modal -->
+    <Modal :open="showAppModal" title="New Application" size="lg" @close="showAppModal = false">
+      <form @submit.prevent="createApp" class="space-y-4">
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Name *</label>
+          <input 
+            v-model="appForm.name" 
+            type="text" 
+            placeholder="my-awesome-api"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600" 
+          />
+        </div>
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Project *</label>
+          <select 
+            v-model="appForm.projectId"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600"
+          >
+            <option value="">Select project</option>
+            <option v-for="project in projects" :key="project.id" :value="project.id">
+              {{ project.name }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Template *</label>
+          <select 
+            v-model="appForm.templateId"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600"
+          >
+            <option value="">Select template</option>
+            <option v-for="template in templates" :key="template.id" :value="template.id">
+              {{ template.name }} ({{ template.language }})
+            </option>
+          </select>
+        </div>
+        <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Kind</label>
+            <input :value="selectedTemplate.kind" disabled class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-400" />
+          </div>
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Language</label>
+            <input :value="selectedTemplate.language" disabled class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-400" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Description</label>
+          <textarea 
+            v-model="appForm.description" 
+            rows="2"
+            placeholder="Application description..."
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" 
+          />
+        </div>
+        <div v-if="appError" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+          <p class="text-red-400 text-sm">{{ appError }}</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" @click="showAppModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            :disabled="!canCreateApp || savingApp"
+            :class="[
+              'px-4 py-2 rounded-lg font-medium transition-colors',
+              canCreateApp && !savingApp
+                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            ]"
+          >
+            {{ savingApp ? 'Creating...' : 'Create Application' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
+
+    <!-- Create Template Modal -->
+    <Modal :open="showTemplateModal" title="Add Template" size="lg" @close="showTemplateModal = false">
+      <form @submit.prevent="createTemplate" class="space-y-4">
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Repository *</label>
+          <div class="relative">
+            <input 
+              v-model="repoSearch" 
+              type="text" 
+              placeholder="Search repositories..."
+              @focus="showRepoDropdown = true"
+              class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                     placeholder-gray-500 focus:outline-none focus:border-gray-600" 
+            />
+            <div v-if="showRepoDropdown && filteredRepos.length > 0" 
+              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
+              <button 
+                v-for="repo in filteredRepos" 
+                :key="repo.id" 
+                type="button"
+                @click="selectRepo(repo)"
+                class="w-full px-4 py-2.5 text-left hover:bg-gray-800 transition-colors"
+              >
+                <p class="text-white text-sm">{{ repo.fullName }}</p>
+              </button>
+            </div>
+          </div>
+          <div v-if="selectedRepo" class="mt-2 p-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-between">
+            <p class="text-white text-sm">{{ selectedRepo.fullName }}</p>
+            <button type="button" @click="selectedRepo = null" class="text-gray-500 hover:text-white">
+              <XMarkIcon class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Template Name *</label>
+          <input 
+            v-model="templateForm.name" 
+            type="text" 
+            placeholder="Go API Template"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600" 
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Kind *</label>
+            <select v-model="templateForm.kind" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600">
+              <option value="">Select kind</option>
+              <option value="api">API</option>
+              <option value="web">Web</option>
+              <option value="worker">Worker</option>
+              <option value="cli">CLI</option>
+              <option value="library">Library</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Language *</label>
+            <select v-model="templateForm.language" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600">
+              <option value="">Select language</option>
+              <option value="go">Go</option>
+              <option value="typescript">TypeScript</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="rust">Rust</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Description</label>
+          <textarea 
+            v-model="templateForm.description" 
+            rows="2"
+            placeholder="Template description..."
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" 
+          />
+        </div>
+        <div v-if="templateError" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+          <p class="text-red-400 text-sm">{{ templateError }}</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" @click="showTemplateModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            :disabled="!canCreateTemplate || savingTemplate"
+            :class="[
+              'px-4 py-2 rounded-lg font-medium transition-colors',
+              canCreateTemplate && !savingTemplate
+                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            ]"
+          >
+            {{ savingTemplate ? 'Adding...' : 'Add Template' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   FolderIcon,
   CubeIcon,
   WrenchScrewdriverIcon,
-  CheckCircleIcon,
+  DocumentDuplicateIcon,
   PlusIcon,
-  CloudArrowUpIcon,
-  DocumentPlusIcon,
-  Cog6ToothIcon
+  RocketLaunchIcon,
+  Cog6ToothIcon,
+  XMarkIcon
 } from '@heroicons/vue/24/outline';
+import { appsApi, projectsApi, templatesApi, forgeApi, type CreateAppRequest, type CreateProjectRequest, type CreateTemplateRequest } from '../api';
+import type { App } from '../types/App';
+import type { Project } from '../types/Project';
+import type { Template } from '../types/Template';
+import type { Build } from '../types/Build';
+import type { Repo } from '../types/Repo';
+import Modal from '../components/ui/Modal.vue';
 
-const stats = ref([
-  { label: 'Projects', value: '0', icon: FolderIcon },
-  { label: 'Applications', value: '0', icon: CubeIcon },
-  { label: 'Builds Today', value: '0', icon: WrenchScrewdriverIcon },
-  { label: 'Deployments', value: '0', icon: CheckCircleIcon },
+const router = useRouter();
+
+// Loading states
+const loading = ref(true);
+const loadingActivity = ref(true);
+const loadingBuilds = ref(true);
+
+// Data
+const apps = ref<App[]>([]);
+const projects = ref<Project[]>([]);
+const templates = ref<Template[]>([]);
+const repos = ref<Repo[]>([]);
+
+// Stats
+const stats = computed(() => [
+  { label: 'Projects', value: projects.value.length, icon: FolderIcon, to: '/projects' },
+  { label: 'Applications', value: apps.value.length, icon: CubeIcon, to: '/apps' },
+  { label: 'Templates', value: templates.value.length, icon: DocumentDuplicateIcon, to: '/templates' },
+  { label: 'Total Builds', value: totalBuilds.value, icon: WrenchScrewdriverIcon, to: '/apps' },
 ]);
 
-const recentActivity = ref<{ id: number; app: string; message: string; type: string; time: string }[]>([]);
+// Builds
+const allBuilds = ref<(Build & { appId: number; appName: string })[]>([]);
+const totalBuilds = computed(() => allBuilds.value.length);
 
-const quickActions = ref([
-  { label: 'Create new project', icon: PlusIcon },
-  { label: 'Import from forge', icon: CloudArrowUpIcon },
-  { label: 'Create from template', icon: DocumentPlusIcon },
-  { label: 'Configure integrations', icon: Cog6ToothIcon },
+const recentBuilds = computed(() => 
+  allBuilds.value
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    .slice(0, 5)
+);
+
+// Activity (derived from builds)
+const recentActivity = computed(() => 
+  allBuilds.value
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    .slice(0, 5)
+    .map(build => ({
+      id: `${build.appId}-${build.id}`,
+      appId: build.appId,
+      appName: build.appName,
+      status: build.status,
+      message: `build #${build.number} ${build.status}`,
+      time: formatTime(build.startedAt),
+    }))
+);
+
+// Quick actions
+const quickActions = computed(() => [
+  { label: 'Create new project', icon: PlusIcon, onClick: () => showProjectModal.value = true },
+  { label: 'Create new application', icon: RocketLaunchIcon, onClick: openAppModal },
+  { label: 'Add template', icon: DocumentDuplicateIcon, onClick: openTemplateModal },
+  { label: 'Settings', icon: Cog6ToothIcon, onClick: () => router.push('/settings') },
 ]);
 
-const recentBuilds = ref<{ id: number; app: string; status: string; branch: string; duration: string; time: string }[]>([]);
+// Project modal
+const showProjectModal = ref(false);
+const savingProject = ref(false);
+const projectError = ref('');
+const projectForm = reactive<CreateProjectRequest>({
+  name: '',
+  description: '',
+});
+
+// App modal
+const showAppModal = ref(false);
+const savingApp = ref(false);
+const appError = ref('');
+const appForm = reactive({
+  name: '',
+  description: '',
+  projectId: '' as number | '',
+  templateId: '' as number | '',
+});
+
+const selectedTemplate = computed(() => 
+  templates.value.find(t => t.id === appForm.templateId)
+);
+
+const canCreateApp = computed(() => 
+  appForm.name && appForm.projectId && appForm.templateId
+);
+
+// Template modal
+const showTemplateModal = ref(false);
+const savingTemplate = ref(false);
+const templateError = ref('');
+const repoSearch = ref('');
+const showRepoDropdown = ref(false);
+const selectedRepo = ref<Repo | null>(null);
+const templateForm = reactive({
+  name: '',
+  description: '',
+  kind: '',
+  language: '',
+});
+
+const filteredRepos = computed(() => {
+  if (!repoSearch.value) return repos.value.slice(0, 10);
+  return repos.value.filter(r =>
+    r.fullName.toLowerCase().includes(repoSearch.value.toLowerCase())
+  ).slice(0, 10);
+});
+
+const canCreateTemplate = computed(() => 
+  templateForm.name && templateForm.kind && templateForm.language && selectedRepo.value
+);
+
+// Methods
+const formatDuration = (seconds: number) => {
+  if (!seconds) return '-';
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+};
+
+const formatTime = (dateString: string) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+};
+
+const fetchData = async () => {
+  try {
+    loading.value = true;
+    const [appsData, projectsData, templatesData] = await Promise.all([
+      appsApi.getAll(),
+      projectsApi.getAll(),
+      templatesApi.getAll(),
+    ]);
+    apps.value = appsData;
+    projects.value = projectsData;
+    templates.value = templatesData;
+  } catch (e) {
+    console.error('Failed to fetch data:', e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchBuilds = async () => {
+  loadingActivity.value = true;
+  loadingBuilds.value = true;
+  
+  try {
+    const buildsPromises = apps.value.map(async (app) => {
+      try {
+        const builds = await appsApi.getBuilds(app.id);
+        return builds.map(build => ({
+          ...build,
+          appId: app.id,
+          appName: app.name,
+        }));
+      } catch {
+        return [];
+      }
+    });
+
+    const results = await Promise.all(buildsPromises);
+    allBuilds.value = results.flat();
+  } catch (e) {
+    console.error('Failed to fetch builds:', e);
+  } finally {
+    loadingActivity.value = false;
+    loadingBuilds.value = false;
+  }
+};
+
+const openAppModal = async () => {
+  showAppModal.value = true;
+  // Data already fetched
+};
+
+const openTemplateModal = async () => {
+  showTemplateModal.value = true;
+  if (repos.value.length === 0) {
+    try {
+      repos.value = await forgeApi.getRepos();
+    } catch (e) {
+      console.error('Failed to fetch repos:', e);
+    }
+  }
+};
+
+const selectRepo = (repo: Repo) => {
+  selectedRepo.value = repo;
+  repoSearch.value = '';
+  showRepoDropdown.value = false;
+  if (!templateForm.name) {
+    templateForm.name = repo.fullName.split('/').pop() || '';
+  }
+};
+
+const createProject = async () => {
+  projectError.value = '';
+  savingProject.value = true;
+
+  try {
+    const project = await projectsApi.create(projectForm);
+    projects.value.push(project);
+    showProjectModal.value = false;
+    projectForm.name = '';
+    projectForm.description = '';
+    router.push(`/projects/${project.id}`);
+  } catch (e: any) {
+    projectError.value = e.message;
+  } finally {
+    savingProject.value = false;
+  }
+};
+
+const createApp = async () => {
+  if (!selectedTemplate.value) return;
+
+  appError.value = '';
+  savingApp.value = true;
+
+  try {
+    const request: CreateAppRequest = {
+      name: appForm.name,
+      description: appForm.description,
+      projectId: appForm.projectId as number,
+      templateId: appForm.templateId as number,
+      kind: selectedTemplate.value.kind,
+      language: selectedTemplate.value.language,
+    };
+
+    const app = await appsApi.create(request);
+    apps.value.push(app);
+    showAppModal.value = false;
+    appForm.name = '';
+    appForm.description = '';
+    appForm.projectId = '';
+    appForm.templateId = '';
+    router.push(`/apps/${app.id}`);
+  } catch (e: any) {
+    appError.value = e.message;
+  } finally {
+    savingApp.value = false;
+  }
+};
+
+const createTemplate = async () => {
+  if (!selectedRepo.value) return;
+
+  templateError.value = '';
+  savingTemplate.value = true;
+
+  try {
+    const request: CreateTemplateRequest = {
+      name: templateForm.name,
+      description: templateForm.description,
+      kind: templateForm.kind,
+      language: templateForm.language,
+      repoUrl: selectedRepo.value.url,
+    };
+
+    const template = await templatesApi.create(request);
+    templates.value.push(template);
+    showTemplateModal.value = false;
+    templateForm.name = '';
+    templateForm.description = '';
+    templateForm.kind = '';
+    templateForm.language = '';
+    selectedRepo.value = null;
+  } catch (e: any) {
+    templateError.value = e.message;
+  } finally {
+    savingTemplate.value = false;
+  }
+};
+
+// Lifecycle
+onMounted(async () => {
+  await fetchData();
+  await fetchBuilds();
+});
 </script>

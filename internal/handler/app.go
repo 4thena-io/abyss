@@ -24,6 +24,7 @@ type AppHandler struct {
 func NewAppHandler() *AppHandler {
 	appRepository := repository.NewAppRepository(database.Connection)
 	projectRepository := repository.NewProjectRepository(database.Connection)
+	templateRepository := repository.NewTemplateRepository(database.Connection)
 
 	forge, err := forge.NewForge()
 	if err != nil {
@@ -34,7 +35,7 @@ func NewAppHandler() *AppHandler {
 		log.Fatalf("failed to create a ci provider: %s", err)
 	}
 
-	service := service.NewAppService(*appRepository, *projectRepository, forge, ciProvider)
+	service := service.NewAppService(*appRepository, *projectRepository, *templateRepository, forge, ciProvider)
 
 	return &AppHandler{*service}
 }
@@ -147,8 +148,33 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := make([]response.Build, len(builds))
+	for i, build := range builds {
+		res[i] = response.Build{
+			ID:       build.ID,
+			Number:   build.Number,
+			Status:   build.Status,
+			Branch:   build.Branch,
+			Commit:   build.Commit,
+			Duration: build.Duration,
+			Link:     build.Link,
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(builds)
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+
+	err = h.service.DeleteApp(r.Context(), uint(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 }
 
 func (h *AppHandler) RegisterRoutes(router *mux.Router) {
@@ -156,4 +182,5 @@ func (h *AppHandler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("", h.GetAllApps).Methods("GET")
 	router.HandleFunc("/{id}", h.GetAppByID).Methods("GET")
 	router.HandleFunc("/{id}/builds", h.GetAppBuilds).Methods("GET")
+	router.HandleFunc("/{id}", h.DeleteApp).Methods("DELETE")
 }

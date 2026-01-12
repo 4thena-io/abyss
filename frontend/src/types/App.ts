@@ -1,5 +1,5 @@
 export interface App {
-  id: string;
+  id: number;
   name: string;
   description: string;
   kind: string;

@@ -20,7 +20,7 @@ func NewProjectService(repository repository.ProjectRepository) *ProjectService 
 }
 
 func (s *ProjectService) GetAllProjects(ctx context.Context) ([]model.Project, error) {
-	data, err := s.repository.GetAllProjects(ctx)
+	data, err := s.repository.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (s *ProjectService) GetAllProjects(ctx context.Context) ([]model.Project, e
 }
 
 func (s *ProjectService) GetProjectByID(ctx context.Context, id uint) (*model.Project, error) {
-	data, err := s.repository.GetProjectByID(ctx, id)
+	data, err := s.repository.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, id uint) (*model.Pr
 }
 
 func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project) (*model.Project, error) {
-	existing, err := s.repository.GetProjectByName(ctx, project.Name)
+	existing, err := s.repository.GetByName(ctx, project.Name)
 	if err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -48,10 +48,21 @@ func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project
 		return nil, fmt.Errorf("the project already exists")
 	}
 
- 	err = s.repository.SaveProject(ctx, project)
+ 	err = s.repository.Save(ctx, project)
 	if err != nil {
 		return nil, err
 	}
 
 	return project, nil
+}
+
+func (s *ProjectService) DeleteProject(ctx context.Context, id uint) error {
+	project, err := s.repository.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if project == nil {
+		return fmt.Errorf("template doesn't exist")
+	}
+	return s.repository.Delete(ctx, project)
 }

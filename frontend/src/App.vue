@@ -13,8 +13,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { RouterView } from 'vue-router';
-import Header from './components/Header.vue';
-import Sidebar from './components/Sidebar.vue';
+import Header from './components/layout/Header.vue';
+import Sidebar from './components/layout/Sidebar.vue';
 
 const sidebarExpanded = ref(false);
 </script>

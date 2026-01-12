@@ -9,8 +9,3 @@ type Build struct {
 	Duration  int64     `json:"duration"`
 	Link      string    `json:"link"`
 }
-
-type ActivateRepo struct {
-	RepoId  int64  `json:"repoId"`
-	RepoUrl string `json:"repoUrl"`
-}

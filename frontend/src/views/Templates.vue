@@ -5,11 +5,10 @@
         <h1 class="text-2xl font-semibold text-white">Templates</h1>
         <p class="text-gray-400 mt-1">{{ templateList.length }} templates available</p>
       </div>
-      <button @click="showModal = true" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 
-          text-white text-sm font-medium rounded-lg transition-colors">
+      <Button @click="openModal" variant="secondary">
         <PlusIcon class="w-4 h-4" />
         Add Template
-      </button>
+      </Button>
     </div>
 
     <!-- Filters -->
@@ -118,83 +117,99 @@
     </div>
 
     <!-- Add Template Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60" @click="closeModal" />
-      <div class="relative bg-gray-800 border border-gray-700 rounded-lg w-full max-w-lg p-6">
-        <h2 class="text-xl font-semibold text-white mb-4">Add Template</h2>
+    <Modal :open="showModal" title="Add Template" size="lg" @close="closeModal">
+      <form @submit.prevent="createTemplate" class="space-y-4">
+        <!-- Repo Selection -->
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Repository *</label>
+          <div class="relative">
+            <input v-model="repoSearch" type="text" placeholder="Search repositories..."
+              @focus="showRepoDropdown = true" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                     placeholder-gray-500 focus:outline-none focus:border-gray-600" />
 
-        <div class="space-y-4">
-          <!-- Repo Selection -->
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Repository</label>
-            <div class="relative">
-              <input v-model="repoSearch" type="text" placeholder="Search repositories..."
-                @focus="showRepoDropdown = true" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                  placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-              <div v-if="showRepoDropdown && filteredRepos.length > 0" class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg 
-                  max-h-48 overflow-y-auto">
-                <button v-for="repo in filteredRepos" :key="repo.id" @click="selectRepo(repo)"
-                  class="w-full px-4 py-2.5 text-left hover:bg-gray-800 transition-colors">
-                  <p class="text-white text-sm">{{ repo.full_name }}</p>
-                  <p v-if="repo.description" class="text-gray-500 text-xs truncate">{{ repo.description }}</p>
-                </button>
-              </div>
-              <div v-if="showRepoDropdown && repoSearch && filteredRepos.length === 0 && !loadingRepos"
-                class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-                <p class="text-gray-500 text-sm">No repositories found</p>
-              </div>
-              <div v-if="loadingRepos"
-                class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-                <div class="w-5 h-5 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin mx-auto" />
-              </div>
-            </div>
-            <div v-if="selectedRepo"
-              class="mt-2 p-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-between">
-              <div>
-                <p class="text-white text-sm">{{ selectedRepo.full_name }}</p>
-                <p class="text-gray-500 text-xs">{{ selectedRepo.clone_url }}</p>
-              </div>
-              <button @click="clearRepo" class="text-gray-500 hover:text-white">
-                <XMarkIcon class="w-4 h-4" />
+            <!-- Repo dropdown -->
+            <div v-if="showRepoDropdown && filteredRepos.length > 0"
+              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
+              <button v-for="repo in filteredRepos" :key="repo.id" type="button" @click="selectRepo(repo)"
+                class="w-full px-4 py-2.5 text-left hover:bg-gray-800 transition-colors">
+                <p class="text-white text-sm">{{ repo.fullName }}</p>
               </button>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Template Name</label>
-            <input v-model="form.name" type="text" placeholder="Go API Template" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-          </div>
-
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Description</label>
-            <textarea v-model="form.description" rows="2" placeholder="Standard Go API with Echo framework..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-gray-400 text-sm mb-2">Kind</label>
-              <input v-model="form.kind" type="text" placeholder="api, cli, web..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                  placeholder-gray-500 focus:outline-none focus:border-gray-600" />
+            <!-- No repos found -->
+            <div v-if="showRepoDropdown && repoSearch && filteredRepos.length === 0 && !loadingRepos"
+              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
+              <p class="text-gray-500 text-sm">No repositories found</p>
             </div>
-            <div>
-              <label class="block text-gray-400 text-sm mb-2">Language</label>
-              <input v-model="form.language" type="text" placeholder="go, vue, python..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                  placeholder-gray-500 focus:outline-none focus:border-gray-600" />
+
+            <!-- Loading repos -->
+            <div v-if="loadingRepos"
+              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
+              <div class="w-5 h-5 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin mx-auto" />
             </div>
+          </div>
+
+          <!-- Selected repo chip -->
+          <div v-if="selectedRepo"
+            class="mt-2 p-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-between">
+            <p class="text-white text-sm">{{ selectedRepo.fullName }}</p>
+            <button type="button" @click="clearRepo" class="text-gray-500 hover:text-white">
+              <XMarkIcon class="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        <div v-if="error" class="mt-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Template Name *</label>
+          <input v-model="form.name" type="text" placeholder="Go API Template" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600" />
+        </div>
+
+        <div>
+          <label class="block text-gray-400 text-sm mb-2">Description</label>
+          <textarea v-model="form.description" rows="2" placeholder="Standard Go API with Echo framework..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Kind *</label>
+            <select v-model="form.kind" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                     focus:outline-none focus:border-gray-600">
+              <option value="">Select kind</option>
+              <option value="api">API</option>
+              <option value="web">Web</option>
+              <option value="worker">Worker</option>
+              <option value="cli">CLI</option>
+              <option value="library">Library</option>
+              <option value="job">Job</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Language *</label>
+            <select v-model="form.language" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
+                     focus:outline-none focus:border-gray-600">
+              <option value="">Select language</option>
+              <option value="go">Go</option>
+              <option value="typescript">TypeScript</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="rust">Rust</option>
+              <option value="csharp">C#</option>
+            </select>
+          </div>
+        </div>
+
+        <div v-if="error" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
           <p class="text-red-400 text-sm">{{ error }}</p>
         </div>
 
-        <div class="flex items-center justify-end gap-3 mt-6">
-          <button @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
             Cancel
           </button>
-          <button @click="createTemplate" :disabled="!canCreate || saving" :class="[
+          <button type="submit" :disabled="!canCreate || saving" :class="[
             'px-4 py-2 rounded-lg font-medium transition-colors',
             canCreate && !saving
               ? 'bg-blue-600 hover:bg-blue-500 text-white'
@@ -203,13 +218,13 @@
             {{ saving ? 'Adding...' : 'Add Template' }}
           </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -220,22 +235,23 @@ import {
   ChevronDownIcon
 } from '@heroicons/vue/24/outline';
 import type { Template } from '../types/Template';
+import type { Repo } from '../types/Repo';
+import { templatesApi, forgeApi, type CreateTemplateRequest } from '../api';
+import Modal from '../components/ui/Modal.vue';
+import Button from '../components/ui/Button.vue';
 
-interface Repo {
-  id: number;
-  full_name: string;
-  description: string;
-  html_url: string;
-  clone_url: string;
-}
-
+// List state
 const templateList = ref<Template[]>([]);
 const loading = ref(true);
+
+// Filter state
 const search = ref('');
 const kindFilter = ref('');
 const languageFilter = ref('');
 const showKindDropdown = ref(false);
 const showLanguageDropdown = ref(false);
+
+// Modal state
 const showModal = ref(false);
 const saving = ref(false);
 const error = ref('');
@@ -247,18 +263,20 @@ const showRepoDropdown = ref(false);
 const loadingRepos = ref(false);
 const selectedRepo = ref<Repo | null>(null);
 
-const form = ref({
+// Form state
+const form = reactive({
   name: '',
   description: '',
   kind: '',
   language: '',
 });
 
+// Computed
 const filteredTemplates = computed(() => {
   return templateList.value.filter(t => {
     const matchesSearch = !search.value ||
       t.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      t.description.toLowerCase().includes(search.value.toLowerCase());
+      t.description?.toLowerCase().includes(search.value.toLowerCase());
     const matchesKind = !kindFilter.value || t.kind === kindFilter.value;
     const matchesLanguage = !languageFilter.value || t.language === languageFilter.value;
     return matchesSearch && matchesKind && matchesLanguage;
@@ -274,18 +292,22 @@ const uniqueLanguages = computed(() => {
 });
 
 const canCreate = computed(() => {
-  return form.value.name && form.value.kind && form.value.language && selectedRepo.value;
+  return form.name && form.kind && form.language && selectedRepo.value;
 });
 
 const filteredRepos = computed(() => {
   if (!repoSearch.value) return repos.value.slice(0, 10);
   return repos.value.filter(r =>
-    r.full_name.toLowerCase().includes(repoSearch.value.toLowerCase())
+    r.fullName.toLowerCase().includes(repoSearch.value.toLowerCase())
   ).slice(0, 10);
 });
 
+// Methods
 const resetForm = () => {
-  form.value = { name: '', description: '', kind: '', language: '' };
+  form.name = '';
+  form.description = '';
+  form.kind = '';
+  form.language = '';
   selectedRepo.value = null;
   repoSearch.value = '';
   showRepoDropdown.value = false;
@@ -297,13 +319,17 @@ const closeModal = () => {
   resetForm();
 };
 
+const openModal = async () => {
+  showModal.value = true;
+  await fetchRepos();
+};
+
 const selectRepo = (repo: Repo) => {
   selectedRepo.value = repo;
   repoSearch.value = '';
   showRepoDropdown.value = false;
-  // Auto-fill name from repo if empty
-  if (!form.value.name) {
-    form.value.name = repo.full_name.split('/').pop() || '';
+  if (!form.name) {
+    form.name = repo.fullName.split('/').pop() || '';
   }
 };
 
@@ -314,9 +340,7 @@ const clearRepo = () => {
 const fetchRepos = async () => {
   loadingRepos.value = true;
   try {
-    const response = await fetch('/api/forge/repos');
-    if (!response.ok) throw new Error('Failed to fetch repos');
-    repos.value = await response.json();
+    repos.value = await forgeApi.getRepos();
   } catch (e) {
     console.error('Failed to fetch repos:', e);
   } finally {
@@ -327,9 +351,7 @@ const fetchRepos = async () => {
 const fetchTemplates = async () => {
   try {
     loading.value = true;
-    const response = await fetch('/api/templates');
-    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-    templateList.value = await response.json();
+    templateList.value = await templatesApi.getAll();
   } catch (e) {
     console.error('Failed to fetch templates:', e);
   } finally {
@@ -344,24 +366,15 @@ const createTemplate = async () => {
   saving.value = true;
 
   try {
-    const response = await fetch('/api/templates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: form.value.name,
-        description: form.value.description,
-        kind: form.value.kind,
-        language: form.value.language,
-        repoUrl: selectedRepo.value.html_url,
-      }),
-    });
+    const request: CreateTemplateRequest = {
+      name: form.name,
+      description: form.description,
+      kind: form.kind,
+      language: form.language,
+      repoUrl: selectedRepo.value.url,
+    };
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || 'Failed to create template');
-    }
-
-    const template = await response.json();
+    const template = await templatesApi.create(request);
     templateList.value.push(template);
     closeModal();
   } catch (e: any) {
@@ -371,27 +384,16 @@ const createTemplate = async () => {
   }
 };
 
-const deleteTemplate = async (id: string) => {
+const deleteTemplate = async (id: number) => {
   if (!confirm('Are you sure you want to delete this template?')) return;
 
   try {
-    const response = await fetch(`/api/templates/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error('Failed to delete');
+    await templatesApi.delete(id);
     templateList.value = templateList.value.filter(t => t.id !== id);
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to delete template:', e);
   }
 };
-
-onMounted(() => {
-  fetchTemplates();
-  fetchRepos();
-  document.addEventListener('click', closeDropdowns);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeDropdowns);
-});
 
 const closeDropdowns = (e: Event) => {
   const target = e.target as HTMLElement;
@@ -400,4 +402,14 @@ const closeDropdowns = (e: Event) => {
     showLanguageDropdown.value = false;
   }
 };
+
+// Lifecycle
+onMounted(() => {
+  fetchTemplates();
+  document.addEventListener('click', closeDropdowns);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdowns);
+});
 </script>

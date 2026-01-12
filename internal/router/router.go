@@ -14,6 +14,7 @@ func New() *mux.Router {
 	handler.NewAppHandler().RegisterRoutes(api.PathPrefix("/apps").Subrouter())
 	handler.NewProjectHandler().RegisterRoutes(api.PathPrefix("/projects").Subrouter())
 	handler.NewTemplateHandler().RegisterRoutes(api.PathPrefix("/templates").Subrouter())
+	handler.NewRepoHandler().RegisterRoutes(api.PathPrefix("/forge/repos").Subrouter())
 
 	// Frontend
 	web.NewFrontendHandler().RegisterRoutes(router)

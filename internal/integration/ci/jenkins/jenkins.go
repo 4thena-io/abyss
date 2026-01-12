@@ -3,8 +3,7 @@ package jenkins
 import (
 	"context"
 
-	"git.4thena.io/4thena/abys/internal/dto/request"
-	"git.4thena.io/4thena/abys/internal/dto/response"
+	"git.4thena.io/4thena/abys/internal/model"
 )
 
 type JenkinsCi struct{}
@@ -13,15 +12,15 @@ func NewJenkinsCi(url, token string) (*JenkinsCi, error) {
 	return &JenkinsCi{}, nil
 }
 
-func (c *JenkinsCi) ActivateRepo(ctx context.Context, req request.ActivateRepo) (*response.ActivateRepo, error) {
-	return &response.ActivateRepo{
-		RepoId:  1,
-		RepoUrl: "https://jenkins.com/1",
+func (c *JenkinsCi) ActivateRepo(ctx context.Context, ID int64) (*model.CIRepo, error) {
+	return &model.CIRepo{
+		ID: 1,
+		URL: "https://jenkins.com/1",
 	}, nil
 }
 
-func (c *JenkinsCi) GetBuilds(ctx context.Context, repoId int64) ([]response.Build, error) {
-	res := make([]response.Build, 1)
-	res[0] = response.Build{}
+func (c *JenkinsCi) GetBuilds(ctx context.Context, ID int64) ([]model.Build, error) {
+	res := make([]model.Build, 1)
+	res[0] = model.Build{}
 	return res, nil
 }

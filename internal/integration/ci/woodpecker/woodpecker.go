@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/dto/request"
-	"git.4thena.io/4thena/abys/internal/dto/response"
+	"git.4thena.io/4thena/abys/internal/model"
 	"go.woodpecker-ci.org/woodpecker/v3/woodpecker-go/woodpecker"
 	"golang.org/x/oauth2"
 )
@@ -30,34 +29,35 @@ func NewWoodpeckerCi(url, token string) (*WoodpeckerCi, error) {
 	}, nil
 }
 
-func (c *WoodpeckerCi) ActivateRepo(ctx context.Context, req request.ActivateRepo) (*response.ActivateRepo, error) {
+func (c *WoodpeckerCi) ActivateRepo(ctx context.Context, ID int64) (*model.CIRepo, error) {
 	repo, err := c.client.RepoPost(woodpecker.RepoPostOptions{
-		ForgeRemoteID: req.ForgeRemoteId,
+		ForgeRemoteID: ID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to activate ci repo: %w", err)
 	}
-	return &response.ActivateRepo{
-		RepoId:  repo.ID,
-		RepoUrl: fmt.Sprintf("%s/repos/%d", c.host, repo.ID),
+	
+	return &model.CIRepo{
+		ID: repo.ID,
+		URL: fmt.Sprintf("%s/repos/%d", c.host, repo.ID),
 	}, nil
 }
 
-func (c *WoodpeckerCi) GetBuilds(ctx context.Context, repoID int64) ([]response.Build, error) {
-	builds, err := c.client.PipelineList(repoID, woodpecker.PipelineListOptions{})
+func (c *WoodpeckerCi) GetBuilds(ctx context.Context, ID int64) ([]model.Build, error) {
+	builds, err := c.client.PipelineList(ID, woodpecker.PipelineListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch builds: %w", err)
 	}
 
-	res := make([]response.Build, len(builds))
+	res := make([]model.Build, len(builds))
 	for i, build := range builds {
-		res[i] = response.Build{
+		res[i] = model.Build{
 			ID:     build.ID,
 			Number: build.Number,
 			Status: build.Status,
 			Branch: build.Branch,
 			Commit: build.Commit,
-			Link:   fmt.Sprintf("%s/repos/%d/pipeline/%d", c.host, repoID, build.Number),
+			Link:   fmt.Sprintf("%s/repos/%d/pipeline/%d", c.host, ID, build.Number),
 		}
 	}
 
