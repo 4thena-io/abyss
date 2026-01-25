@@ -1,7 +1,7 @@
 import { api } from './client';
 import type { Repo } from '../types/Repo';
 
-export const forgeApi = {
+export const repoApi = {
   getRepos: () =>
-    api.get<Repo[]>('/forge/repos'),
+    api.get<Repo[]>('/repos'),
 };
