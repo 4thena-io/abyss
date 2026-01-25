@@ -34,7 +34,7 @@
         </div>
         <div class="divide-y divide-gray-700">
           <div v-if="loadingActivity" class="px-5 py-8 flex justify-center">
-            <div class="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+            <Spinner size="md" />
           </div>
           <template v-else-if="recentActivity.length > 0">
             <div 
@@ -93,7 +93,7 @@
       </div>
       
       <div v-if="loadingBuilds" class="px-5 py-8 flex justify-center">
-        <div class="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+        <Spinner size="md" />
       </div>
       
       <div v-else-if="recentBuilds.length === 0" class="px-5 py-8 text-center text-gray-500">
@@ -134,23 +134,7 @@
                 </a>
               </td>
               <td class="px-5 py-4">
-                <span :class="[
-                  'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium',
-                  build.status === 'success' ? 'bg-green-500/20 text-green-400' :
-                  build.status === 'running' ? 'bg-blue-500/20 text-blue-400' :
-                  build.status === 'failure' ? 'bg-red-500/20 text-red-400' :
-                  build.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-gray-500/20 text-gray-400'
-                ]">
-                  <span :class="[
-                    'w-1.5 h-1.5 rounded-full',
-                    build.status === 'success' ? 'bg-green-400' :
-                    build.status === 'running' ? 'bg-blue-400 animate-pulse' :
-                    build.status === 'failure' ? 'bg-red-400' :
-                    build.status === 'pending' ? 'bg-yellow-400' : 'bg-gray-400'
-                  ]" />
-                  {{ build.status }}
-                </span>
+                <StatusBadge :status="build.status" />
               </td>
               <td class="px-5 py-4 text-gray-400 text-sm">{{ build.branch || '-' }}</td>
               <td class="px-5 py-4 text-gray-400 text-sm">{{ formatDuration(build.duration) }}</td>
@@ -164,29 +148,20 @@
     <!-- Create Project Modal -->
     <Modal :open="showProjectModal" title="New Project" @close="showProjectModal = false">
       <form @submit.prevent="createProject" class="space-y-4">
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Name *</label>
-          <input 
-            v-model="projectForm.name" 
-            type="text" 
-            placeholder="my-project"
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600" 
-          />
-        </div>
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Description</label>
-          <textarea 
-            v-model="projectForm.description" 
-            rows="3"
-            placeholder="Project description..."
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" 
-          />
-        </div>
-        <div v-if="projectError" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p class="text-red-400 text-sm">{{ projectError }}</p>
-        </div>
+        <FormField 
+          v-model="projectForm.name" 
+          label="Name" 
+          required 
+          placeholder="my-project" 
+        />
+        <FormField 
+          v-model="projectForm.description" 
+          label="Description" 
+          type="textarea" 
+          :rows="3" 
+          placeholder="Project description..." 
+        />
+        <ErrorAlert v-if="projectError" :message="projectError" />
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" @click="showProjectModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
             Cancel
@@ -210,63 +185,48 @@
     <!-- Create App Modal -->
     <Modal :open="showAppModal" title="New Application" size="lg" @close="showAppModal = false">
       <form @submit.prevent="createApp" class="space-y-4">
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Name *</label>
-          <input 
-            v-model="appForm.name" 
-            type="text" 
-            placeholder="my-awesome-api"
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600" 
-          />
-        </div>
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Project *</label>
-          <select 
-            v-model="appForm.projectId"
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600"
-          >
-            <option value="">Select project</option>
-            <option v-for="project in projects" :key="project.id" :value="project.id">
-              {{ project.name }}
-            </option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Template *</label>
-          <select 
-            v-model="appForm.templateId"
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600"
-          >
-            <option value="">Select template</option>
-            <option v-for="template in templates" :key="template.id" :value="template.id">
-              {{ template.name }} ({{ template.language }})
-            </option>
-          </select>
-        </div>
+        <FormField 
+          v-model="appForm.name" 
+          label="Name" 
+          required 
+          placeholder="my-awesome-api" 
+        />
+        <Dropdown 
+          v-model="appForm.projectId" 
+          label="Project" 
+          variant="form"
+          required
+          placeholder="Select project"
+          :options="projectOptions"
+        />
+        <Dropdown 
+          v-model="appForm.templateId" 
+          label="Template" 
+          variant="form"
+          required
+          placeholder="Select template"
+          :options="templateOptions"
+        />
         <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Kind</label>
-            <input :value="selectedTemplate.kind" disabled class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-400" />
-          </div>
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Language</label>
-            <input :value="selectedTemplate.language" disabled class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-400" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Description</label>
-          <textarea 
-            v-model="appForm.description" 
-            rows="2"
-            placeholder="Application description..."
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" 
+          <FormField 
+            :model-value="selectedTemplate.kind" 
+            label="Kind" 
+            disabled
+          />
+          <FormField 
+            :model-value="selectedTemplate.language" 
+            label="Language" 
+            disabled
           />
         </div>
-        <div v-if="appError" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p class="text-red-400 text-sm">{{ appError }}</p>
-        </div>
+        <FormField 
+          v-model="appForm.description" 
+          label="Description" 
+          type="textarea" 
+          :rows="2" 
+          placeholder="Application description..." 
+        />
+        <ErrorAlert v-if="appError" :message="appError" />
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" @click="showAppModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
             Cancel
@@ -321,53 +281,38 @@
             </button>
           </div>
         </div>
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Template Name *</label>
-          <input 
-            v-model="templateForm.name" 
-            type="text" 
-            placeholder="Go API Template"
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600" 
-          />
-        </div>
+        <FormField 
+          v-model="templateForm.name" 
+          label="Template Name" 
+          required 
+          placeholder="Go API Template" 
+        />
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Kind *</label>
-            <select v-model="templateForm.kind" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600">
-              <option value="">Select kind</option>
-              <option value="api">API</option>
-              <option value="web">Web</option>
-              <option value="worker">Worker</option>
-              <option value="cli">CLI</option>
-              <option value="library">Library</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Language *</label>
-            <select v-model="templateForm.language" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-gray-600">
-              <option value="">Select language</option>
-              <option value="go">Go</option>
-              <option value="typescript">TypeScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="rust">Rust</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Description</label>
-          <textarea 
-            v-model="templateForm.description" 
-            rows="2"
-            placeholder="Template description..."
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" 
+          <Dropdown 
+            v-model="templateForm.kind" 
+            label="Kind" 
+            variant="form"
+            required
+            placeholder="Select kind"
+            :options="kindOptions"
+          />
+          <Dropdown 
+            v-model="templateForm.language" 
+            label="Language" 
+            variant="form"
+            required
+            placeholder="Select language"
+            :options="homeLanguageOptions"
           />
         </div>
-        <div v-if="templateError" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p class="text-red-400 text-sm">{{ templateError }}</p>
-        </div>
+        <FormField 
+          v-model="templateForm.description" 
+          label="Description" 
+          type="textarea" 
+          :rows="2" 
+          placeholder="Template description..." 
+        />
+        <ErrorAlert v-if="templateError" :message="templateError" />
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" @click="showTemplateModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
             Cancel
@@ -403,15 +348,22 @@ import {
   Cog6ToothIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline';
-import { appsApi, projectsApi, templatesApi, forgeApi, type CreateAppRequest, type CreateProjectRequest, type CreateTemplateRequest } from '../api';
+import { appsApi, projectsApi, templatesApi, repoApi, type CreateAppRequest, type CreateProjectRequest, type CreateTemplateRequest } from '../api';
 import type { App } from '../types/App';
 import type { Project } from '../types/Project';
 import type { Template } from '../types/Template';
 import type { Build } from '../types/Build';
 import type { Repo } from '../types/Repo';
 import Modal from '../components/ui/Modal.vue';
+import Spinner from '../components/ui/Spinner.vue';
+import StatusBadge from '../components/ui/StatusBadge.vue';
+import ErrorAlert from '../components/ui/ErrorAlert.vue';
+import FormField from '../components/ui/FormField.vue';
+import Dropdown from '../components/ui/Dropdown.vue';
+import { useFormatters } from '../composables/useFormatters';
 
 const router = useRouter();
+const { formatDuration, formatRelativeTime: formatTime } = useFormatters();
 
 // Loading states
 const loading = ref(true);
@@ -518,31 +470,32 @@ const canCreateTemplate = computed(() =>
   templateForm.name && templateForm.kind && templateForm.language && selectedRepo.value
 );
 
+// Options for form selects
+const projectOptions = computed(() =>
+  projects.value.map(p => ({ value: p.id, label: p.name }))
+);
+
+const templateOptions = computed(() =>
+  templates.value.map(t => ({ value: t.id, label: `${t.name} (${t.language})` }))
+);
+
+const kindOptions = [
+  { value: 'api', label: 'API' },
+  { value: 'web', label: 'Web' },
+  { value: 'worker', label: 'Worker' },
+  { value: 'cli', label: 'CLI' },
+  { value: 'library', label: 'Library' },
+];
+
+const homeLanguageOptions = [
+  { value: 'go', label: 'Go' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'python', label: 'Python' },
+  { value: 'java', label: 'Java' },
+  { value: 'rust', label: 'Rust' },
+];
+
 // Methods
-const formatDuration = (seconds: number) => {
-  if (!seconds) return '-';
-  if (seconds < 60) return `${seconds}s`;
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}m ${secs}s`;
-};
-
-const formatTime = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
-};
-
 const fetchData = async () => {
   try {
     loading.value = true;
@@ -598,7 +551,7 @@ const openTemplateModal = async () => {
   showTemplateModal.value = true;
   if (repos.value.length === 0) {
     try {
-      repos.value = await forgeApi.getRepos();
+      repos.value = await repoApi.getRepos();
     } catch (e) {
       console.error('Failed to fetch repos:', e);
     }

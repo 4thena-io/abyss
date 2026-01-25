@@ -1,79 +1,41 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold text-white">Applications</h1>
-        <p class="text-gray-400 mt-1">{{ appList.length }} applications across all projects</p>
-      </div>
-      <Button @click="openModal" variant="secondary">
-        <PlusIcon class="w-4 h-4" />
-        New Application
-      </Button>
-    </div>
+    <PageHeader title="Applications" :subtitle="`${appList.length} applications across all projects`">
+      <template #actions>
+        <Button @click="openModal" variant="secondary">
+          <PlusIcon class="w-4 h-4" />
+          New Application
+        </Button>
+      </template>
+    </PageHeader>
 
     <!-- Filters -->
     <div class="flex items-center gap-4">
-      <div class="relative flex-1 max-w-xs">
-        <MagnifyingGlassIcon class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input v-model="search" type="text" placeholder="Filter applications..." class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 
-            text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-      </div>
-
-      <!-- Kind Dropdown -->
-      <div class="relative">
-        <button @click="showKindDropdown = !showKindDropdown" class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 
-            text-sm text-gray-300 hover:border-gray-600 transition-colors min-w-32">
-          <span>{{ kindFilter || 'All kinds' }}</span>
-          <ChevronDownIcon class="w-4 h-4 ml-auto" />
-        </button>
-        <div v-if="showKindDropdown"
-          class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-          <button @click="kindFilter = ''; showKindDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-            !kindFilter ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            All kinds
-          </button>
-          <button v-for="kind in uniqueKinds" :key="kind" @click="kindFilter = kind; showKindDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-            kindFilter === kind ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            {{ kind }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Language Dropdown -->
-      <div class="relative">
-        <button @click="showLanguageDropdown = !showLanguageDropdown" class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 
-            text-sm text-gray-300 hover:border-gray-600 transition-colors min-w-32">
-          <span>{{ languageFilter || 'All languages' }}</span>
-          <ChevronDownIcon class="w-4 h-4 ml-auto" />
-        </button>
-        <div v-if="showLanguageDropdown"
-          class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-          <button @click="languageFilter = ''; showLanguageDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-            !languageFilter ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            All languages
-          </button>
-          <button v-for="lang in uniqueLanguages" :key="lang"
-            @click="languageFilter = lang; showLanguageDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-              languageFilter === lang ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            {{ lang }}
-          </button>
-        </div>
-      </div>
+      <SearchInput v-model="search" placeholder="Filter applications..." />
+      <Dropdown 
+        v-model="kindFilter" 
+        :options="kindFilterOptions" 
+        all-label="All kinds" 
+      />
+      <Dropdown 
+        v-model="languageFilter" 
+        :options="languageFilterOptions" 
+        all-label="All languages" 
+      />
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+      <Spinner size="lg" />
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="filteredApps.length === 0" class="bg-gray-800 border border-gray-700 rounded-lg py-16 text-center">
-      <CubeIcon class="w-12 h-12 text-gray-600 mx-auto" />
-      <h3 class="mt-4 text-lg font-medium text-white">No applications found</h3>
-      <p class="mt-2 text-gray-400 text-sm">
-        {{ search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Create your first application to get started' }}
-      </p>
-    </div>
+    <EmptyState 
+      v-else-if="filteredApps.length === 0"
+      :icon="CubeIcon"
+      title="No applications found"
+      :message="search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Create your first application to get started'"
+    />
 
     <!-- App Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -111,54 +73,53 @@
     <!-- Create App Modal -->
     <Modal :open="showModal" title="New Application" size="lg" @close="closeModal">
       <form @submit.prevent="createApp" class="space-y-4">
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Name *</label>
-          <input v-model="form.name" type="text" placeholder="my-awesome-api" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-          <p class="text-xs text-gray-500 mt-1">Will be used as repository name</p>
-        </div>
+        <FormField 
+          v-model="form.name" 
+          label="Name" 
+          required 
+          placeholder="my-awesome-api"
+          hint="Will be used as repository name"
+        />
 
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Project *</label>
-          <select v-model="form.projectId" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   focus:outline-none focus:border-gray-600">
-            <option value="">Select project</option>
-            <option v-for="project in projects" :key="project.id" :value="project.id">
-              {{ project.name }}
-            </option>
-          </select>
-        </div>
+        <Dropdown 
+          v-model="form.projectId" 
+          label="Project" 
+          variant="form"
+          required
+          placeholder="Select project"
+          :options="projectOptions"
+        />
 
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Template *</label>
-          <select v-model="form.templateId" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   focus:outline-none focus:border-gray-600">
-            <option value="">Select template</option>
-            <option v-for="template in templates" :key="template.id" :value="template.id">
-              {{ template.name }} ({{ template.language }})
-            </option>
-          </select>
-        </div>
+        <Dropdown 
+          v-model="form.templateId" 
+          label="Template" 
+          variant="form"
+          required
+          placeholder="Select template"
+          :options="templateOptions"
+        />
 
         <!-- Auto-filled from template -->
         <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Kind</label>
-            <input :value="selectedTemplate.kind" disabled
-              class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-400" />
-          </div>
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Language</label>
-            <input :value="selectedTemplate.language" disabled
-              class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-400" />
-          </div>
+          <FormField 
+            :model-value="selectedTemplate.kind" 
+            label="Kind" 
+            disabled
+          />
+          <FormField 
+            :model-value="selectedTemplate.language" 
+            label="Language" 
+            disabled
+          />
         </div>
 
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Description</label>
-          <textarea v-model="form.description" rows="2" placeholder="Application description..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" />
-        </div>
+        <FormField 
+          v-model="form.description" 
+          label="Description" 
+          type="textarea" 
+          :rows="2" 
+          placeholder="Application description..."
+        />
 
         <!-- Info box -->
         <div v-if="selectedTemplate && selectedProject" class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
@@ -168,9 +129,7 @@
           </p>
         </div>
 
-        <div v-if="error" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p class="text-red-400 text-sm">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" />
 
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
@@ -191,12 +150,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import {
   PlusIcon,
-  MagnifyingGlassIcon,
-  CubeIcon,
-  ChevronDownIcon
+  CubeIcon
 } from '@heroicons/vue/24/outline';
 import type { App } from '../types/App';
 import type { Project } from '../types/Project';
@@ -204,6 +161,13 @@ import type { Template } from '../types/Template';
 import { appsApi, projectsApi, templatesApi, type CreateAppRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';
+import Spinner from '../components/ui/Spinner.vue';
+import SearchInput from '../components/ui/SearchInput.vue';
+import EmptyState from '../components/ui/EmptyState.vue';
+import ErrorAlert from '../components/ui/ErrorAlert.vue';
+import FormField from '../components/ui/FormField.vue';
+import PageHeader from '../components/ui/PageHeader.vue';
+import Dropdown from '../components/ui/Dropdown.vue';
 
 // List state
 const appList = ref<App[]>([]);
@@ -213,8 +177,6 @@ const loading = ref(true);
 const search = ref('');
 const kindFilter = ref('');
 const languageFilter = ref('');
-const showKindDropdown = ref(false);
-const showLanguageDropdown = ref(false);
 
 // Modal state
 const showModal = ref(false);
@@ -253,6 +215,14 @@ const uniqueLanguages = computed(() => {
   return [...new Set(appList.value.map(a => a.language).filter(Boolean))].sort();
 });
 
+const kindFilterOptions = computed(() => 
+  uniqueKinds.value.map(k => ({ value: k, label: k }))
+);
+
+const languageFilterOptions = computed(() => 
+  uniqueLanguages.value.map(l => ({ value: l, label: l }))
+);
+
 const selectedProject = computed(() =>
   projects.value.find(p => p.id === form.projectId)
 );
@@ -263,6 +233,14 @@ const selectedTemplate = computed(() =>
 
 const canCreate = computed(() =>
   form.name.trim() !== '' && form.projectId !== '' && form.templateId !== ''
+);
+
+const projectOptions = computed(() =>
+  projects.value.map(p => ({ value: p.id, label: p.name }))
+);
+
+const templateOptions = computed(() =>
+  templates.value.map(t => ({ value: t.id, label: `${t.name} (${t.language})` }))
 );
 
 // Methods
@@ -331,21 +309,8 @@ const createApp = async () => {
   }
 };
 
-const closeDropdowns = (e: Event) => {
-  const target = e.target as HTMLElement;
-  if (!target.closest('.relative')) {
-    showKindDropdown.value = false;
-    showLanguageDropdown.value = false;
-  }
-};
-
 // Lifecycle
 onMounted(() => {
   fetchApps();
-  document.addEventListener('click', closeDropdowns);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeDropdowns);
 });
 </script>

@@ -1,39 +1,31 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold text-white">Projects</h1>
-        <p class="text-gray-400 mt-1">{{ projectList.length }} projects</p>
-      </div>
-      <Button @click="showModal = true" variant="secondary">
-        <PlusIcon class="w-4 h-4" />
-        New Project
-      </Button>
-    </div>
+    <PageHeader title="Projects" :subtitle="`${projectList.length} projects`">
+      <template #actions>
+        <Button @click="showModal = true" variant="secondary">
+          <PlusIcon class="w-4 h-4" />
+          New Project
+        </Button>
+      </template>
+    </PageHeader>
 
     <!-- Filters -->
     <div class="flex items-center gap-4">
-      <div class="relative flex-1 max-w-xs">
-        <MagnifyingGlassIcon class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input v-model="search" type="text" placeholder="Filter projects..." class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 
-            text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-      </div>
+      <SearchInput v-model="search" placeholder="Filter projects..." />
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+      <Spinner size="lg" />
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="filteredProjects.length === 0"
-      class="bg-gray-800 border border-gray-700 rounded-lg py-16 text-center">
-      <FolderIcon class="w-12 h-12 text-gray-600 mx-auto" />
-      <h3 class="mt-4 text-lg font-medium text-white">No projects found</h3>
-      <p class="mt-2 text-gray-400 text-sm">
-        {{ search ? 'Try adjusting your search' : 'Create your first project to get started' }}
-      </p>
-    </div>
+    <EmptyState 
+      v-else-if="filteredProjects.length === 0"
+      :icon="FolderIcon"
+      title="No projects found"
+      :message="search ? 'Try adjusting your search' : 'Create your first project to get started'"
+    />
 
     <!-- Project Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -64,21 +56,22 @@
     <!-- Create Project Modal -->
     <Modal :open="showModal" title="New Project" @close="closeModal">
       <form @submit.prevent="createProject" class="space-y-4">
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Name *</label>
-          <input v-model="form.name" type="text" placeholder="my-project" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-        </div>
+        <FormField 
+          v-model="form.name" 
+          label="Name" 
+          required 
+          placeholder="my-project" 
+        />
 
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Description</label>
-          <textarea v-model="form.description" rows="3" placeholder="Project description..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" />
-        </div>
+        <FormField 
+          v-model="form.description" 
+          label="Description" 
+          type="textarea" 
+          :rows="3" 
+          placeholder="Project description..." 
+        />
 
-        <div v-if="error" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p class="text-red-400 text-sm">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" />
 
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
@@ -102,13 +95,18 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import {
   PlusIcon,
-  MagnifyingGlassIcon,
   FolderIcon
 } from '@heroicons/vue/24/outline';
 import type { Project } from '../types/Project';
 import { projectsApi, type CreateProjectRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';
+import Spinner from '../components/ui/Spinner.vue';
+import SearchInput from '../components/ui/SearchInput.vue';
+import EmptyState from '../components/ui/EmptyState.vue';
+import ErrorAlert from '../components/ui/ErrorAlert.vue';
+import FormField from '../components/ui/FormField.vue';
+import PageHeader from '../components/ui/PageHeader.vue';
 
 // List state
 const projectList = ref<Project[]>([]);

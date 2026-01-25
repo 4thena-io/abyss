@@ -1,80 +1,41 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold text-white">Templates</h1>
-        <p class="text-gray-400 mt-1">{{ templateList.length }} templates available</p>
-      </div>
-      <Button @click="openModal" variant="secondary">
-        <PlusIcon class="w-4 h-4" />
-        Add Template
-      </Button>
-    </div>
+    <PageHeader title="Templates" :subtitle="`${templateList.length} templates available`">
+      <template #actions>
+        <Button @click="openModal" variant="secondary">
+          <PlusIcon class="w-4 h-4" />
+          Add Template
+        </Button>
+      </template>
+    </PageHeader>
 
     <!-- Filters -->
     <div class="flex items-center gap-4">
-      <div class="relative flex-1 max-w-xs">
-        <MagnifyingGlassIcon class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input v-model="search" type="text" placeholder="Filter templates..." class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 
-            text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-      </div>
-
-      <!-- Kind Dropdown -->
-      <div class="relative">
-        <button @click="showKindDropdown = !showKindDropdown" class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 
-            text-sm text-gray-300 hover:border-gray-600 transition-colors min-w-32">
-          <span>{{ kindFilter || 'All kinds' }}</span>
-          <ChevronDownIcon class="w-4 h-4 ml-auto" />
-        </button>
-        <div v-if="showKindDropdown"
-          class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-          <button @click="kindFilter = ''; showKindDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-            !kindFilter ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            All kinds
-          </button>
-          <button v-for="kind in uniqueKinds" :key="kind" @click="kindFilter = kind; showKindDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-            kindFilter === kind ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            {{ kind }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Language Dropdown -->
-      <div class="relative">
-        <button @click="showLanguageDropdown = !showLanguageDropdown" class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 
-            text-sm text-gray-300 hover:border-gray-600 transition-colors min-w-32">
-          <span>{{ languageFilter || 'All languages' }}</span>
-          <ChevronDownIcon class="w-4 h-4 ml-auto" />
-        </button>
-        <div v-if="showLanguageDropdown"
-          class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-          <button @click="languageFilter = ''; showLanguageDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-            !languageFilter ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            All languages
-          </button>
-          <button v-for="lang in uniqueLanguages" :key="lang"
-            @click="languageFilter = lang; showLanguageDropdown = false" :class="['w-full px-3 py-2 text-left text-sm transition-colors',
-              languageFilter === lang ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700']">
-            {{ lang }}
-          </button>
-        </div>
-      </div>
+      <SearchInput v-model="search" placeholder="Filter templates..." />
+      <Dropdown 
+        v-model="kindFilter" 
+        :options="kindFilterOptions" 
+        all-label="All kinds" 
+      />
+      <Dropdown 
+        v-model="languageFilter" 
+        :options="languageFilterOptions" 
+        all-label="All languages" 
+      />
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+      <Spinner size="lg" />
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="filteredTemplates.length === 0"
-      class="bg-gray-800 border border-gray-700 rounded-lg py-16 text-center">
-      <DocumentDuplicateIcon class="w-12 h-12 text-gray-600 mx-auto" />
-      <h3 class="mt-4 text-lg font-medium text-white">No templates found</h3>
-      <p class="mt-2 text-gray-400 text-sm">
-        {{ search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Add your first template to get started' }}
-      </p>
-    </div>
+    <EmptyState 
+      v-else-if="filteredTemplates.length === 0"
+      :icon="DocumentDuplicateIcon"
+      title="No templates found"
+      :message="search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Add your first template to get started'"
+    />
 
     <!-- Template Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -145,7 +106,7 @@
             <!-- Loading repos -->
             <div v-if="loadingRepos"
               class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-              <div class="w-5 h-5 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin mx-auto" />
+              <Spinner size="sm" class="mx-auto" />
             </div>
           </div>
 
@@ -159,51 +120,41 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Template Name *</label>
-          <input v-model="form.name" type="text" placeholder="Go API Template" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600" />
-        </div>
+        <FormField 
+          v-model="form.name" 
+          label="Template Name" 
+          required 
+          placeholder="Go API Template" 
+        />
 
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Description</label>
-          <textarea v-model="form.description" rows="2" placeholder="Standard Go API with Echo framework..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                   placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none" />
-        </div>
+        <FormField 
+          v-model="form.description" 
+          label="Description" 
+          type="textarea" 
+          :rows="2" 
+          placeholder="Standard Go API with Echo framework..." 
+        />
 
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Kind *</label>
-            <select v-model="form.kind" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                     focus:outline-none focus:border-gray-600">
-              <option value="">Select kind</option>
-              <option value="api">API</option>
-              <option value="web">Web</option>
-              <option value="worker">Worker</option>
-              <option value="cli">CLI</option>
-              <option value="library">Library</option>
-              <option value="job">Job</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-gray-400 text-sm mb-2">Language *</label>
-            <select v-model="form.language" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                     focus:outline-none focus:border-gray-600">
-              <option value="">Select language</option>
-              <option value="go">Go</option>
-              <option value="typescript">TypeScript</option>
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="rust">Rust</option>
-              <option value="csharp">C#</option>
-            </select>
-          </div>
+          <Dropdown 
+            v-model="form.kind" 
+            label="Kind" 
+            variant="form"
+            required
+            placeholder="Select kind"
+            :options="kindOptions"
+          />
+          <Dropdown 
+            v-model="form.language" 
+            label="Language" 
+            variant="form"
+            required
+            placeholder="Select language"
+            :options="languageOptions"
+          />
         </div>
 
-        <div v-if="error" class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p class="text-red-400 text-sm">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" />
 
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
@@ -224,21 +175,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
 import {
   PlusIcon,
-  MagnifyingGlassIcon,
   DocumentDuplicateIcon,
   CodeBracketIcon,
   TrashIcon,
-  XMarkIcon,
-  ChevronDownIcon
+  XMarkIcon
 } from '@heroicons/vue/24/outline';
 import type { Template } from '../types/Template';
 import type { Repo } from '../types/Repo';
-import { templatesApi, forgeApi, type CreateTemplateRequest } from '../api';
+import { templatesApi, repoApi, type CreateTemplateRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';
+import Spinner from '../components/ui/Spinner.vue';
+import SearchInput from '../components/ui/SearchInput.vue';
+import EmptyState from '../components/ui/EmptyState.vue';
+import ErrorAlert from '../components/ui/ErrorAlert.vue';
+import FormField from '../components/ui/FormField.vue';
+import PageHeader from '../components/ui/PageHeader.vue';
+import Dropdown from '../components/ui/Dropdown.vue';
 
 // List state
 const templateList = ref<Template[]>([]);
@@ -248,8 +204,6 @@ const loading = ref(true);
 const search = ref('');
 const kindFilter = ref('');
 const languageFilter = ref('');
-const showKindDropdown = ref(false);
-const showLanguageDropdown = ref(false);
 
 // Modal state
 const showModal = ref(false);
@@ -291,9 +245,36 @@ const uniqueLanguages = computed(() => {
   return [...new Set(templateList.value.map(t => t.language).filter(Boolean))].sort();
 });
 
+const kindFilterOptions = computed(() => 
+  uniqueKinds.value.map(k => ({ value: k, label: k }))
+);
+
+const languageFilterOptions = computed(() => 
+  uniqueLanguages.value.map(l => ({ value: l, label: l }))
+);
+
 const canCreate = computed(() => {
   return form.name && form.kind && form.language && selectedRepo.value;
 });
+
+const kindOptions = [
+  { value: 'api', label: 'API' },
+  { value: 'web', label: 'Web' },
+  { value: 'worker', label: 'Worker' },
+  { value: 'cli', label: 'CLI' },
+  { value: 'library', label: 'Library' },
+  { value: 'job', label: 'Job' },
+];
+
+const languageOptions = [
+  { value: 'go', label: 'Go' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'python', label: 'Python' },
+  { value: 'java', label: 'Java' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'csharp', label: 'C#' },
+];
 
 const filteredRepos = computed(() => {
   if (!repoSearch.value) return repos.value.slice(0, 10);
@@ -340,7 +321,7 @@ const clearRepo = () => {
 const fetchRepos = async () => {
   loadingRepos.value = true;
   try {
-    repos.value = await forgeApi.getRepos();
+    repos.value = await repoApi.getRepos();
   } catch (e) {
     console.error('Failed to fetch repos:', e);
   } finally {
@@ -395,21 +376,8 @@ const deleteTemplate = async (id: number) => {
   }
 };
 
-const closeDropdowns = (e: Event) => {
-  const target = e.target as HTMLElement;
-  if (!target.closest('.relative')) {
-    showKindDropdown.value = false;
-    showLanguageDropdown.value = false;
-  }
-};
-
 // Lifecycle
 onMounted(() => {
   fetchTemplates();
-  document.addEventListener('click', closeDropdowns);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeDropdowns);
 });
 </script>

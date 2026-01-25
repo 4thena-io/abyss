@@ -2,17 +2,19 @@
   <div class="space-y-6">
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+      <Spinner size="lg" />
     </div>
 
     <!-- Not Found -->
-    <div v-else-if="!project" class="bg-gray-800 border border-gray-700 rounded-lg py-16 text-center">
-      <FolderIcon class="w-12 h-12 text-gray-600 mx-auto" />
-      <h3 class="mt-4 text-lg font-medium text-white">Project not found</h3>
-      <router-link to="/projects" class="mt-4 inline-block text-blue-400 hover:text-blue-300">
+    <EmptyState 
+      v-else-if="!project"
+      :icon="FolderIcon"
+      title="Project not found"
+    >
+      <router-link to="/projects" class="text-blue-400 hover:text-blue-300">
         Back to projects
       </router-link>
-    </div>
+    </EmptyState>
 
     <template v-else>
       <!-- Header -->
@@ -29,19 +31,7 @@
       </div>
 
       <!-- Tabs -->
-      <div class="border-b border-gray-700">
-        <nav class="flex gap-6">
-          <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="[
-            'pb-3 text-sm font-medium transition-colors relative',
-            activeTab === tab.id
-              ? 'text-white'
-              : 'text-gray-400 hover:text-gray-300'
-          ]">
-            {{ tab.label }}
-            <div v-if="activeTab === tab.id" class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
-          </button>
-        </nav>
-      </div>
+      <Tabs v-model="activeTab" :tabs="tabs" />
 
       <!-- Tab Content -->
       <div class="mt-6">
@@ -79,14 +69,16 @@
 
           <!-- Loading Apps -->
           <div v-if="loadingApps" class="flex items-center justify-center py-8">
-            <div class="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+            <Spinner size="md" />
           </div>
 
           <!-- No Apps -->
-          <div v-else-if="apps.length === 0" class="bg-gray-800 border border-gray-700 rounded-lg py-12 text-center">
-            <CubeIcon class="w-10 h-10 text-gray-600 mx-auto" />
-            <p class="mt-3 text-gray-400">No applications in this project</p>
-          </div>
+          <EmptyState 
+            v-else-if="apps.length === 0"
+            :icon="CubeIcon"
+            title="No applications"
+            message="No applications in this project"
+          />
 
           <!-- Apps Grid -->
           <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -132,6 +124,9 @@ import {
   CubeIcon,
   ArrowPathIcon
 } from '@heroicons/vue/24/outline';
+import Spinner from '../components/ui/Spinner.vue';
+import EmptyState from '../components/ui/EmptyState.vue';
+import Tabs from '../components/ui/Tabs.vue';
 import type { Project } from '../types/Project';
 import type { App } from '../types/App';
 

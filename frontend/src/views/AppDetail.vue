@@ -2,17 +2,19 @@
   <div class="space-y-6">
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+      <Spinner size="lg" />
     </div>
 
     <!-- Not Found -->
-    <div v-else-if="!app" class="bg-gray-800 border border-gray-700 rounded-lg py-16 text-center">
-      <CubeIcon class="w-12 h-12 text-gray-600 mx-auto" />
-      <h3 class="mt-4 text-lg font-medium text-white">Application not found</h3>
-      <router-link to="/apps" class="mt-4 inline-block text-blue-400 hover:text-blue-300">
+    <EmptyState 
+      v-else-if="!app"
+      :icon="CubeIcon"
+      title="Application not found"
+    >
+      <router-link to="/apps" class="text-blue-400 hover:text-blue-300">
         Back to applications
       </router-link>
-    </div>
+    </EmptyState>
 
     <template v-else>
       <!-- Header -->
@@ -36,19 +38,7 @@
       </div>
 
       <!-- Tabs -->
-      <div class="border-b border-gray-700">
-        <nav class="flex gap-6">
-          <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="[
-            'pb-3 text-sm font-medium transition-colors relative',
-            activeTab === tab.id
-              ? 'text-white'
-              : 'text-gray-400 hover:text-gray-300'
-          ]">
-            {{ tab.label }}
-            <div v-if="activeTab === tab.id" class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
-          </button>
-        </nav>
-      </div>
+      <Tabs v-model="activeTab" :tabs="tabs" />
 
       <!-- Tab Content -->
       <div class="mt-6">
@@ -113,14 +103,16 @@
 
           <!-- Loading Builds -->
           <div v-if="loadingBuilds" class="flex items-center justify-center py-8">
-            <div class="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+            <Spinner size="md" />
           </div>
 
           <!-- No Builds -->
-          <div v-else-if="builds.length === 0" class="bg-gray-800 border border-gray-700 rounded-lg py-12 text-center">
-            <WrenchScrewdriverIcon class="w-10 h-10 text-gray-600 mx-auto" />
-            <p class="mt-3 text-gray-400">No builds yet</p>
-          </div>
+          <EmptyState 
+            v-else-if="builds.length === 0"
+            :icon="WrenchScrewdriverIcon"
+            title="No builds"
+            message="No builds yet"
+          />
 
           <!-- Builds List -->
           <div v-else class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
@@ -144,23 +136,7 @@
                     </a>
                   </td>
                   <td class="px-5 py-4">
-                    <span :class="[
-                      'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium',
-                      build.status === 'success' ? 'bg-green-500/20 text-green-400' :
-                        build.status === 'running' ? 'bg-blue-500/20 text-blue-400' :
-                          build.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            build.status === 'failure' ? 'bg-red-500/20 text-red-400' :
-                              'bg-gray-500/20 text-gray-400'
-                    ]">
-                      <span :class="[
-                        'w-1.5 h-1.5 rounded-full',
-                        build.status === 'success' ? 'bg-green-400' :
-                          build.status === 'running' ? 'bg-blue-400 animate-pulse' :
-                            build.status === 'pending' ? 'bg-yellow-400' :
-                              build.status === 'failure' ? 'bg-red-400' : 'bg-gray-400'
-                      ]" />
-                      {{ build.status }}
-                    </span>
+                    <StatusBadge :status="build.status" />
                   </td>
                   <td class="px-5 py-4 text-gray-300 text-sm">{{ build.branch }}</td>
                   <td class="px-5 py-4">
@@ -225,10 +201,16 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/vue/24/outline';
+import Spinner from '../components/ui/Spinner.vue';
+import EmptyState from '../components/ui/EmptyState.vue';
+import Tabs from '../components/ui/Tabs.vue';
+import { useFormatters } from '../composables/useFormatters';
+import StatusBadge from '../components/ui/StatusBadge.vue';
 import type { App } from '../types/App';
 import type { Build } from '../types/Build';
 
 const route = useRoute();
+const { formatDuration, formatRelativeTime: formatTime, formatUrl } = useFormatters();
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
@@ -240,36 +222,6 @@ const builds = ref<Build[]>([]);
 const loading = ref(true);
 const loadingBuilds = ref(false);
 const activeTab = ref('overview');
-
-const formatUrl = (url: string) => {
-  if (!url) return '#';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return `https://${url}`;
-};
-
-const formatDuration = (seconds: number) => {
-  if (!seconds) return '-';
-  if (seconds < 60) return `${seconds}s`;
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}m ${secs}s`;
-};
-
-const formatTime = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
-};
 
 const fetchApp = async () => {
   try {
