@@ -15,8 +15,8 @@ type App struct {
 	RepoID      int64  `gorm:"not null"`
 	RepoURL     string `gorm:"not null"`
 	CloneURL    string `gorm:"not null"`
-	CiID        int64  `gorm:"not null"`
-	CiURL       string `gorm:"not null"`
+	CIID        int64  `gorm:"not null"`
+	CIURL       string `gorm:"not null"`
 	ProjectID   uint
 	TemplateID  uint `gorm:"not null"`
 	Status      constant.Status

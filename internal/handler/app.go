@@ -14,7 +14,7 @@ import (
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 type AppHandler struct {
@@ -72,7 +72,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 		Kind:        app.Kind,
 		Language:    app.Language,
 		RepoURL:     app.RepoURL,
-		CiURL:       app.CiURL,
+		CiURL:       app.CIURL,
 		ProjectID:   app.ProjectID,
 		TemplateID:  app.TemplateID,
 	})
@@ -94,7 +94,7 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 			Kind:        app.Kind,
 			Language:    app.Language,
 			RepoURL:     app.RepoURL,
-			CiURL:       app.CiURL,
+			CiURL:       app.CIURL,
 			ProjectID:   app.ProjectID,
 			TemplateID:  app.TemplateID,
 		}
@@ -105,7 +105,7 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
@@ -129,14 +129,14 @@ func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
 		Kind:        app.Kind,
 		Language:    app.Language,
 		RepoURL:     app.RepoURL,
-		CiURL:       app.CiURL,
+		CiURL:       app.CIURL,
 		ProjectID:   app.ProjectID,
 		TemplateID:  app.TemplateID,
 	})
 }
 
 func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
@@ -166,7 +166,11 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
 
 	err = h.service.DeleteApp(r.Context(), uint(id))
 	if err != nil {
@@ -174,13 +178,6 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *AppHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("", h.CreateApp).Methods("POST")
-	router.HandleFunc("", h.GetAllApps).Methods("GET")
-	router.HandleFunc("/{id}", h.GetAppByID).Methods("GET")
-	router.HandleFunc("/{id}/builds", h.GetAppBuilds).Methods("GET")
-	router.HandleFunc("/{id}", h.DeleteApp).Methods("DELETE")
-}

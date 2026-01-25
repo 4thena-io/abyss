@@ -11,7 +11,7 @@ import (
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 type ProjectHandler struct {
@@ -80,11 +80,12 @@ func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
+
 	project, err := h.projectService.GetProjectByID(r.Context(), uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -104,16 +105,18 @@ func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
+
 	apps, err := h.appService.GetAppsByProject(r.Context(), uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	res := make([]response.App, len(apps))
 	for i, app := range apps {
 		res[i] = response.App{
@@ -123,7 +126,7 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 			Kind:        app.Kind,
 			Language:    app.Language,
 			RepoURL:     app.RepoURL,
-			CiURL:       app.CiURL,
+			CiURL:       app.CIURL,
 			ProjectID:   app.ProjectID,
 			TemplateID:  app.TemplateID,
 		}
@@ -134,7 +137,11 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
 
 	err = h.projectService.DeleteProject(r.Context(), uint(id))
 	if err != nil {
@@ -142,14 +149,6 @@ func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *ProjectHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("", h.CreateProject).Methods("POST")
-	router.HandleFunc("", h.GetAllProjects).Methods("GET")
-	router.HandleFunc("/{id}", h.GetProjectByID).Methods("GET")
-	router.HandleFunc("/{id}/apps", h.GetProjectApps).Methods("GET")
-	router.HandleFunc("/{id}", h.DeleteProject).Methods("DELETE")
-}

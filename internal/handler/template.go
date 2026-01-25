@@ -11,7 +11,7 @@ import (
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 type TemplateHandler struct {
@@ -80,7 +80,7 @@ func (h *TemplateHandler) GetAllTemplates(w http.ResponseWriter, r *http.Request
 }
 
 func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
+	name := chi.URLParam(r, "id")
 
 	template, err := h.service.GetTemplateByName(r.Context(), name)
 	if err != nil {
@@ -104,7 +104,11 @@ func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
 
 	err = h.service.DeleteTemplate(r.Context(), uint(id))
 	if err != nil {
@@ -112,12 +116,6 @@ func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *TemplateHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("", h.CreateTemplate).Methods("POST")
-	router.HandleFunc("", h.GetAllTemplates).Methods("GET")
-	router.HandleFunc("/{value}", h.GetTemplateByName).Methods("GET")
-	router.HandleFunc("/{id}", h.DeleteTemplate).Methods("DELETE")
-}

@@ -1,35 +1,32 @@
 package web
 
 import (
-	"git.4thena.io/4thena/abys/frontend"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strings"
+
+	"git.4thena.io/4thena/abys/frontend"
 )
 
 type FrontendHandler struct {
-	staticFileHandler http.Handler
+	fileServer http.Handler
 }
 
 func NewFrontendHandler() *FrontendHandler {
 	uiFs, err := frontend.HttpFs()
 	if err != nil {
-		log.Fatal("Failed to load frontend assets: %w", err)
+		log.Fatalf("failed to load frontend assets: %v", err)
 	}
-	fileServer := http.FileServer(uiFs)
-	spaHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		p := r.URL.Path
-		if !strings.Contains(p, ".") || strings.HasSuffix(p, "/") {
-			r.URL.Path = "/"
-		}
-		fileServer.ServeHTTP(w, r)
-	})
+
 	return &FrontendHandler{
-		staticFileHandler: spaHandler,
+		fileServer: http.FileServer(uiFs),
 	}
-}
-func (h *FrontendHandler) RegisterRoutes(router *mux.Router) {
-	router.PathPrefix("/").Handler(h.staticFileHandler).Methods("GET")
 }
 
+func (h *FrontendHandler) Serve(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	if !strings.Contains(path, ".") || strings.HasSuffix(path, "/") {
+		r.URL.Path = "/"
+	}
+	h.fileServer.ServeHTTP(w, r)
+}

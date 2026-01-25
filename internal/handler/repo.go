@@ -8,7 +8,6 @@ import (
 	"git.4thena.io/4thena/abys/internal/dto/response"
 	"git.4thena.io/4thena/abys/internal/integration/forge"
 	"git.4thena.io/4thena/abys/internal/service"
-	"github.com/gorilla/mux"
 )
 
 type RepoHandler struct {
@@ -45,8 +44,4 @@ func (h *RepoHandler) GetAllRepos(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
-}
-
-func (h *RepoHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("", h.GetAllRepos).Methods("GET")
 }

@@ -14,7 +14,7 @@ var (
 	token = config.Environment.CiToken
 )
 
-func NewCi() (Ci, error) {
+func NewCi() (CI, error) {
 	switch kind {
 		case "jenkins":
 			return jenkins.NewJenkinsCi(host, token)

@@ -3,21 +3,59 @@ package router
 import (
 	"git.4thena.io/4thena/abys/internal/handler"
 	"git.4thena.io/4thena/abys/internal/web"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
-func New() *mux.Router {
-	router := mux.NewRouter()
+func New() chi.Router {
+	r := chi.NewRouter()
 
-	// API
-	api := router.PathPrefix("/api").Subrouter()
-	handler.NewAppHandler().RegisterRoutes(api.PathPrefix("/apps").Subrouter())
-	handler.NewProjectHandler().RegisterRoutes(api.PathPrefix("/projects").Subrouter())
-	handler.NewTemplateHandler().RegisterRoutes(api.PathPrefix("/templates").Subrouter())
-	handler.NewRepoHandler().RegisterRoutes(api.PathPrefix("/forge/repos").Subrouter())
+	web := web.NewFrontendHandler()
+	app := handler.NewAppHandler()
+	project := handler.NewProjectHandler()
+	template := handler.NewTemplateHandler()
+	repo := handler.NewRepoHandler()
 
-	// Frontend
-	web.NewFrontendHandler().RegisterRoutes(router)
+	r.Route("/", func(r chi.Router) {
+		r.Get("/*", web.Serve)
 
-	return router
+		r.Route("/api", func(r chi.Router) {
+			r.Route("/apps", func(r chi.Router) {
+				r.Get("/", app.GetAllApps)
+				r.Post("/", app.CreateApp)
+
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", app.GetAppByID)
+					r.Delete("/", app.DeleteApp)
+					r.Get("/builds", app.GetAppBuilds)
+				})
+			})
+
+			r.Route("/projects", func(r chi.Router) {
+				r.Get("/", project.GetAllProjects)
+				r.Post("/", project.CreateProject)
+
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", project.GetProjectByID)
+					r.Delete("/", project.DeleteProject)
+					r.Get("/apps", project.GetProjectApps)
+				})
+			})
+
+			r.Route("/templates", func(r chi.Router) {
+				r.Get("/", template.GetAllTemplates)
+				r.Post("/", template.CreateTemplate)
+
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", template.GetTemplateByName)
+					r.Delete("/", template.DeleteTemplate)
+				})
+			})
+
+			r.Route("/repos", func(r chi.Router) {
+				r.Get("/", repo.GetAllRepos)
+			})
+		})
+	})
+
+	return r
 }

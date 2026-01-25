@@ -18,10 +18,10 @@ type AppService struct {
 	projectRepository  repository.ProjectRepository
 	templateRepository repository.TemplateRepository
 	forge              forge.Forge
-	ci                 ci.Ci
+	ci                 ci.CI
 }
 
-func NewAppService(appRepository repository.AppRepository, projectRepository repository.ProjectRepository, templateRepository repository.TemplateRepository, forge forge.Forge, ci ci.Ci) *AppService {
+func NewAppService(appRepository repository.AppRepository, projectRepository repository.ProjectRepository, templateRepository repository.TemplateRepository, forge forge.Forge, ci ci.CI) *AppService {
 	return &AppService{
 		appRepository,
 		projectRepository,
@@ -78,8 +78,8 @@ func (s *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 	app.RepoID = repo.ID
 	app.RepoURL = repo.URL
 	app.CloneURL = repo.CloneURL
-	app.CiID = ciRepo.ID
-	app.CiURL = ciRepo.URL
+	app.CIID = ciRepo.ID
+	app.CIURL = ciRepo.URL
 	app.Status = constant.StatusNew
 
 	err = s.appRepository.Save(ctx, app)
@@ -117,7 +117,7 @@ func (s *AppService) GetAppBuilds(ctx context.Context, id uint) ([]model.Build, 
 	if app == nil {
 		return nil, fmt.Errorf("app not found")
 	}
-	return s.ci.GetBuilds(ctx, app.CiID)
+	return s.ci.GetBuilds(ctx, app.CIID)
 }
 
 func (s *AppService) GetAppsByProject(ctx context.Context, id uint) ([]model.App, error) {
