@@ -2,8 +2,7 @@ FROM docker.io/library/alpine:3.22
 
 RUN apk add --no-cache \
   ca-certificates \
-  git \
-  hugo
+  git
 
 ARG TARGETOS TARGETARCH
 COPY build/abyss-${TARGETOS}-${TARGETARCH} /usr/bin/abyss
