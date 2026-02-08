@@ -9,6 +9,7 @@ export interface CreateAppRequest {
   language: string;
   projectId: number;
   templateId: number;
+  repoId: number;
 }
 
 export const appsApi = {

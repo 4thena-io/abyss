@@ -18,17 +18,11 @@
 
     <template v-else>
       <!-- Header -->
-      <div class="flex items-start justify-between">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
-            <FolderIcon class="w-7 h-7 text-gray-400" />
-          </div>
-          <div>
-            <h1 class="text-2xl font-semibold text-white">{{ project.name }}</h1>
-            <p class="text-gray-400 text-sm mt-1">{{ project.description || 'No description' }}</p>
-          </div>
-        </div>
-      </div>
+      <DetailHeader 
+        :icon="FolderIcon" 
+        :title="project.name" 
+        :subtitle="project.description" 
+      />
 
       <!-- Tabs -->
       <Tabs v-model="activeTab" :tabs="tabs" />
@@ -37,34 +31,21 @@
       <div class="mt-6">
         <!-- Overview Tab -->
         <div v-if="activeTab === 'overview'" class="space-y-6">
-          <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-            <h2 class="text-lg font-medium text-white mb-4">Details</h2>
-            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <dt class="text-gray-400 text-sm">Name</dt>
-                <dd class="text-white mt-1">{{ project.name }}</dd>
-              </div>
-              <div>
-                <dt class="text-gray-400 text-sm">Description</dt>
-                <dd class="text-white mt-1">{{ project.description || 'No description' }}</dd>
-              </div>
-              <div>
-                <dt class="text-gray-400 text-sm">Applications</dt>
-                <dd class="text-white mt-1">{{ apps.length }} apps</dd>
-              </div>
-            </dl>
-          </div>
+          <DefinitionList 
+            title="Details"
+            :items="[
+              { label: 'Name', value: project.name },
+              { label: 'Description', value: project.description, fallback: 'No description' },
+              { label: 'Applications', value: `${apps.length} apps` },
+            ]"
+          />
         </div>
 
         <!-- Apps Tab -->
         <div v-if="activeTab === 'apps'" class="space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-medium text-white">Applications</h2>
-            <button @click="fetchApps" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 
-                hover:text-white transition-colors">
-              <ArrowPathIcon :class="['w-4 h-4', loadingApps ? 'animate-spin' : '']" />
-              <span>Refresh</span>
-            </button>
+            <RefreshButton :loading="loadingApps" @click="fetchApps" />
           </div>
 
           <!-- Loading Apps -->
@@ -82,33 +63,20 @@
 
           <!-- Apps Grid -->
           <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <router-link v-for="app in apps" :key="app.id" :to="`/apps/${app.id}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
-                     hover:border-gray-600 hover:bg-gray-750 transition-all group">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
-                  <CubeIcon class="w-5 h-5 text-gray-400" />
-                </div>
-                <div>
-                  <h3 class="text-white font-medium group-hover:text-blue-400 transition-colors">
-                    {{ app.name }}
-                  </h3>
-                  <p class="text-gray-500 text-sm">{{ app.kind }}</p>
-                </div>
-              </div>
-
-              <p v-if="app.description" class="mt-3 text-gray-400 text-sm line-clamp-2">
-                {{ app.description }}
-              </p>
-
-              <div class="mt-4 flex items-center gap-2 flex-wrap">
-                <span class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">
-                  {{ app.kind }}
-                </span>
-                <span v-if="app.language" class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">
-                  {{ app.language }}
-                </span>
-              </div>
-            </router-link>
+            <EntityCard 
+              v-for="app in apps" 
+              :key="app.id"
+              :icon="CubeIcon"
+              :title="app.name"
+              :subtitle="app.kind"
+              :description="app.description"
+              :show-no-description="false"
+              :to="`/apps/${app.id}`"
+            >
+              <template #badges>
+                <TagGroup :tags="[app.kind, app.language].filter(Boolean) as string[]" />
+              </template>
+            </EntityCard>
           </div>
         </div>
       </div>
@@ -121,12 +89,16 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   FolderIcon,
-  CubeIcon,
-  ArrowPathIcon
+  CubeIcon
 } from '@heroicons/vue/24/outline';
 import Spinner from '../components/ui/Spinner.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import Tabs from '../components/ui/Tabs.vue';
+import EntityCard from '../components/ui/EntityCard.vue';
+import TagGroup from '../components/ui/TagGroup.vue';
+import RefreshButton from '../components/ui/RefreshButton.vue';
+import DetailHeader from '../components/ui/DetailHeader.vue';
+import DefinitionList from '../components/ui/DefinitionList.vue';
 import type { Project } from '../types/Project';
 import type { App } from '../types/App';
 

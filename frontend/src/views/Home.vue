@@ -7,63 +7,25 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <router-link 
+      <StatsCard 
         v-for="stat in stats" 
         :key="stat.label" 
+        :label="stat.label"
+        :value="stat.value"
+        :icon="stat.icon"
         :to="stat.to"
-        class="bg-gray-800 rounded-lg p-5 border border-gray-700 hover:border-gray-600 transition-colors"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-400 text-sm">{{ stat.label }}</p>
-            <p class="text-2xl font-semibold text-white mt-1">
-              <span v-if="loading" class="inline-block w-8 h-6 bg-gray-700 rounded animate-pulse"></span>
-              <span v-else>{{ stat.value }}</span>
-            </p>
-          </div>
-          <component :is="stat.icon" class="w-8 h-8 text-gray-600" />
-        </div>
-      </router-link>
+        :loading="loading"
+      />
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Recent Activity -->
-      <div class="lg:col-span-2 bg-gray-800 rounded-lg border border-gray-700">
-        <div class="px-5 py-4 border-b border-gray-700">
-          <h2 class="text-lg font-medium text-white">Recent Activity</h2>
-        </div>
-        <div class="divide-y divide-gray-700">
-          <div v-if="loadingActivity" class="px-5 py-8 flex justify-center">
-            <Spinner size="md" />
-          </div>
-          <template v-else-if="recentActivity.length > 0">
-            <div 
-              v-for="activity in recentActivity" 
-              :key="activity.id"
-              class="px-5 py-4 flex items-start gap-4 hover:bg-gray-750 transition-colors"
-            >
-              <div :class="[
-                'w-2 h-2 rounded-full mt-2 shrink-0',
-                activity.status === 'success' ? 'bg-green-500' :
-                activity.status === 'running' ? 'bg-blue-500' :
-                activity.status === 'failure' ? 'bg-red-500' : 'bg-gray-500'
-              ]" />
-              <div class="flex-1 min-w-0">
-                <p class="text-white text-sm">
-                  <router-link :to="`/apps/${activity.appId}`" class="font-medium hover:text-blue-400">
-                    {{ activity.appName }}
-                  </router-link>
-                  <span class="text-gray-400"> {{ activity.message }}</span>
-                </p>
-                <p class="text-gray-500 text-xs mt-1">{{ activity.time }}</p>
-              </div>
-            </div>
-          </template>
-          <div v-else class="px-5 py-8 text-center text-gray-500">
-            No recent activity
-          </div>
-        </div>
-      </div>
+      <ActivityList 
+        class="lg:col-span-2"
+        title="Recent Activity"
+        :items="activityItems"
+        :loading="loadingActivity"
+      />
 
       <!-- Quick Actions -->
       <div class="bg-gray-800 rounded-lg border border-gray-700">
@@ -162,23 +124,13 @@
           placeholder="Project description..." 
         />
         <ErrorAlert v-if="projectError" :message="projectError" />
-        <div class="flex items-center justify-end gap-3 pt-2">
-          <button type="button" @click="showProjectModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
-            Cancel
-          </button>
-          <button 
-            type="submit"
-            :disabled="!projectForm.name || savingProject"
-            :class="[
-              'px-4 py-2 rounded-lg font-medium transition-colors',
-              projectForm.name && !savingProject
-                ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            ]"
-          >
-            {{ savingProject ? 'Creating...' : 'Create Project' }}
-          </button>
-        </div>
+        <FormActions 
+          submit-label="Create Project"
+          submitting-label="Creating..."
+          :disabled="!projectForm.name"
+          :saving="savingProject"
+          @cancel="showProjectModal = false"
+        />
       </form>
     </Modal>
 
@@ -227,60 +179,26 @@
           placeholder="Application description..." 
         />
         <ErrorAlert v-if="appError" :message="appError" />
-        <div class="flex items-center justify-end gap-3 pt-2">
-          <button type="button" @click="showAppModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
-            Cancel
-          </button>
-          <button 
-            type="submit"
-            :disabled="!canCreateApp || savingApp"
-            :class="[
-              'px-4 py-2 rounded-lg font-medium transition-colors',
-              canCreateApp && !savingApp
-                ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            ]"
-          >
-            {{ savingApp ? 'Creating...' : 'Create Application' }}
-          </button>
-        </div>
+        <FormActions 
+          submit-label="Create Application"
+          submitting-label="Creating..."
+          :disabled="!canCreateApp"
+          :saving="savingApp"
+          @cancel="showAppModal = false"
+        />
       </form>
     </Modal>
 
     <!-- Create Template Modal -->
     <Modal :open="showTemplateModal" title="Add Template" size="lg" @close="showTemplateModal = false">
       <form @submit.prevent="createTemplate" class="space-y-4">
-        <div>
-          <label class="block text-gray-400 text-sm mb-2">Repository *</label>
-          <div class="relative">
-            <input 
-              v-model="repoSearch" 
-              type="text" 
-              placeholder="Search repositories..."
-              @focus="showRepoDropdown = true"
-              class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                     placeholder-gray-500 focus:outline-none focus:border-gray-600" 
-            />
-            <div v-if="showRepoDropdown && filteredRepos.length > 0" 
-              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
-              <button 
-                v-for="repo in filteredRepos" 
-                :key="repo.id" 
-                type="button"
-                @click="selectRepo(repo)"
-                class="w-full px-4 py-2.5 text-left hover:bg-gray-800 transition-colors"
-              >
-                <p class="text-white text-sm">{{ repo.fullName }}</p>
-              </button>
-            </div>
-          </div>
-          <div v-if="selectedRepo" class="mt-2 p-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-between">
-            <p class="text-white text-sm">{{ selectedRepo.fullName }}</p>
-            <button type="button" @click="selectedRepo = null" class="text-gray-500 hover:text-white">
-              <XMarkIcon class="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <RepositoryPicker 
+          v-model="selectedRepo"
+          :repos="repoOptions"
+          label="Repository"
+          required
+          @select="onRepoSelect"
+        />
         <FormField 
           v-model="templateForm.name" 
           label="Template Name" 
@@ -313,23 +231,13 @@
           placeholder="Template description..." 
         />
         <ErrorAlert v-if="templateError" :message="templateError" />
-        <div class="flex items-center justify-end gap-3 pt-2">
-          <button type="button" @click="showTemplateModal = false" class="px-4 py-2 text-gray-400 hover:text-white">
-            Cancel
-          </button>
-          <button 
-            type="submit"
-            :disabled="!canCreateTemplate || savingTemplate"
-            :class="[
-              'px-4 py-2 rounded-lg font-medium transition-colors',
-              canCreateTemplate && !savingTemplate
-                ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            ]"
-          >
-            {{ savingTemplate ? 'Adding...' : 'Add Template' }}
-          </button>
-        </div>
+        <FormActions 
+          submit-label="Add Template"
+          submitting-label="Adding..."
+          :disabled="!canCreateTemplate"
+          :saving="savingTemplate"
+          @cancel="showTemplateModal = false"
+        />
       </form>
     </Modal>
   </div>
@@ -346,7 +254,6 @@ import {
   PlusIcon,
   RocketLaunchIcon,
   Cog6ToothIcon,
-  XMarkIcon
 } from '@heroicons/vue/24/outline';
 import { appsApi, projectsApi, templatesApi, repoApi, type CreateAppRequest, type CreateProjectRequest, type CreateTemplateRequest } from '../api';
 import type { App } from '../types/App';
@@ -360,6 +267,10 @@ import StatusBadge from '../components/ui/StatusBadge.vue';
 import ErrorAlert from '../components/ui/ErrorAlert.vue';
 import FormField from '../components/ui/FormField.vue';
 import Dropdown from '../components/ui/Dropdown.vue';
+import FormActions from '../components/ui/FormActions.vue';
+import StatsCard from '../components/ui/StatsCard.vue';
+import ActivityList from '../components/ui/ActivityList.vue';
+import RepositoryPicker, { type Repository } from '../components/ui/RepositoryPicker.vue';
 import { useFormatters } from '../composables/useFormatters';
 
 const router = useRouter();
@@ -394,18 +305,18 @@ const recentBuilds = computed(() =>
     .slice(0, 5)
 );
 
-// Activity (derived from builds)
-const recentActivity = computed(() => 
+// Activity (derived from builds) - formatted for ActivityList component
+const activityItems = computed(() => 
   allBuilds.value
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
     .slice(0, 5)
     .map(build => ({
       id: `${build.appId}-${build.id}`,
-      appId: build.appId,
-      appName: build.appName,
-      status: build.status,
+      title: build.appName,
       message: `build #${build.number} ${build.status}`,
       time: formatTime(build.startedAt),
+      status: build.status,
+      to: `/apps/${build.appId}`,
     }))
 );
 
@@ -449,9 +360,7 @@ const canCreateApp = computed(() =>
 const showTemplateModal = ref(false);
 const savingTemplate = ref(false);
 const templateError = ref('');
-const repoSearch = ref('');
-const showRepoDropdown = ref(false);
-const selectedRepo = ref<Repo | null>(null);
+const selectedRepo = ref<Repository | null>(null);
 const templateForm = reactive({
   name: '',
   description: '',
@@ -459,12 +368,10 @@ const templateForm = reactive({
   language: '',
 });
 
-const filteredRepos = computed(() => {
-  if (!repoSearch.value) return repos.value.slice(0, 10);
-  return repos.value.filter(r =>
-    r.fullName.toLowerCase().includes(repoSearch.value.toLowerCase())
-  ).slice(0, 10);
-});
+// Repos formatted for RepositoryPicker
+const repoOptions = computed(() => 
+  repos.value.map(r => ({ id: r.id, fullName: r.fullName, url: r.url }))
+);
 
 const canCreateTemplate = computed(() => 
   templateForm.name && templateForm.kind && templateForm.language && selectedRepo.value
@@ -558,10 +465,7 @@ const openTemplateModal = async () => {
   }
 };
 
-const selectRepo = (repo: Repo) => {
-  selectedRepo.value = repo;
-  repoSearch.value = '';
-  showRepoDropdown.value = false;
+const onRepoSelect = (repo: Repository) => {
   if (!templateForm.name) {
     templateForm.name = repo.fullName.split('/').pop() || '';
   }

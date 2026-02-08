@@ -39,35 +39,20 @@
 
     <!-- App Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <router-link v-for="app in filteredApps" :key="app.id" :to="`/apps/${app.id}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
-          hover:border-gray-600 hover:bg-gray-750 transition-all group">
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
-              <CubeIcon class="w-5 h-5 text-gray-400" />
-            </div>
-            <div>
-              <h3 class="text-white font-medium group-hover:text-blue-400 transition-colors">
-                {{ app.name }}
-              </h3>
-              <p class="text-gray-500 text-sm">{{ app.kind }}</p>
-            </div>
-          </div>
-        </div>
-
-        <p v-if="app.description" class="mt-3 text-gray-400 text-sm line-clamp-2">
-          {{ app.description }}
-        </p>
-
-        <div class="mt-4 flex items-center gap-2 flex-wrap">
-          <span class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">
-            {{ app.kind }}
-          </span>
-          <span v-if="app.language" class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">
-            {{ app.language }}
-          </span>
-        </div>
-      </router-link>
+      <EntityCard 
+        v-for="app in filteredApps" 
+        :key="app.id"
+        :icon="CubeIcon"
+        :title="app.name"
+        :subtitle="app.kind"
+        :description="app.description"
+        :show-no-description="false"
+        :to="`/apps/${app.id}`"
+      >
+        <template #badges>
+          <TagGroup :tags="[app.kind, app.language].filter(Boolean) as string[]" />
+        </template>
+      </EntityCard>
     </div>
 
     <!-- Create App Modal -->
@@ -131,19 +116,13 @@
 
         <ErrorAlert v-if="error" :message="error" />
 
-        <div class="flex items-center justify-end gap-3 pt-2">
-          <button type="button" @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
-            Cancel
-          </button>
-          <button type="submit" :disabled="!canCreate || saving" :class="[
-            'px-4 py-2 rounded-lg font-medium transition-colors',
-            canCreate && !saving
-              ? 'bg-blue-600 hover:bg-blue-500 text-white'
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-          ]">
-            {{ saving ? 'Creating...' : 'Create Application' }}
-          </button>
-        </div>
+        <FormActions 
+          submit-label="Create Application"
+          submitting-label="Creating..."
+          :disabled="!canCreate"
+          :saving="saving"
+          @cancel="closeModal"
+        />
       </form>
     </Modal>
   </div>
@@ -168,6 +147,9 @@ import ErrorAlert from '../components/ui/ErrorAlert.vue';
 import FormField from '../components/ui/FormField.vue';
 import PageHeader from '../components/ui/PageHeader.vue';
 import Dropdown from '../components/ui/Dropdown.vue';
+import FormActions from '../components/ui/FormActions.vue';
+import EntityCard from '../components/ui/EntityCard.vue';
+import TagGroup from '../components/ui/TagGroup.vue';
 
 // List state
 const appList = ref<App[]>([]);

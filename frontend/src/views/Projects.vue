@@ -29,28 +29,14 @@
 
     <!-- Project Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <router-link v-for="project in filteredProjects" :key="project.id" :to="`/projects/${project.id}`" class="bg-gray-800 border border-gray-700 rounded-lg p-5 
-          hover:border-gray-600 transition-all group">
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
-              <FolderIcon class="w-5 h-5 text-gray-400" />
-            </div>
-            <div>
-              <h3 class="text-white font-medium group-hover:text-blue-400 transition-colors">
-                {{ project.name }}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        <p v-if="project.description" class="mt-4 text-gray-400 text-sm line-clamp-2">
-          {{ project.description }}
-        </p>
-        <p v-else class="mt-4 text-gray-500 text-sm italic">
-          No description
-        </p>
-      </router-link>
+      <EntityCard 
+        v-for="project in filteredProjects" 
+        :key="project.id"
+        :icon="FolderIcon"
+        :title="project.name"
+        :description="project.description"
+        :to="`/projects/${project.id}`"
+      />
     </div>
 
     <!-- Create Project Modal -->
@@ -73,19 +59,13 @@
 
         <ErrorAlert v-if="error" :message="error" />
 
-        <div class="flex items-center justify-end gap-3 pt-2">
-          <button type="button" @click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">
-            Cancel
-          </button>
-          <button type="submit" :disabled="!canCreate || saving" :class="[
-            'px-4 py-2 rounded-lg font-medium transition-colors',
-            canCreate && !saving
-              ? 'bg-blue-600 hover:bg-blue-500 text-white'
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-          ]">
-            {{ saving ? 'Creating...' : 'Create Project' }}
-          </button>
-        </div>
+        <FormActions 
+          submit-label="Create Project"
+          submitting-label="Creating..."
+          :disabled="!canCreate"
+          :saving="saving"
+          @cancel="closeModal"
+        />
       </form>
     </Modal>
   </div>
@@ -107,6 +87,8 @@ import EmptyState from '../components/ui/EmptyState.vue';
 import ErrorAlert from '../components/ui/ErrorAlert.vue';
 import FormField from '../components/ui/FormField.vue';
 import PageHeader from '../components/ui/PageHeader.vue';
+import FormActions from '../components/ui/FormActions.vue';
+import EntityCard from '../components/ui/EntityCard.vue';
 
 // List state
 const projectList = ref<Project[]>([]);
