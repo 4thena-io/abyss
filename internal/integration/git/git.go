@@ -1,29 +1,154 @@
 package git
 
-import gogit "github.com/go-git/go-git/v5"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
-type GitClient struct{}
+	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+)
 
-func New() *GitClient {
-	return &GitClient{}
+type GitClient struct {
+	token string
 }
 
-func (c *GitClient) CloneTemplate(repoURL, token, localPath string) error {
+func New(token string) *GitClient {
+	return &GitClient{token: token}
+}
+
+// Clone clones a repository to a local path.
+func (c *GitClient) Clone(repoURL, localPath string) error {
 	_, err := gogit.PlainClone(localPath, false, &gogit.CloneOptions{
-		URL: repoURL,
+		URL:  repoURL,
+		Auth: c.auth(),
+	})
+	return err
+}
+
+// InitAndPush initializes a new git repo, adds all files, commits, and pushes to remote.
+func (c *GitClient) InitAndPush(localPath, remoteURL, commitMsg string) error {
+	repo, err := gogit.PlainInit(localPath, false)
+	if err != nil {
+		return fmt.Errorf("failed to init repo: %w", err)
+	}
+
+	// Add remote
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{remoteURL},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to add remote: %w", err)
+	}
+
+	// Add all files
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("failed to get worktree: %w", err)
+	}
+
+	err = worktree.AddGlob(".")
+	if err != nil {
+		return fmt.Errorf("failed to add files: %w", err)
+	}
+
+	// Commit
+	_, err = worktree.Commit(commitMsg, &gogit.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Abyss",
+			Email: "abyss@localhost",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
+	}
+
+	// Push
+	err = repo.Push(&gogit.PushOptions{
+		Auth: c.auth(),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to push: %w", err)
 	}
 
 	return nil
 }
 
-func (c *GitClient) PushRepo(token, localPath string) error {
-	r, err := gogit.PlainOpen(localPath)
-	if err != nil {
-		return err
+// FileExists checks if a file exists in the local path.
+func (c *GitClient) FileExists(localPath, filePath string) bool {
+	fullPath := filepath.Join(localPath, filePath)
+	_, err := os.Stat(fullPath)
+	return err == nil
+}
+
+// CreateFile creates a file with the given content.
+func (c *GitClient) CreateFile(localPath, filePath, content string) error {
+	fullPath := filepath.Join(localPath, filePath)
+
+	// Ensure parent directory exists
+	dir := filepath.Dir(fullPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	return r.Push(&gogit.PushOptions{})
+	return os.WriteFile(fullPath, []byte(content), 0644)
+}
+
+// RemoveGitDir removes the .git directory from a local path.
+func (c *GitClient) RemoveGitDir(localPath string) error {
+	gitDir := filepath.Join(localPath, ".git")
+	return os.RemoveAll(gitDir)
+}
+
+// AddCommitPush adds all changes, commits, and pushes to the existing remote.
+func (c *GitClient) AddCommitPush(localPath, commitMsg string) error {
+	repo, err := gogit.PlainOpen(localPath)
+	if err != nil {
+		return fmt.Errorf("failed to open repo: %w", err)
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("failed to get worktree: %w", err)
+	}
+
+	err = worktree.AddGlob(".")
+	if err != nil {
+		return fmt.Errorf("failed to add files: %w", err)
+	}
+
+	_, err = worktree.Commit(commitMsg, &gogit.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Abyss",
+			Email: "abyss@localhost",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
+	}
+
+	err = repo.Push(&gogit.PushOptions{
+		Auth: c.auth(),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to push: %w", err)
+	}
+
+	return nil
+}
+
+func (c *GitClient) auth() *http.BasicAuth {
+	if c.token == "" {
+		return nil
+	}
+	return &http.BasicAuth{
+		Username: "git", // Can be anything for token auth
+		Password: c.token,
+	}
 }

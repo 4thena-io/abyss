@@ -29,22 +29,33 @@ func NewWoodpeckerCi(url, token string) (*WoodpeckerCi, error) {
 	}, nil
 }
 
-func (c *WoodpeckerCi) ActivateRepo(ctx context.Context, ID int64) (*model.CIRepo, error) {
+// ActivateRepo activates CI for a repository using the forge remote ID.
+// The slug parameter is ignored by Woodpecker.
+func (c *WoodpeckerCi) ActivateRepo(ctx context.Context, forgeRemoteID int64, slug string) (*model.CIRepo, error) {
 	repo, err := c.client.RepoPost(woodpecker.RepoPostOptions{
-		ForgeRemoteID: ID,
+		ForgeRemoteID: forgeRemoteID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to activate ci repo: %w", err)
 	}
-	
+
 	return &model.CIRepo{
-		ID: repo.ID,
-		URL: fmt.Sprintf("%s/repos/%d", c.host, repo.ID),
+		ID:   repo.ID,
+		URL:  fmt.Sprintf("%s/repos/%d", c.host, repo.ID),
+		Slug: repo.FullName,
 	}, nil
 }
 
-func (c *WoodpeckerCi) GetBuilds(ctx context.Context, ID int64) ([]model.Build, error) {
-	builds, err := c.client.PipelineList(ID, woodpecker.PipelineListOptions{})
+// DeleteRepo removes a repository from CI using the CI repo ID.
+// The slug parameter is ignored by Woodpecker.
+func (c *WoodpeckerCi) DeleteRepo(ctx context.Context, ciRepoID int64, slug string) error {
+	return c.client.RepoDel(ciRepoID)
+}
+
+// GetBuilds returns pipelines for a repository using the CI repo ID.
+// The slug parameter is ignored by Woodpecker.
+func (c *WoodpeckerCi) GetBuilds(ctx context.Context, ciRepoID int64, slug string) ([]model.Build, error) {
+	builds, err := c.client.PipelineList(ciRepoID, woodpecker.PipelineListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch builds: %w", err)
 	}
@@ -57,7 +68,7 @@ func (c *WoodpeckerCi) GetBuilds(ctx context.Context, ID int64) ([]model.Build, 
 			Status: build.Status,
 			Branch: build.Branch,
 			Commit: build.Commit,
-			Link:   fmt.Sprintf("%s/repos/%d/pipeline/%d", c.host, ID, build.Number),
+			Link:   fmt.Sprintf("%s/repos/%d/pipeline/%d", c.host, ciRepoID, build.Number),
 		}
 	}
 

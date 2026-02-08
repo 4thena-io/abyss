@@ -7,6 +7,7 @@ import (
 )
 
 type CI interface {
-	ActivateRepo(ctx context.Context, ID int64) (*model.CIRepo, error)
-	GetBuilds(ctx context.Context, ID int64) ([]model.Build, error)
+	ActivateRepo(ctx context.Context, forgeRemoteID int64, slug string) (*model.CIRepo, error)
+	DeleteRepo(ctx context.Context, ciRepoID int64, slug string) error
+	GetBuilds(ctx context.Context, ciRepoID int64, slug string) ([]model.Build, error)
 }

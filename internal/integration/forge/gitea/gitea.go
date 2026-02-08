@@ -57,6 +57,21 @@ func (f *GiteaForge) GetOrgRepos(ctx context.Context, name string) ([]model.Repo
 	return res, nil
 }
 
+func (f *GiteaForge) GetRepo(ctx context.Context, id int64) (*model.Repo, error) {
+	repo, _, err := f.client.GetRepoByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Repo{
+		ID:       repo.ID,
+		Name:     repo.Name,
+		FullName: repo.FullName,
+		URL:      repo.HTMLURL,
+		CloneURL: repo.CloneURL,
+	}, nil
+}
+
 func (f *GiteaForge) DeleteRepo(ctx context.Context, owner, name string) error {
 	_, err := f.client.DeleteRepo(owner, name)
 	if err != nil {
