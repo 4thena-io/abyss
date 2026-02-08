@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"git.4thena.io/4thena/abys/internal/api/rest/request"
+	"git.4thena.io/4thena/abys/internal/api/rest/response"
 	"git.4thena.io/4thena/abys/internal/database"
-	"git.4thena.io/4thena/abys/internal/dto/request"
-	"git.4thena.io/4thena/abys/internal/dto/response"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
@@ -120,15 +120,16 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 	res := make([]response.App, len(apps))
 	for i, app := range apps {
 		res[i] = response.App{
-			ID:          app.ID,
-			Name:        app.Name,
-			Description: app.Description,
-			Kind:        app.Kind,
-			Language:    app.Language,
-			RepoURL:     app.RepoURL,
-			CiURL:       app.CIURL,
-			ProjectID:   app.ProjectID,
-			TemplateID:  app.TemplateID,
+			ID:           app.ID,
+			Name:         app.Name,
+			Description:  app.Description,
+			Kind:         app.Kind,
+			Language:     app.Language,
+			RepoFullName: app.RepoFullName,
+			RepoURL:      app.RepoURL,
+			CiURL:        app.CIURL,
+			ProjectID:    app.ProjectID,
+			TemplateID:   app.TemplateID,
 		}
 	}
 
@@ -151,4 +152,3 @@ func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
-

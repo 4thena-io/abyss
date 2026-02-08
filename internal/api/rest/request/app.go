@@ -6,5 +6,6 @@ type CreateApp struct {
 	Kind        string `json:"kind"`
 	Language    string `json:"language"`
 	ProjectID   uint   `json:"projectId"`
-	TemplateID  uint   `json:"templateId"`
+	TemplateID  uint   `json:"templateId,omitempty"`
+	RepoID      int64  `json:"repoId,omitempty"`
 }

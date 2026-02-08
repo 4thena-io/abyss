@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"git.4thena.io/4thena/abys/internal/api/rest/request"
+	"git.4thena.io/4thena/abys/internal/api/rest/response"
 	"git.4thena.io/4thena/abys/internal/database"
-	"git.4thena.io/4thena/abys/internal/dto/request"
-	"git.4thena.io/4thena/abys/internal/dto/response"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
@@ -118,4 +118,3 @@ func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusNoContent)
 }
-

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"git.4thena.io/4thena/abys/internal/dto/response"
+	"git.4thena.io/4thena/abys/internal/api/rest/response"
 	"git.4thena.io/4thena/abys/internal/integration/forge"
 	"git.4thena.io/4thena/abys/internal/service"
 )

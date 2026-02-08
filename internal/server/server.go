@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"git.4thena.io/4thena/abys/internal/router"
+	"git.4thena.io/4thena/abys/internal/api/rest/router"
 )
 
 type Server struct {

@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"git.4thena.io/4thena/abys/internal/api/rest/request"
+	"git.4thena.io/4thena/abys/internal/api/rest/response"
+	"git.4thena.io/4thena/abys/internal/config"
 	"git.4thena.io/4thena/abys/internal/database"
-	"git.4thena.io/4thena/abys/internal/dto/request"
-	"git.4thena.io/4thena/abys/internal/dto/response"
 	"git.4thena.io/4thena/abys/internal/integration/ci"
 	"git.4thena.io/4thena/abys/internal/integration/forge"
+	"git.4thena.io/4thena/abys/internal/integration/git"
 	"git.4thena.io/4thena/abys/internal/model"
 	"git.4thena.io/4thena/abys/internal/repository"
 	"git.4thena.io/4thena/abys/internal/service"
@@ -28,14 +30,15 @@ func NewAppHandler() *AppHandler {
 
 	forge, err := forge.NewForge()
 	if err != nil {
-		log.Fatalf("failed to create a git provider: %s", err)
+		log.Fatalf("failed to create a forge provider: %s", err)
 	}
 	ciProvider, err := ci.NewCi()
 	if err != nil {
 		log.Fatalf("failed to create a ci provider: %s", err)
 	}
+	gitClient := git.New(config.Environment.ForgeToken)
 
-	service := service.NewAppService(*appRepository, *projectRepository, *templateRepository, forge, ciProvider)
+	service := service.NewAppService(*appRepository, *projectRepository, *templateRepository, forge, ciProvider, gitClient)
 
 	return &AppHandler{*service}
 }
@@ -48,16 +51,34 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	appModel := &model.App{
-		Name:        req.Name,
-		Description: req.Description,
-		Kind:        req.Kind,
-		Language:    req.Language,
-		ProjectID:   req.ProjectID,
-		TemplateID:  req.TemplateID,
+	var app *model.App
+	var err error
+
+	if req.RepoID != 0 {
+		// Create from existing repo
+		app, err = h.service.CreateAppFromRepo(r.Context(), &model.App{
+			Name:        req.Name,
+			Description: req.Description,
+			Kind:        req.Kind,
+			Language:    req.Language,
+			ProjectID:   req.ProjectID,
+			RepoID:      req.RepoID,
+		})
+	} else if req.TemplateID != 0 {
+		// Create from template
+		app, err = h.service.CreateAppFromTemplate(r.Context(), &model.App{
+			Name:        req.Name,
+			Description: req.Description,
+			Kind:        req.Kind,
+			Language:    req.Language,
+			ProjectID:   req.ProjectID,
+			TemplateID:  &req.TemplateID,
+		})
+	} else {
+		http.Error(w, "Must specify either templateId or repoId", http.StatusBadRequest)
+		return
 	}
 
-	app, err := h.service.CreateApp(r.Context(), appModel)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,15 +87,16 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response.App{
-		ID:          app.ID,
-		Name:        app.Name,
-		Description: app.Description,
-		Kind:        app.Kind,
-		Language:    app.Language,
-		RepoURL:     app.RepoURL,
-		CiURL:       app.CIURL,
-		ProjectID:   app.ProjectID,
-		TemplateID:  app.TemplateID,
+		ID:           app.ID,
+		Name:         app.Name,
+		Description:  app.Description,
+		Kind:         app.Kind,
+		Language:     app.Language,
+		RepoFullName: app.RepoFullName,
+		RepoURL:      app.RepoURL,
+		CiURL:        app.CIURL,
+		ProjectID:    app.ProjectID,
+		TemplateID:   app.TemplateID,
 	})
 }
 
@@ -88,15 +110,16 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 	res := make([]response.App, len(apps))
 	for i, app := range apps {
 		res[i] = response.App{
-			ID:          app.ID,
-			Name:        app.Name,
-			Description: app.Description,
-			Kind:        app.Kind,
-			Language:    app.Language,
-			RepoURL:     app.RepoURL,
-			CiURL:       app.CIURL,
-			ProjectID:   app.ProjectID,
-			TemplateID:  app.TemplateID,
+			ID:           app.ID,
+			Name:         app.Name,
+			Description:  app.Description,
+			Kind:         app.Kind,
+			Language:     app.Language,
+			RepoFullName: app.RepoFullName,
+			RepoURL:      app.RepoURL,
+			CiURL:        app.CIURL,
+			ProjectID:    app.ProjectID,
+			TemplateID:   app.TemplateID,
 		}
 	}
 
@@ -123,15 +146,16 @@ func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response.App{
-		ID:          app.ID,
-		Name:        app.Name,
-		Description: app.Description,
-		Kind:        app.Kind,
-		Language:    app.Language,
-		RepoURL:     app.RepoURL,
-		CiURL:       app.CIURL,
-		ProjectID:   app.ProjectID,
-		TemplateID:  app.TemplateID,
+		ID:           app.ID,
+		Name:         app.Name,
+		Description:  app.Description,
+		Kind:         app.Kind,
+		Language:     app.Language,
+		RepoFullName: app.RepoFullName,
+		RepoURL:      app.RepoURL,
+		CiURL:        app.CIURL,
+		ProjectID:    app.ProjectID,
+		TemplateID:   app.TemplateID,
 	})
 }
 
@@ -180,4 +204,3 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
-
