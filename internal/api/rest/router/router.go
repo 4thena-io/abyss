@@ -1,8 +1,8 @@
 package router
 
 import (
-	"git.4thena.io/4thena/abys/internal/api/rest/handler"
-	"git.4thena.io/4thena/abys/internal/web"
+	"github.com/4thena-io/abyss/internal/api/rest/handler"
+	"github.com/4thena-io/abyss/internal/web"
 	"github.com/go-chi/chi/v5"
 )
 

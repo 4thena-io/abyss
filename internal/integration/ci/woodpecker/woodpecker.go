@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/model"
+	"github.com/4thena-io/abyss/internal/model"
 	"go.woodpecker-ci.org/woodpecker/v3/woodpecker-go/woodpecker"
 	"golang.org/x/oauth2"
 )

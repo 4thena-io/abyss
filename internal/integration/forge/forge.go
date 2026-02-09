@@ -3,7 +3,7 @@ package forge
 import (
 	"context"
 
-	"git.4thena.io/4thena/abys/internal/model"
+	"github.com/4thena-io/abyss/internal/model"
 )
 
 type Forge interface {

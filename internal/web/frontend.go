@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"git.4thena.io/4thena/abys/frontend"
+	"github.com/4thena-io/abyss/frontend"
 )
 
 type FrontendHandler struct {

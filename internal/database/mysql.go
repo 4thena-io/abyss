@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/config"
+	"github.com/4thena-io/abyss/internal/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

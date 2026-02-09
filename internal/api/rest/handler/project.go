@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"git.4thena.io/4thena/abys/internal/api/rest/request"
-	"git.4thena.io/4thena/abys/internal/api/rest/response"
-	"git.4thena.io/4thena/abys/internal/database"
-	"git.4thena.io/4thena/abys/internal/model"
-	"git.4thena.io/4thena/abys/internal/repository"
-	"git.4thena.io/4thena/abys/internal/service"
+	"github.com/4thena-io/abyss/internal/api/rest/request"
+	"github.com/4thena-io/abyss/internal/api/rest/response"
+	"github.com/4thena-io/abyss/internal/database"
+	"github.com/4thena-io/abyss/internal/model"
+	"github.com/4thena-io/abyss/internal/repository"
+	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
 )
 

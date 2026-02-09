@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"git.4thena.io/4thena/abys/internal/integration/forge"
-	"git.4thena.io/4thena/abys/internal/model"
+	"github.com/4thena-io/abyss/internal/integration/forge"
+	"github.com/4thena-io/abyss/internal/model"
 )
 
 type RepoService struct {

@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"git.4thena.io/4thena/abys/internal/constant"
+	"github.com/4thena-io/abyss/internal/constant"
 )
 
 type App struct {
