@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.4thena.io/4thena/abys/internal/model"
+	"github.com/4thena-io/abyss/internal/model"
 	"github.com/drone/drone-go/drone"
 	"golang.org/x/oauth2"
 )

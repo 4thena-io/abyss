@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/model"
-	"git.4thena.io/4thena/abys/internal/repository"
+	"github.com/4thena-io/abyss/internal/model"
+	"github.com/4thena-io/abyss/internal/repository"
 	"gorm.io/gorm"
 )
 

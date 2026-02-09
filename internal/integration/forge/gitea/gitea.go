@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	gt "code.gitea.io/sdk/gitea"
-	"git.4thena.io/4thena/abys/internal/model"
+	"github.com/4thena-io/abyss/internal/model"
 )
 
 type GiteaForge struct {

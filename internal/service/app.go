@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.4thena.io/4thena/abys/internal/constant"
-	"git.4thena.io/4thena/abys/internal/integration/ci"
-	"git.4thena.io/4thena/abys/internal/integration/forge"
-	"git.4thena.io/4thena/abys/internal/integration/git"
-	"git.4thena.io/4thena/abys/internal/model"
-	"git.4thena.io/4thena/abys/internal/repository"
+	"github.com/4thena-io/abyss/internal/constant"
+	"github.com/4thena-io/abyss/internal/integration/ci"
+	"github.com/4thena-io/abyss/internal/integration/forge"
+	"github.com/4thena-io/abyss/internal/integration/git"
+	"github.com/4thena-io/abyss/internal/model"
+	"github.com/4thena-io/abyss/internal/repository"
 	"gorm.io/gorm"
 )
 

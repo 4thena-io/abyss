@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	fg "codeberg.org/mvdkleijn/forgejo-sdk/forgejo"
-	"git.4thena.io/4thena/abys/internal/model"
+	"github.com/4thena-io/abyss/internal/model"
 )
 
 type ForgejoForge struct {

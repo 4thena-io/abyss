@@ -3,10 +3,10 @@ package forge
 import (
 	"fmt"
 
-	"git.4thena.io/4thena/abys/internal/config"
-	"git.4thena.io/4thena/abys/internal/integration/forge/forgejo"
-	"git.4thena.io/4thena/abys/internal/integration/forge/gitea"
-	"git.4thena.io/4thena/abys/internal/integration/forge/github"
+	"github.com/4thena-io/abyss/internal/config"
+	"github.com/4thena-io/abyss/internal/integration/forge/forgejo"
+	"github.com/4thena-io/abyss/internal/integration/forge/gitea"
+	"github.com/4thena-io/abyss/internal/integration/forge/github"
 )
 
 var (

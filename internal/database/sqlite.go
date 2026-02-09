@@ -1,7 +1,7 @@
 package database
 
 import (
-	"git.4thena.io/4thena/abys/internal/config"
+	"github.com/4thena-io/abyss/internal/config"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )

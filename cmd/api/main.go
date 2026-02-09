@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"git.4thena.io/4thena/abys/internal/server"
+	"github.com/4thena-io/abyss/internal/server"
 )
 
 func main() {

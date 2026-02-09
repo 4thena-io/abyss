@@ -1,4 +1,4 @@
-module git.4thena.io/4thena/abys
+module github.com/4thena-io/abyss
 
 go 1.24.4
 

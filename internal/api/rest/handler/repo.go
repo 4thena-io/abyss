@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"git.4thena.io/4thena/abys/internal/api/rest/response"
-	"git.4thena.io/4thena/abys/internal/integration/forge"
-	"git.4thena.io/4thena/abys/internal/service"
+	"github.com/4thena-io/abyss/internal/api/rest/response"
+	"github.com/4thena-io/abyss/internal/integration/forge"
+	"github.com/4thena-io/abyss/internal/service"
 )
 
 type RepoHandler struct {
