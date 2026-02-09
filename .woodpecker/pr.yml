@@ -6,11 +6,18 @@ variables:
   - &bun-image "oven/bun:1.3.3-alpine"
 
 steps:
-  build-frontend:
+  install-ui-dependencies:
     image: *bun-image
     directory: frontend/
     commands:
-      - bun install
+      - bun install --frozen-lockfile
+
+  build-ui:
+    image: *bun-image
+    directory: frontend/
+    depends_on:
+      - install-ui-dependencies
+    commands:
       - bun run build
 
   vendor:
@@ -21,7 +28,7 @@ steps:
   build-binary:
     image: *golang-image
     depends_on:
-      - build-frontend
+      - build-ui
       - vendor
     commands:
       - go build -ldflags="-s -w" -o build/abyss ./cmd/api
