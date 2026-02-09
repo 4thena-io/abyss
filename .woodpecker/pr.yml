@@ -1,0 +1,27 @@
+when:
+  event: pull_request
+
+variables:
+  - &golang-image "golang:1.24.4-alpine3.22"
+  - &bun-image "oven/bun:1.3.3-alpine"
+
+steps:
+  build-frontend:
+    image: *bun-image
+    directory: frontend/
+    commands:
+      - bun install
+      - bun run build
+
+  vendor:
+    image: *golang-image
+    commands:
+      - go mod vendor
+
+  build-binary:
+    image: *golang-image
+    depends_on:
+      - build-frontend
+      - vendor
+    commands:
+      - go build -ldflags="-s -w" -o build/abyss ./cmd/api
