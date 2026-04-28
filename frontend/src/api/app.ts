@@ -1,6 +1,7 @@
 import { api } from './client';
 import type { App } from '../types/App';
 import type { Build } from '../types/Build';
+import type { Deployment } from '../types/Deployment';
 
 export interface CreateAppRequest {
   name: string;
@@ -18,4 +19,5 @@ export const appsApi = {
   create: (data: CreateAppRequest) => api.post<App>('/apps', data),
   delete: (id: number) => api.delete(`/apps/${id}`),
   getBuilds: (id: number) => api.get<Build[]>(`/apps/${id}/builds`),
+  getDeployments: (id: number) => api.get<Deployment[]>(`/apps/${id}/deployments`),
 };
