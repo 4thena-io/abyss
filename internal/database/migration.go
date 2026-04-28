@@ -10,6 +10,8 @@ func RunMigrations(db *gorm.DB) error {
 		&model.Project{},
 		&model.Template{},
 		&model.App{},
+		&model.Team{},
+		&model.TeamMember{},
 		&model.Deployment{},
 	)
 }

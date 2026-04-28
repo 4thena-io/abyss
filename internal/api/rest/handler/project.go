@@ -44,6 +44,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	project, err := h.projectService.SaveProject(r.Context(), &model.Project{
 		Name:        req.Name,
 		Description: req.Description,
+		TeamID:      req.TeamID,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -56,6 +57,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		ID:          project.ID,
 		Name:        project.Name,
 		Description: project.Description,
+		TeamID:      project.TeamID,
 	})
 }
 
@@ -72,6 +74,7 @@ func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 			ID:          project.ID,
 			Name:        project.Name,
 			Description: project.Description,
+			TeamID:      project.TeamID,
 		}
 	}
 
@@ -101,6 +104,7 @@ func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) 
 		ID:          project.ID,
 		Name:        project.Name,
 		Description: project.Description,
+		TeamID:      project.TeamID,
 	})
 }
 
