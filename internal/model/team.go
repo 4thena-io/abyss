@@ -6,12 +6,20 @@ import (
 	"github.com/4thena-io/abyss/internal/constant"
 )
 
-type Project struct {
+type Team struct {
 	ID          uint            `gorm:"primaryKey;autoIncrement"`
 	Name        string          `gorm:"uniqueIndex"`
 	Description string          `gorm:"not null"`
-	TeamID      *uint
 	Status      constant.Status
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+type TeamMember struct {
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
+	TeamID    uint      `gorm:"not null;index"`
+	Username  string    `gorm:"not null"`
+	Role      string    `gorm:"not null;default:member"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

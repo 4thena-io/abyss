@@ -73,3 +73,12 @@ func (r *AppRepository) GetByTemplate(ctx context.Context, id uint) ([]model.App
 func (r *AppRepository) Delete(ctx context.Context, app *model.App) error {
 	return r.db.WithContext(ctx).Delete(&app).Error
 }
+
+func (r *AppRepository) CountByTeam(ctx context.Context, teamID uint) (int64, error) {
+	var count int64
+	result := r.db.WithContext(ctx).Model(&model.App{}).
+		Joins("JOIN projects ON projects.id = apps.project_id").
+		Where("projects.team_id = ?", teamID).
+		Count(&count)
+	return count, result.Error
+}
