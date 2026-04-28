@@ -12,5 +12,6 @@ func RunMigrations(db *gorm.DB) error {
 		&model.App{},
 		&model.Team{},
 		&model.TeamMember{},
+		&model.Deployment{},
 	)
 }

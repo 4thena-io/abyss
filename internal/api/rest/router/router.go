@@ -28,6 +28,7 @@ func New() chi.Router {
 					r.Get("/", app.GetAppByID)
 					r.Delete("/", app.DeleteApp)
 					r.Get("/builds", app.GetAppBuilds)
+					r.Get("/deployments", app.GetAppDeployments)
 				})
 			})
 
