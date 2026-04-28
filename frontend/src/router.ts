@@ -5,10 +5,14 @@ import Projects from "./views/Projects.vue";
 import Templates from "./views/Templates.vue";
 import AppDetail from "./views/AppDetail.vue";
 import ProjectDetail from "./views/ProjectDetail.vue";
+import Teams from "./views/Teams.vue";
+import TeamDetail from "./views/TeamDetail.vue";
 
 
 const routes = [
 	{ path: "/", component: Home },
+  { path: "/teams", component: Teams },
+  { path: "/teams/:id", component: TeamDetail },
   { path: "/apps", component: Apps },
   { path: "/apps/:id", component: AppDetail },
   { path: "/projects", component: Projects },

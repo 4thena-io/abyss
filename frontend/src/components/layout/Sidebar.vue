@@ -38,11 +38,12 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
-import { 
-  CubeIcon, 
-  DocumentDuplicateIcon, 
-  FolderIcon, 
-  HomeIcon 
+import {
+  CubeIcon,
+  DocumentDuplicateIcon,
+  FolderIcon,
+  HomeIcon,
+  UsersIcon,
 } from '@heroicons/vue/24/outline';
 
 defineProps<{
@@ -51,6 +52,7 @@ defineProps<{
 
 const navItems = [
   { to: '/', label: 'Home', icon: HomeIcon },
+  { to: '/teams', label: 'Teams', icon: UsersIcon },
   { to: '/projects', label: 'Projects', icon: FolderIcon },
   { to: '/apps', label: 'Applications', icon: CubeIcon },
   { to: '/templates', label: 'Templates', icon: DocumentDuplicateIcon },
