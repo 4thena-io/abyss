@@ -20,13 +20,15 @@ import (
 )
 
 type AppHandler struct {
-	service service.AppService
+	service           service.AppService
+	deploymentService service.DeploymentService
 }
 
 func NewAppHandler() *AppHandler {
 	appRepository := repository.NewAppRepository(database.Connection)
 	projectRepository := repository.NewProjectRepository(database.Connection)
 	templateRepository := repository.NewTemplateRepository(database.Connection)
+	deploymentRepository := repository.NewDeploymentRepository(database.Connection)
 
 	forge, err := forge.NewForge()
 	if err != nil {
@@ -38,9 +40,10 @@ func NewAppHandler() *AppHandler {
 	}
 	gitClient := git.New(config.Environment.ForgeToken)
 
-	service := service.NewAppService(*appRepository, *projectRepository, *templateRepository, forge, ciProvider, gitClient)
+	appService := service.NewAppService(*appRepository, *projectRepository, *templateRepository, forge, ciProvider, gitClient)
+	deploymentService := service.NewDeploymentService(*deploymentRepository)
 
-	return &AppHandler{*service}
+	return &AppHandler{*appService, *deploymentService}
 }
 
 func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
@@ -203,4 +206,35 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AppHandler) GetAppDeployments(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	deployments, err := h.deploymentService.GetDeploymentsByApp(r.Context(), uint(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res := make([]response.Deployment, len(deployments))
+	for i, d := range deployments {
+		res[i] = response.Deployment{
+			ID:          d.ID,
+			AppID:       d.AppID,
+			Environment: d.Environment,
+			Status:      d.Status,
+			Commit:      d.Commit,
+			TriggeredBy: d.TriggeredBy,
+			Duration:    d.Duration,
+			DeployedAt:  d.DeployedAt.Format("2006-01-02T15:04:05Z07:00"),
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
 }
