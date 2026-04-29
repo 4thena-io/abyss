@@ -9,7 +9,7 @@ import (
 )
 
 type ProjectService struct {
-	repository   repository.ProjectRepository
+	repository repository.ProjectRepository
 }
 
 func NewProjectService(repository repository.ProjectRepository) *ProjectService {
@@ -41,13 +41,13 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, id uint) (*model.Pr
 func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project) (*model.Project, error) {
 	existing, err := s.repository.GetByName(ctx, project.Name)
 	if err != nil {
-		return nil, fmt.Errorf("there was an error reading the data: %w", err)
+		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("the project already exists")
+		return nil, fmt.Errorf("project already exists")
 	}
 
- 	err = s.repository.Save(ctx, project)
+	err = s.repository.Save(ctx, project)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, id uint) error {
 		return err
 	}
 	if project == nil {
-		return fmt.Errorf("template doesn't exist")
+		return fmt.Errorf("project doesn't exist")
 	}
 	return s.repository.Delete(ctx, project)
 }

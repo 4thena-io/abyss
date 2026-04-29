@@ -6,7 +6,6 @@ import (
 
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/repository"
-	"gorm.io/gorm"
 )
 
 type TeamStats struct {
@@ -52,6 +51,9 @@ func (s *TeamService) GetTeamByID(ctx context.Context, id uint) (*TeamStats, err
 	if err != nil {
 		return nil, err
 	}
+	if team == nil {
+		return nil, fmt.Errorf("team not found")
+	}
 
 	memberCount, _ := s.teamRepo.CountMembers(ctx, id)
 	projectCount, _ := s.projectRepo.CountByTeam(ctx, id)
@@ -67,7 +69,7 @@ func (s *TeamService) GetTeamByID(ctx context.Context, id uint) (*TeamStats, err
 
 func (s *TeamService) SaveTeam(ctx context.Context, team *model.Team) (*model.Team, error) {
 	existing, err := s.teamRepo.GetByName(ctx, team.Name)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil {
 		return nil, err
 	}
 	if existing != nil {

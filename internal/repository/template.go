@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/4thena-io/abyss/internal/model"
 	"gorm.io/gorm"
@@ -37,6 +38,9 @@ func (r *TemplateRepository) GetAll(ctx context.Context) ([]model.Template, erro
 func (r *TemplateRepository) GetByID(ctx context.Context, id uint) (*model.Template, error) {
 	var template model.Template
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&template)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -46,6 +50,9 @@ func (r *TemplateRepository) GetByID(ctx context.Context, id uint) (*model.Templ
 func (r *TemplateRepository) GetByName(ctx context.Context, name string) (*model.Template, error) {
 	var template model.Template
 	result := r.db.WithContext(ctx).Where("name = ?", name).First(&template)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if result.Error != nil {
 		return nil, result.Error
 	}

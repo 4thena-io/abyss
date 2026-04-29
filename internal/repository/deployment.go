@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/4thena-io/abyss/internal/model"
 	"gorm.io/gorm"
@@ -28,6 +29,9 @@ func (r *DeploymentRepository) GetByApp(ctx context.Context, appID uint) ([]mode
 func (r *DeploymentRepository) GetByID(ctx context.Context, id uint) (*model.Deployment, error) {
 	var deployment model.Deployment
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&deployment)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if result.Error != nil {
 		return nil, result.Error
 	}

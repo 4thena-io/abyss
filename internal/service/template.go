@@ -6,7 +6,6 @@ import (
 
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/repository"
-	"gorm.io/gorm"
 )
 
 type TemplateService struct {
@@ -53,11 +52,11 @@ func (s *TemplateService) GetTemplateByID(ctx context.Context, id uint) (*model.
 
 func (s *TemplateService) SaveTemplate(ctx context.Context, template *model.Template) (*model.Template, error) {
 	existing, err := s.repository.GetByName(ctx, template.Name)
-	if err == gorm.ErrRecordNotFound {
+	if err != nil {
 		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("the template already exists")
+		return nil, fmt.Errorf("template already exists")
 	}
 
 	err = s.repository.Save(ctx, template)

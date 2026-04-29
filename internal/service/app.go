@@ -13,7 +13,6 @@ import (
 	"github.com/4thena-io/abyss/internal/integration/git"
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/repository"
-	"gorm.io/gorm"
 )
 
 type AppService struct {
@@ -65,7 +64,7 @@ func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) 
 	}
 
 	existing, err := s.appRepository.GetByName(ctx, app.Name)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil {
 		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
 	if existing != nil {
@@ -158,7 +157,7 @@ func (s *AppService) CreateAppFromRepo(ctx context.Context, app *model.App) (*mo
 
 	// Validate app name uniqueness
 	existing, err := s.appRepository.GetByName(ctx, app.Name)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil {
 		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
 	if existing != nil {
