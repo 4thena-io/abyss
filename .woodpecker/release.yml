@@ -2,12 +2,18 @@ when:
   event: push
   branch: main
   path:
-    include: ['cmd/*', 'internal/*', 'frontend/*', 'go.mod', 'go.sum']
-    exclude: ['*.md']
+    include:
+      - "cmd/*"
+      - "internal/*"
+      - "frontend/*"
+      - "go.mod"
+      - "go.sum"
+    exclude:
+      - "*.md"
 
 variables:
-  - &golang-image 'golang:1.24.4-alpine3.22'
-  - &bun-image 'oven/bun:1.3.3-alpine'
+  - &golang-image "golang:1.24.4-alpine3.22"
+  - &bun-image "oven/bun:1.3.3-alpine"
 
 matrix:
   os:
@@ -47,10 +53,10 @@ steps:
       - vendor
     commands:
       - go build -ldflags="-s -w" -o build/abyss-${os}-${arch} ./cmd/abyss
-  
+
   build-docker:
     depends_on:
-      - build-binary 
+      - build-binary
     image: woodpeckerci/plugin-docker-buildx:6.0.3
     settings:
       registry: git.internal.4thena.io

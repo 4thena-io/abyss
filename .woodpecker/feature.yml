@@ -1,6 +1,6 @@
 when:
   event: push
-  branch: feature/*
+  branch: feat/*
 
 variables:
   - &golang-image "golang:1.24.4-alpine3.22"
