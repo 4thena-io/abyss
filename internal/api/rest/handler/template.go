@@ -7,9 +7,7 @@ import (
 
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
-	"github.com/4thena-io/abyss/internal/database"
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -18,9 +16,7 @@ type TemplateHandler struct {
 	service service.TemplateService
 }
 
-func NewTemplateHandler() *TemplateHandler {
-	repository := repository.NewTemplateRepository(database.Connection)
-	service := service.NewTemplateService(*repository)
+func NewTemplateHandler(service *service.TemplateService) *TemplateHandler {
 	return &TemplateHandler{*service}
 }
 
@@ -37,6 +33,7 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 		Description: req.Description,
 		Kind:        req.Kind,
 		Language:    req.Language,
+		CloneURL:    req.RepoURL + ".git",
 		RepoURL:     req.RepoURL,
 	})
 	if err != nil {

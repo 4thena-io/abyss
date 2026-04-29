@@ -7,9 +7,7 @@ import (
 
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
-	"github.com/4thena-io/abyss/internal/database"
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -19,18 +17,8 @@ type ProjectHandler struct {
 	appService     service.AppService
 }
 
-func NewProjectHandler() *ProjectHandler {
-	projectRepository := repository.NewProjectRepository(database.Connection)
-	appRepository := repository.NewAppRepository(database.Connection)
-	templateRepository := repository.NewTemplateRepository(database.Connection)
-
-	projectService := service.NewProjectService(*projectRepository)
-	appService := service.NewAppServiceReadOnly(*appRepository, *projectRepository, *templateRepository)
-
-	return &ProjectHandler{
-		projectService: *projectService,
-		appService:     *appService,
-	}
+func NewProjectHandler(projectService *service.ProjectService, appService *service.AppService) *ProjectHandler {
+	return &ProjectHandler{*projectService, *appService}
 }
 
 func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {

@@ -1,12 +1,10 @@
-package server
+package main
 
 import (
 	"context"
 	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/4thena-io/abyss/internal/api/rest/router"
 )
 
 type Server struct {
@@ -18,13 +16,13 @@ type Config struct {
 	Port string
 }
 
-func New(cfg Config) *Server {
+func newServer(cfg Config, handler http.Handler) *Server {
 	addr := cfg.Host + ":" + cfg.Port
 
 	return &Server{
 		http: &http.Server{
 			Addr:         addr,
-			Handler:      router.New(),
+			Handler:      handler,
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 15 * time.Second,
 			IdleTimeout:  60 * time.Second,
@@ -32,11 +30,11 @@ func New(cfg Config) *Server {
 	}
 }
 
-func (s *Server) Start() error {
+func (s *Server) start() error {
 	slog.Info("server running", "addr", "http://"+s.http.Addr)
 	return s.http.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context) error {
+func (s *Server) shutdown(ctx context.Context) error {
 	return s.http.Shutdown(ctx)
 }

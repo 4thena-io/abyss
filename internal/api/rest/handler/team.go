@@ -9,9 +9,7 @@ import (
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
 	"github.com/4thena-io/abyss/internal/constant"
-	"github.com/4thena-io/abyss/internal/database"
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -20,13 +18,8 @@ type TeamHandler struct {
 	service service.TeamService
 }
 
-func NewTeamHandler() *TeamHandler {
-	teamRepository := repository.NewTeamRepository(database.Connection)
-	projectRepository := repository.NewProjectRepository(database.Connection)
-	appRepository := repository.NewAppRepository(database.Connection)
-
-	teamService := service.NewTeamService(*teamRepository, *projectRepository, *appRepository)
-	return &TeamHandler{*teamService}
+func NewTeamHandler(service *service.TeamService) *TeamHandler {
+	return &TeamHandler{*service}
 }
 
 func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {

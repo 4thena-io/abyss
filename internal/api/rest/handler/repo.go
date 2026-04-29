@@ -2,11 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/4thena-io/abyss/internal/api/rest/response"
-	"github.com/4thena-io/abyss/internal/integration/forge"
 	"github.com/4thena-io/abyss/internal/service"
 )
 
@@ -14,15 +12,8 @@ type RepoHandler struct {
 	service service.RepoService
 }
 
-func NewRepoHandler() *RepoHandler {
-	forge, err := forge.NewForge()
-	if err != nil {
-		log.Fatalf("failed to create a git provider: %s", err)
-	}
-	service := service.NewRepoService(forge)
-	return &RepoHandler{
-		*service,
-	}
+func NewRepoHandler(service *service.RepoService) *RepoHandler {
+	return &RepoHandler{*service}
 }
 
 func (h *RepoHandler) GetAllRepos(w http.ResponseWriter, r *http.Request) {

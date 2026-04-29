@@ -16,8 +16,7 @@
         <button
           @click="$router.push(item.to)"
           :class="[
-            'flex items-center gap-3 w-full transition-colors p-2 rounded-lg',
-            expanded ? 'justify-start' : 'justify-center',
+            'flex items-center gap-3 w-full transition-colors p-2 rounded-lg justify-start',
             isExactActive 
               ? 'text-white bg-gray-800' 
               : 'text-gray-400 hover:text-white hover:bg-gray-800'

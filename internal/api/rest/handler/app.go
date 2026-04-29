@@ -2,19 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
-	"github.com/4thena-io/abyss/internal/config"
-	"github.com/4thena-io/abyss/internal/database"
-	"github.com/4thena-io/abyss/internal/integration/ci"
-	"github.com/4thena-io/abyss/internal/integration/forge"
-	"github.com/4thena-io/abyss/internal/integration/git"
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -24,25 +17,7 @@ type AppHandler struct {
 	deploymentService service.DeploymentService
 }
 
-func NewAppHandler() *AppHandler {
-	appRepository := repository.NewAppRepository(database.Connection)
-	projectRepository := repository.NewProjectRepository(database.Connection)
-	templateRepository := repository.NewTemplateRepository(database.Connection)
-	deploymentRepository := repository.NewDeploymentRepository(database.Connection)
-
-	forge, err := forge.NewForge()
-	if err != nil {
-		log.Fatalf("failed to create a forge provider: %s", err)
-	}
-	ciProvider, err := ci.NewCi()
-	if err != nil {
-		log.Fatalf("failed to create a ci provider: %s", err)
-	}
-	gitClient := git.New(config.Environment.ForgeToken)
-
-	appService := service.NewAppService(*appRepository, *projectRepository, *templateRepository, forge, ciProvider, gitClient)
-	deploymentService := service.NewDeploymentService(*deploymentRepository)
-
+func NewAppHandler(appService *service.AppService, deploymentService *service.DeploymentService) *AppHandler {
 	return &AppHandler{*appService, *deploymentService}
 }
 

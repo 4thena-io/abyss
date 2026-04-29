@@ -25,7 +25,14 @@ type AppService struct {
 	git                *git.GitClient
 }
 
-func NewAppService(appRepository repository.AppRepository, projectRepository repository.ProjectRepository, templateRepository repository.TemplateRepository, forge forge.Forge, ci ci.CI, gitClient *git.GitClient) *AppService {
+func NewAppService(
+	appRepository repository.AppRepository,
+	projectRepository repository.ProjectRepository,
+	templateRepository repository.TemplateRepository,
+	forge forge.Forge,
+	ci ci.CI,
+	gitClient *git.GitClient,
+) *AppService {
 	return &AppService{
 		appRepository:      appRepository,
 		projectRepository:  projectRepository,
@@ -33,14 +40,6 @@ func NewAppService(appRepository repository.AppRepository, projectRepository rep
 		forge:              forge,
 		ci:                 ci,
 		git:                gitClient,
-	}
-}
-
-func NewAppServiceReadOnly(appRepository repository.AppRepository, projectRepository repository.ProjectRepository, templateRepository repository.TemplateRepository) *AppService {
-	return &AppService{
-		appRepository:      appRepository,
-		projectRepository:  projectRepository,
-		templateRepository: templateRepository,
 	}
 }
 

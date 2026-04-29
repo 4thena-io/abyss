@@ -4,17 +4,20 @@ import (
 	"github.com/4thena-io/abyss/internal/api/rest/handler"
 	"github.com/4thena-io/abyss/internal/web"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-func New() chi.Router {
+func New(
+	app *handler.AppHandler,
+	project *handler.ProjectHandler,
+	template *handler.TemplateHandler,
+	repo *handler.RepoHandler,
+	team *handler.TeamHandler,
+) chi.Router {
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
 	web := web.NewFrontendHandler()
-	app := handler.NewAppHandler()
-	project := handler.NewProjectHandler()
-	template := handler.NewTemplateHandler()
-	repo := handler.NewRepoHandler()
-	team := handler.NewTeamHandler()
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/*", web.Serve)
