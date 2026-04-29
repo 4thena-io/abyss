@@ -53,7 +53,7 @@ func (s *TemplateService) GetTemplateByID(ctx context.Context, id uint) (*model.
 
 func (s *TemplateService) SaveTemplate(ctx context.Context, template *model.Template) (*model.Template, error) {
 	existing, err := s.repository.GetByName(ctx, template.Name)
-	if err != gorm.ErrRecordNotFound {
+	if err == gorm.ErrRecordNotFound {
 		return nil, err
 	}
 	if existing != nil {

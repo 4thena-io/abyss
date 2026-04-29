@@ -6,7 +6,6 @@ import (
 
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/repository"
-	"gorm.io/gorm"
 )
 
 type ProjectService struct {
@@ -41,8 +40,8 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, id uint) (*model.Pr
 
 func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project) (*model.Project, error) {
 	existing, err := s.repository.GetByName(ctx, project.Name)
-	if err != gorm.ErrRecordNotFound {
-		return nil, err
+	if err != nil {
+		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
 	if existing != nil {
 		return nil, fmt.Errorf("the project already exists")

@@ -2,7 +2,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -o ./tmp/app ./cmd/api"
+pre_cmd = ["cd frontend && bun run build"]
+cmd = "go build -o ./tmp/app ./cmd/abyss"
 bin = "tmp/app"
 
 [log]
