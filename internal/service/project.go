@@ -5,14 +5,23 @@ import (
 	"fmt"
 
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 )
 
-type ProjectService struct {
-	repository repository.ProjectRepository
+type ProjectRepository interface {
+	Save(ctx context.Context, project *model.Project) error
+	GetAll(ctx context.Context) ([]model.Project, error)
+	GetByID(ctx context.Context, id uint) (*model.Project, error)
+	GetByName(ctx context.Context, name string) (*model.Project, error)
+	GetByTeam(ctx context.Context, teamID uint) ([]model.Project, error)
+	Delete(ctx context.Context, project *model.Project) error
+	CountByTeam(ctx context.Context, teamID uint) (int64, error)
 }
 
-func NewProjectService(repository repository.ProjectRepository) *ProjectService {
+type ProjectService struct {
+	repository ProjectRepository
+}
+
+func NewProjectService(repository ProjectRepository) *ProjectService {
 	return &ProjectService{
 		repository,
 	}

@@ -5,8 +5,18 @@ import (
 	"fmt"
 
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 )
+
+type TeamRepository interface {
+	Save(ctx context.Context, team *model.Team) error
+	GetAll(ctx context.Context) ([]model.Team, error)
+	GetByID(ctx context.Context, id uint) (*model.Team, error)
+	GetByName(ctx context.Context, name string) (*model.Team, error)
+	GetMembers(ctx context.Context, teamID uint) ([]model.TeamMember, error)
+	SaveMember(ctx context.Context, member *model.TeamMember) error
+	CountMembers(ctx context.Context, teamID uint) (int64, error)
+	Delete(ctx context.Context, team *model.Team) error
+}
 
 type TeamStats struct {
 	Team         model.Team
@@ -16,12 +26,12 @@ type TeamStats struct {
 }
 
 type TeamService struct {
-	teamRepo    repository.TeamRepository
-	projectRepo repository.ProjectRepository
-	appRepo     repository.AppRepository
+	teamRepo    TeamRepository
+	projectRepo ProjectRepository
+	appRepo     AppRepository
 }
 
-func NewTeamService(teamRepo repository.TeamRepository, projectRepo repository.ProjectRepository, appRepo repository.AppRepository) *TeamService {
+func NewTeamService(teamRepo TeamRepository, projectRepo ProjectRepository, appRepo AppRepository) *TeamService {
 	return &TeamService{teamRepo, projectRepo, appRepo}
 }
 

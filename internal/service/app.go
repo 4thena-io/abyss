@@ -12,22 +12,32 @@ import (
 	"github.com/4thena-io/abyss/internal/integration/forge"
 	"github.com/4thena-io/abyss/internal/integration/git"
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 )
 
+type AppRepository interface {
+	Save(ctx context.Context, app *model.App) error
+	GetAll(ctx context.Context) ([]model.App, error)
+	GetByID(ctx context.Context, id uint) (*model.App, error)
+	GetByName(ctx context.Context, name string) (*model.App, error)
+	GetByProject(ctx context.Context, id uint) ([]model.App, error)
+	GetByTemplate(ctx context.Context, id uint) ([]model.App, error)
+	Delete(ctx context.Context, app *model.App) error
+	CountByTeam(ctx context.Context, teamID uint) (int64, error)
+}
+
 type AppService struct {
-	appRepository      repository.AppRepository
-	projectRepository  repository.ProjectRepository
-	templateRepository repository.TemplateRepository
+	appRepository      AppRepository
+	projectRepository  ProjectRepository
+	templateRepository TemplateRepository
 	forge              forge.Forge
 	ci                 ci.CI
 	git                *git.GitClient
 }
 
 func NewAppService(
-	appRepository repository.AppRepository,
-	projectRepository repository.ProjectRepository,
-	templateRepository repository.TemplateRepository,
+	appRepository AppRepository,
+	projectRepository ProjectRepository,
+	templateRepository TemplateRepository,
 	forge forge.Forge,
 	ci ci.CI,
 	gitClient *git.GitClient,

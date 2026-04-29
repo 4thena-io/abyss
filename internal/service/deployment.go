@@ -4,14 +4,18 @@ import (
 	"context"
 
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 )
 
-type DeploymentService struct {
-	deploymentRepository repository.DeploymentRepository
+type DeploymentRepository interface {
+	Save(ctx context.Context, deployment *model.Deployment) error
+	GetByApp(ctx context.Context, appID uint) ([]model.Deployment, error)
 }
 
-func NewDeploymentService(deploymentRepository repository.DeploymentRepository) *DeploymentService {
+type DeploymentService struct {
+	deploymentRepository DeploymentRepository
+}
+
+func NewDeploymentService(deploymentRepository DeploymentRepository) *DeploymentService {
 	return &DeploymentService{deploymentRepository: deploymentRepository}
 }
 

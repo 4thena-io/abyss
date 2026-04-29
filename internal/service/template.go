@@ -5,14 +5,21 @@ import (
 	"fmt"
 
 	"github.com/4thena-io/abyss/internal/model"
-	"github.com/4thena-io/abyss/internal/repository"
 )
 
-type TemplateService struct {
-	repository repository.TemplateRepository
+type TemplateRepository interface {
+	Save(ctx context.Context, template *model.Template) error
+	GetAll(ctx context.Context) ([]model.Template, error)
+	GetByID(ctx context.Context, id uint) (*model.Template, error)
+	GetByName(ctx context.Context, name string) (*model.Template, error)
+	Delete(ctx context.Context, template *model.Template) error
 }
 
-func NewTemplateService(repository repository.TemplateRepository) *TemplateService {
+type TemplateService struct {
+	repository TemplateRepository
+}
+
+func NewTemplateService(repository TemplateRepository) *TemplateService {
 	return &TemplateService{
 		repository: repository,
 	}

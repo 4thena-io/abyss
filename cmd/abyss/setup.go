@@ -33,12 +33,12 @@ func setup() *Server {
 	deploymentRepo := repository.NewDeploymentRepository(db)
 	teamRepo := repository.NewTeamRepository(db)
 
-	appService := service.NewAppService(*appRepo, *projectRepo, *templateRepo, forgeProvider, ciProvider, gitClient)
-	deploymentService := service.NewDeploymentService(*deploymentRepo)
-	projectService := service.NewProjectService(*projectRepo)
-	templateService := service.NewTemplateService(*templateRepo)
+	appService := service.NewAppService(appRepo, projectRepo, templateRepo, forgeProvider, ciProvider, gitClient)
+	deploymentService := service.NewDeploymentService(deploymentRepo)
+	projectService := service.NewProjectService(projectRepo)
+	templateService := service.NewTemplateService(templateRepo)
 	repoService := service.NewRepoService(forgeProvider)
-	teamService := service.NewTeamService(*teamRepo, *projectRepo, *appRepo)
+	teamService := service.NewTeamService(teamRepo, projectRepo, appRepo)
 
 	r := router.New(
 		handler.NewAppHandler(appService, deploymentService),
