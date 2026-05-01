@@ -32,6 +32,7 @@ type AppService struct {
 	forge              forge.Forge
 	ci                 ci.CI
 	git                *git.GitClient
+	owner              string
 }
 
 func NewAppService(
@@ -41,6 +42,7 @@ func NewAppService(
 	forge forge.Forge,
 	ci ci.CI,
 	gitClient *git.GitClient,
+	owner string,
 ) *AppService {
 	return &AppService{
 		appRepository:      appRepository,
@@ -49,6 +51,7 @@ func NewAppService(
 		forge:              forge,
 		ci:                 ci,
 		git:                gitClient,
+		owner:              owner,
 	}
 }
 
@@ -82,20 +85,20 @@ func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) 
 	}
 
 	// Create empty repo in forge
-	repo, err := s.forge.CreateRepo(ctx, "4thena", app.Name)
+	repo, err := s.forge.CreateRepo(ctx, s.owner, app.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create the app: %w", err)
 	}
 	// Clone template, prepare files, and push to new repo
 	if err := s.initRepoFromTemplate(template.CloneURL, repo.CloneURL, app.Name); err != nil {
-		s.forge.DeleteRepo(ctx, "4thena", app.Name)
+		s.forge.DeleteRepo(ctx, s.owner, app.Name)
 		return nil, fmt.Errorf("failed to initialize repo from template: %w", err)
 	}
 
 	// Activate CI for this repo
 	ciRepo, err := s.ci.ActivateRepo(ctx, repo.ID, repo.FullName)
 	if err != nil {
-		s.forge.DeleteRepo(ctx, "4thena", app.Name)
+		s.forge.DeleteRepo(ctx, s.owner, app.Name)
 		return nil, fmt.Errorf("failed to activate ci repo: %w", err)
 	}
 
@@ -332,7 +335,7 @@ func (s *AppService) DeleteApp(ctx context.Context, id uint) error {
 		return err
 	}
 
-	err = s.forge.DeleteRepo(ctx, "4thena", app.Name)
+	err = s.forge.DeleteRepo(ctx, s.owner, app.Name)
 	if err != nil {
 		return err
 	}

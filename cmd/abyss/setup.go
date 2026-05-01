@@ -14,18 +14,21 @@ import (
 	"github.com/4thena-io/abyss/internal/service"
 )
 
-func setup() *Server {
-	db := database.Connection
+func setup(cfg *config.Config) *Server {
+	db, err := database.NewConnection(cfg.Database)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
 
-	forgeProvider, err := forge.NewForge()
+	forgeProvider, err := forge.NewForge(cfg.Forge)
 	if err != nil {
-		log.Fatalf("failed to create forge provider: %s", err)
+		log.Fatalf("failed to create forge provider: %v", err)
 	}
-	ciProvider, err := ci.NewCi()
+	ciProvider, err := ci.NewCi(cfg.CI, cfg.Forge)
 	if err != nil {
-		log.Fatalf("failed to create ci provider: %s", err)
+		log.Fatalf("failed to create ci provider: %v", err)
 	}
-	gitClient := git.New(config.Environment.ForgeToken)
+	gitClient := git.New(cfg.Forge.Token)
 
 	appRepo := repository.NewAppRepository(db)
 	projectRepo := repository.NewProjectRepository(db)
@@ -33,11 +36,11 @@ func setup() *Server {
 	deploymentRepo := repository.NewDeploymentRepository(db)
 	teamRepo := repository.NewTeamRepository(db)
 
-	appService := service.NewAppService(appRepo, projectRepo, templateRepo, forgeProvider, ciProvider, gitClient)
+	appService := service.NewAppService(appRepo, projectRepo, templateRepo, forgeProvider, ciProvider, gitClient, cfg.Forge.Owner)
 	deploymentService := service.NewDeploymentService(deploymentRepo)
 	projectService := service.NewProjectService(projectRepo)
 	templateService := service.NewTemplateService(templateRepo)
-	repoService := service.NewRepoService(forgeProvider)
+	repoService := service.NewRepoService(forgeProvider, cfg.Forge.Owner)
 	teamService := service.NewTeamService(teamRepo, projectRepo, appRepo)
 
 	r := router.New(
@@ -48,5 +51,5 @@ func setup() *Server {
 		handler.NewTeamHandler(teamService),
 	)
 
-	return newServer(Config{Host: "0.0.0.0", Port: "8000"}, r)
+	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r)
 }

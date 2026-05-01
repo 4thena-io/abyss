@@ -16,13 +16,13 @@ type MySQLProvider struct {
 	dbName   string
 }
 
-func NewMySQLProvider() *MySQLProvider {
+func NewMySQLProvider(cfg config.DatabaseConfig) *MySQLProvider {
 	return &MySQLProvider{
-		host:     config.Environment.DbHost,
-		port:     config.Environment.DbPort,
-		user:     config.Environment.DbUser,
-		password: config.Environment.DbPassword,
-		dbName:   config.Environment.DbName,
+		host:     cfg.Host,
+		port:     cfg.Port,
+		user:     cfg.User,
+		password: cfg.Password,
+		dbName:   cfg.Name,
 	}
 }
 
@@ -35,6 +35,5 @@ func (p *MySQLProvider) GetDialector() gorm.Dialector {
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		p.user, p.password, p.host, p.port, p.dbName,
 	)
-
 	return mysql.Open(dsn)
 }

@@ -10,8 +10,8 @@ type SQLiteProvider struct {
 	path string
 }
 
-func NewSQLiteProvider() *SQLiteProvider {
-	path := config.Environment.DbPath
+func NewSQLiteProvider(cfg config.DatabaseConfig) *SQLiteProvider {
+	path := cfg.Path
 	if path == "" {
 		path = "abyss.db"
 	}

@@ -9,21 +9,15 @@ import (
 	"github.com/4thena-io/abyss/internal/integration/forge/github"
 )
 
-var (
-	kind  = config.Environment.ForgeType
-	host  = config.Environment.ForgeHost
-	token = config.Environment.ForgeToken
-)
-
-func NewForge() (Forge, error) {
-	switch kind {
+func NewForge(cfg config.ForgeConfig) (Forge, error) {
+	switch cfg.Type {
 	case "gitea":
-		return gitea.NewGiteaForge(host, token)
+		return gitea.NewGiteaForge(cfg.Host, cfg.Token)
 	case "forgejo":
-		return forgejo.NewForgejoForge(host, token)
+		return forgejo.NewForgejoForge(cfg.Host, cfg.Token)
 	case "github":
-		return github.NewGithubForge(host, token)
+		return github.NewGithubForge(cfg.Host, cfg.Token)
 	default:
-		return nil, fmt.Errorf("unknown forge type %s", kind)
+		return nil, fmt.Errorf("unknown forge type %s", cfg.Type)
 	}
 }

@@ -16,13 +16,13 @@ type PostgresProvider struct {
 	dbName   string
 }
 
-func NewPostgresProvider() *PostgresProvider {
+func NewPostgresProvider(cfg config.DatabaseConfig) *PostgresProvider {
 	return &PostgresProvider{
-		host:     config.Environment.DbHost,
-		port:     config.Environment.DbPort,
-		user:     config.Environment.DbUser,
-		password: config.Environment.DbPassword,
-		dbName:   config.Environment.DbName,
+		host:     cfg.Host,
+		port:     cfg.Port,
+		user:     cfg.User,
+		password: cfg.Password,
+		dbName:   cfg.Name,
 	}
 }
 
@@ -35,6 +35,5 @@ func (p *PostgresProvider) GetDialector() gorm.Dialector {
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		p.host, p.port, p.user, p.password, p.dbName,
 	)
-
 	return postgres.Open(dsn)
 }

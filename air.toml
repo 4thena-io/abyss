@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 [build]
 pre_cmd = ["cd frontend && bun run build"]
 cmd = "go build -o ./tmp/app ./cmd/abyss"
-bin = "tmp/app"
+full_bin = "./tmp/app serve -c ./config.yaml"
 
 [log]
 main_only = true

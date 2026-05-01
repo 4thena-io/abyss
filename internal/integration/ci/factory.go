@@ -9,49 +9,28 @@ import (
 	"github.com/4thena-io/abyss/internal/integration/ci/woodpecker"
 )
 
-func effectiveCIHost(cfg config.Config) string {
-	if cfg.CiHost != "" {
-		return cfg.CiHost
-	}
+func NewCi(cfg config.CIConfig, forgeCfg config.ForgeConfig) (CI, error) {
+	host := cfg.Host
+	token := cfg.Token
 
-	switch cfg.CiType {
+	switch cfg.Type {
 	case "gitea-actions", "github-actions", "gitlab-ci":
-		return cfg.ForgeHost
-	default:
-		return ""
-	}
-}
-
-func effectiveCIToken(cfg config.Config) string {
-	if cfg.CiToken != "" {
-		return cfg.CiToken
+		if host == "" {
+			host = forgeCfg.Host
+		}
+		if token == "" {
+			token = forgeCfg.Token
+		}
 	}
 
-	switch cfg.CiType {
-	case "gitea-actions", "github-actions", "gitlab-ci":
-		return cfg.ForgeToken
-	default:
-		return ""
-	}
-}
-
-func NewCi() (CI, error) {
-	cfg := config.Environment
-
-	host := effectiveCIHost(cfg)
-	token := effectiveCIToken(cfg)
-
-	switch cfg.CiType {
+	switch cfg.Type {
 	case "gitea-actions":
 		return gitea_actions.NewGiteaActionsCI(host, token)
-
 	case "woodpecker":
 		return woodpecker.NewWoodpeckerCi(host, token)
-
 	case "drone":
 		return drone.NewDroneCi(host, token)
-
 	default:
-		return nil, fmt.Errorf("unknown ci provider %s", cfg.CiType)
+		return nil, fmt.Errorf("unknown ci provider %s", cfg.Type)
 	}
 }

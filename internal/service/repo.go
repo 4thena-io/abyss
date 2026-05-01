@@ -9,18 +9,13 @@ import (
 
 type RepoService struct {
 	forge forge.Forge
+	owner string
 }
 
-func NewRepoService(forge forge.Forge) *RepoService {
-	return &RepoService{
-		forge,
-	}
+func NewRepoService(forge forge.Forge, owner string) *RepoService {
+	return &RepoService{forge, owner}
 }
 
 func (s *RepoService) GetRepos(ctx context.Context) ([]model.Repo, error) {
-	repos, err := s.forge.GetOrgRepos(ctx, "4thena")
-	if err != nil {
-		return nil, err
-	}
-	return repos, nil
+	return s.forge.GetOrgRepos(ctx, s.owner)
 }

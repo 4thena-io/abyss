@@ -1,17 +1,20 @@
 package database
 
-import "fmt"
+import (
+	"fmt"
 
-func NewDatabaseProvider(providerType string) (Provider, error) {
-	switch providerType {
+	"github.com/4thena-io/abyss/internal/config"
+)
+
+func NewDatabaseProvider(cfg config.DatabaseConfig) (Provider, error) {
+	switch cfg.Type {
 	case "postgres":
-		return NewPostgresProvider(), nil
+		return NewPostgresProvider(cfg), nil
 	case "mysql":
-		return NewMySQLProvider(), nil
+		return NewMySQLProvider(cfg), nil
 	case "sqlite", "":
-		return NewSQLiteProvider(), nil
+		return NewSQLiteProvider(cfg), nil
 	default:
-		return nil, fmt.Errorf("unknown database provider: %s", providerType)
+		return nil, fmt.Errorf("unknown database provider: %s", cfg.Type)
 	}
 }
-
