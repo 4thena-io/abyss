@@ -14,10 +14,12 @@ import (
 
 type GitClient struct {
 	token string
+	name  string
+	email string
 }
 
-func New(token string) *GitClient {
-	return &GitClient{token: token}
+func New(token, name, email string) *GitClient {
+	return &GitClient{token: token, name: name, email: email}
 }
 
 // Clone clones a repository to a local path.
@@ -59,8 +61,8 @@ func (c *GitClient) InitAndPush(localPath, remoteURL, commitMsg string) error {
 	// Commit
 	_, err = worktree.Commit(commitMsg, &gogit.CommitOptions{
 		Author: &object.Signature{
-			Name:  "Abyss",
-			Email: "abyss@localhost",
+			Name:  c.name,
+			Email: c.email,
 			When:  time.Now(),
 		},
 	})
@@ -124,8 +126,8 @@ func (c *GitClient) AddCommitPush(localPath, commitMsg string) error {
 
 	_, err = worktree.Commit(commitMsg, &gogit.CommitOptions{
 		Author: &object.Signature{
-			Name:  "Abyss",
-			Email: "abyss@localhost",
+			Name:  c.name,
+			Email: c.email,
 			When:  time.Now(),
 		},
 	})
