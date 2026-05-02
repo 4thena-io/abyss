@@ -1,18 +1,9 @@
 when:
-  event: push
+  event: tag
   branch: main
-  path:
-    include:
-      - "cmd/*"
-      - "internal/*"
-      - "frontend/*"
-      - "go.mod"
-      - "go.sum"
-    exclude:
-      - "*.md"
 
 variables:
-  - &golang-image "golang:1.24.4-alpine3.22"
+  - &golang-image "golang:1.26.2-alpine3.22"
   - &bun-image "oven/bun:1.3.3-alpine"
 
 matrix:
