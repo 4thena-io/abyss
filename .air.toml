@@ -1,0 +1,17 @@
+root = "."
+tmp_dir = ".air"
+
+[build]
+cmd = "go build -o ./.air/abyss ./cmd/abyss"
+full_bin = "./.air/abyss serve"
+include_dir = ["cmd", "internal"]
+include_ext = ["go"]
+
+[log]
+main_only = true
+
+[misc]
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
