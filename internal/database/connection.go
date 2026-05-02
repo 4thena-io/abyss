@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/4thena-io/abyss/internal/config"
+	"github.com/4thena-io/abyss/internal/logger"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,9 @@ func NewConnection(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db, err := provider.Connect()
+	db, err := gorm.Open(provider.GetDialector(), &gorm.Config{
+		Logger: logger.NewGormLogger(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}

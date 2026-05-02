@@ -26,10 +26,6 @@ func NewPostgresProvider(cfg config.DatabaseConfig) *PostgresProvider {
 	}
 }
 
-func (p *PostgresProvider) Connect() (*gorm.DB, error) {
-	return gorm.Open(p.GetDialector(), &gorm.Config{})
-}
-
 func (p *PostgresProvider) GetDialector() gorm.Dialector {
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",

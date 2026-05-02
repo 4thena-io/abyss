@@ -26,10 +26,6 @@ func NewMySQLProvider(cfg config.DatabaseConfig) *MySQLProvider {
 	}
 }
 
-func (p *MySQLProvider) Connect() (*gorm.DB, error) {
-	return gorm.Open(p.GetDialector(), &gorm.Config{})
-}
-
 func (p *MySQLProvider) GetDialector() gorm.Dialector {
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
