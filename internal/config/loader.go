@@ -21,7 +21,7 @@ func Load(configPath string) (*Config, error) {
 	}
 
 	if configPath == "" {
-		configPath = resolvePath()
+		configPath = DefaultPath()
 	}
 
 	if err := k.Load(file.Provider(configPath), yaml.Parser()); err != nil {
@@ -46,11 +46,14 @@ func Load(configPath string) (*Config, error) {
 	return &cfg, nil
 }
 
-func resolvePath() string {
-	if home := os.Getenv("ABYSS_HOME"); home != "" {
-		return filepath.Join(home, "config.yaml")
+// DefaultPath returns the config file path used when none is specified.
+// Set ABYSS_HOME to override the base directory (defaults to the working directory).
+func DefaultPath() string {
+	base := os.Getenv("ABYSS_HOME")
+	if base == "" {
+		base = "."
 	}
-	return "/etc/abyss/config.yaml"
+	return filepath.Join(base, "custom", "conf", "config.yaml")
 }
 
 func defaults() map[string]interface{} {
@@ -63,8 +66,10 @@ func defaults() map[string]interface{} {
 		"database.port":  "5432",
 		"database.user":  "postgres",
 		"database.name":  "abyss",
-		"forge.type":     "gitea",
-		"forge.host":     "http://127.0.0.1:3000",
-		"ci.type":        "gitea-actions",
+		"forge.type":      "gitea",
+		"forge.host":      "http://127.0.0.1:3000",
+		"ci.type":         "gitea-actions",
+		"logging.level":   "info",
+		"logging.format":  "pretty",
 	}
 }

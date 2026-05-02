@@ -18,4 +18,9 @@ ci:
 auth:
   client_id: ""
   client_secret: ""
-  session_secret: ""
+  callback_url: "http://localhost:8000/auth/callback"
+
+logging:
+  level: info       # debug, info, warn, error
+  format: pretty    # pretty or json
+  file: ""          # optional log file path, always written as JSON

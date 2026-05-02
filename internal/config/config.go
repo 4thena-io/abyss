@@ -6,6 +6,7 @@ type Config struct {
 	Forge    ForgeConfig    `koanf:"forge"`
 	CI       CIConfig       `koanf:"ci"`
 	Auth     AuthConfig     `koanf:"auth"`
+	Logging  LoggingConfig  `koanf:"logging"`
 }
 
 type ServerConfig struct {
@@ -37,7 +38,13 @@ type CIConfig struct {
 }
 
 type AuthConfig struct {
-	ClientID      string `koanf:"client_id"`
-	ClientSecret  string `koanf:"client_secret"`
-	SessionSecret string `koanf:"session_secret"`
+	ClientID     string `koanf:"client_id"`
+	ClientSecret string `koanf:"client_secret"`
+	CallbackURL  string `koanf:"callback_url"`
+}
+
+type LoggingConfig struct {
+	Level  string `koanf:"level"`
+	Format string `koanf:"format"`
+	File   string `koanf:"file"`
 }
