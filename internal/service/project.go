@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/4thena-io/abyss/internal/model"
 )
@@ -36,15 +35,7 @@ func (s *ProjectService) GetAllProjects(ctx context.Context) ([]model.Project, e
 }
 
 func (s *ProjectService) GetProjectByID(ctx context.Context, id uint) (*model.Project, error) {
-	data, err := s.repository.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if data == nil {
-		return nil, fmt.Errorf("project not found")
-	}
-
-	return data, nil
+	return s.repository.GetByID(ctx, id)
 }
 
 func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project) (*model.Project, error) {
@@ -53,7 +44,7 @@ func (s *ProjectService) SaveProject(ctx context.Context, project *model.Project
 		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("project already exists")
+		return nil, ErrConflict
 	}
 
 	err = s.repository.Save(ctx, project)
@@ -70,7 +61,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, id uint) error {
 		return err
 	}
 	if project == nil {
-		return fmt.Errorf("project doesn't exist")
+		return ErrNotFound
 	}
 	return s.repository.Delete(ctx, project)
 }

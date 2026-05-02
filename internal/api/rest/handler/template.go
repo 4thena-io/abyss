@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type TemplateHandler struct {
@@ -23,7 +25,7 @@ func NewTemplateHandler(service *service.TemplateService) *TemplateHandler {
 func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request) {
 	var req request.CreateTemplate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	defer r.Body.Close()
@@ -36,8 +38,13 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 		CloneURL:    req.RepoURL + ".git",
 		RepoURL:     req.RepoURL,
 	})
+	if errors.Is(err, service.ErrConflict) {
+		response.Conflict(w, "template already exists")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to create template")
+		response.InternalError(w)
 		return
 	}
 
@@ -56,7 +63,8 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 func (h *TemplateHandler) GetAllTemplates(w http.ResponseWriter, r *http.Request) {
 	templates, err := h.service.GetAllTemplates(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get templates")
+		response.InternalError(w)
 		return
 	}
 
@@ -81,11 +89,12 @@ func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Reque
 
 	template, err := h.service.GetTemplateByName(r.Context(), name)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get template")
+		response.InternalError(w)
 		return
 	}
 	if template == nil {
-		http.Error(w, "Template not found", http.StatusNotFound)
+		response.NotFound(w, "template not found")
 		return
 	}
 
@@ -103,13 +112,18 @@ func (h *TemplateHandler) GetTemplateByName(w http.ResponseWriter, r *http.Reque
 func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	err = h.service.DeleteTemplate(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "template not found")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to delete template")
+		response.InternalError(w)
 		return
 	}
 

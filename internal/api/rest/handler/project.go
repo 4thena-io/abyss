@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type ProjectHandler struct {
@@ -24,7 +26,7 @@ func NewProjectHandler(projectService *service.ProjectService, appService *servi
 func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var req request.CreateProject
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	defer r.Body.Close()
@@ -34,8 +36,13 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		Description: req.Description,
 		TeamID:      req.TeamID,
 	})
+	if errors.Is(err, service.ErrConflict) {
+		response.Conflict(w, "project already exists")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to create project")
+		response.InternalError(w)
 		return
 	}
 
@@ -52,7 +59,8 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	projects, err := h.projectService.GetAllProjects(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get projects")
+		response.InternalError(w)
 		return
 	}
 
@@ -73,17 +81,18 @@ func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	project, err := h.projectService.GetProjectByID(r.Context(), uint(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get project")
+		response.InternalError(w)
 		return
 	}
 	if project == nil {
-		http.Error(w, "Project not found", http.StatusNotFound)
+		response.NotFound(w, "project not found")
 		return
 	}
 
@@ -99,13 +108,18 @@ func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) 
 func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	apps, err := h.appService.GetAppsByProject(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "project not found")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get project apps")
+		response.InternalError(w)
 		return
 	}
 
@@ -132,13 +146,18 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	err = h.projectService.DeleteProject(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "project not found")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to delete project")
+		response.InternalError(w)
 		return
 	}
 

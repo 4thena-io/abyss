@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type TeamHandler struct {
@@ -25,7 +27,7 @@ func NewTeamHandler(service *service.TeamService) *TeamHandler {
 func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	var req request.CreateTeam
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	defer r.Body.Close()
@@ -35,8 +37,13 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 		Description: req.Description,
 		Status:      constant.StatusActive,
 	})
+	if errors.Is(err, service.ErrConflict) {
+		response.Conflict(w, "team already exists")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to create team")
+		response.InternalError(w)
 		return
 	}
 
@@ -52,7 +59,8 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) GetAllTeams(w http.ResponseWriter, r *http.Request) {
 	teams, err := h.service.GetAllTeams(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get teams")
+		response.InternalError(w)
 		return
 	}
 
@@ -75,13 +83,18 @@ func (h *TeamHandler) GetAllTeams(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) GetTeamByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	t, err := h.service.GetTeamByID(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "team not found")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get team")
+		response.InternalError(w)
 		return
 	}
 
@@ -99,12 +112,18 @@ func (h *TeamHandler) GetTeamByID(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
-	if err := h.service.DeleteTeam(r.Context(), uint(id)); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	err = h.service.DeleteTeam(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "team not found")
+		return
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("failed to delete team")
+		response.InternalError(w)
 		return
 	}
 
@@ -114,13 +133,14 @@ func (h *TeamHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) GetTeamProjects(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	projects, err := h.service.GetTeamProjects(r.Context(), uint(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get team projects")
+		response.InternalError(w)
 		return
 	}
 
@@ -141,13 +161,14 @@ func (h *TeamHandler) GetTeamProjects(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) GetTeamMembers(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	members, err := h.service.GetTeamMembers(r.Context(), uint(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get team members")
+		response.InternalError(w)
 		return
 	}
 
@@ -169,13 +190,13 @@ func (h *TeamHandler) GetTeamMembers(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	var req request.AddTeamMember
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	defer r.Body.Close()
@@ -191,7 +212,8 @@ func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 		Role:     role,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to add team member")
+		response.InternalError(w)
 		return
 	}
 

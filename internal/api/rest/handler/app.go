@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type AppHandler struct {
@@ -24,7 +26,7 @@ func NewAppHandler(appService *service.AppService, deploymentService *service.De
 func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	var req request.CreateApp
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	defer r.Body.Close()
@@ -33,7 +35,6 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if req.RepoID != 0 {
-		// Create from existing repo
 		app, err = h.service.CreateAppFromRepo(r.Context(), &model.App{
 			Name:        req.Name,
 			Description: req.Description,
@@ -43,7 +44,6 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 			RepoID:      req.RepoID,
 		})
 	} else if req.TemplateID != 0 {
-		// Create from template
 		app, err = h.service.CreateAppFromTemplate(r.Context(), &model.App{
 			Name:        req.Name,
 			Description: req.Description,
@@ -53,12 +53,17 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 			TemplateID:  &req.TemplateID,
 		})
 	} else {
-		http.Error(w, "Must specify either templateId or repoId", http.StatusBadRequest)
+		response.BadRequest(w, "must specify either templateId or repoId")
 		return
 	}
 
+	if errors.Is(err, service.ErrConflict) {
+		response.Conflict(w, "app already exists")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to create app")
+		response.InternalError(w)
 		return
 	}
 
@@ -81,7 +86,8 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 	apps, err := h.service.GetAllApps(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get apps")
+		response.InternalError(w)
 		return
 	}
 
@@ -108,17 +114,18 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	app, err := h.service.GetAppByID(r.Context(), uint(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get app")
+		response.InternalError(w)
 		return
 	}
 	if app == nil {
-		http.Error(w, "App not found", http.StatusNotFound)
+		response.NotFound(w, "app not found")
 		return
 	}
 
@@ -140,13 +147,18 @@ func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
 func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	builds, err := h.service.GetAppBuilds(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "app not found")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get app builds")
+		response.InternalError(w)
 		return
 	}
 
@@ -170,13 +182,18 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	err = h.service.DeleteApp(r.Context(), uint(id))
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "app not found")
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to delete app")
+		response.InternalError(w)
 		return
 	}
 
@@ -186,13 +203,14 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 func (h *AppHandler) GetAppDeployments(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 
 	deployments, err := h.deploymentService.GetDeploymentsByApp(r.Context(), uint(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get app deployments")
+		response.InternalError(w)
 		return
 	}
 

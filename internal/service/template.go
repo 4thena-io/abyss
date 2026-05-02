@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/4thena-io/abyss/internal/model"
 )
@@ -34,27 +33,11 @@ func (s *TemplateService) GetAllTemplates(ctx context.Context) ([]model.Template
 }
 
 func (s *TemplateService) GetTemplateByName(ctx context.Context, name string) (*model.Template, error) {
-	data, err := s.repository.GetByName(ctx, name)
-	if err != nil {
-		return nil, err
-	}
-	if data == nil {
-		return nil, fmt.Errorf("template not found")
-	}
-
-	return data, nil
+	return s.repository.GetByName(ctx, name)
 }
 
 func (s *TemplateService) GetTemplateByID(ctx context.Context, id uint) (*model.Template, error) {
-	template, err := s.repository.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if template == nil {
-		return nil, fmt.Errorf("template not found")
-	}
-
-	return template, nil
+	return s.repository.GetByID(ctx, id)
 }
 
 func (s *TemplateService) SaveTemplate(ctx context.Context, template *model.Template) (*model.Template, error) {
@@ -63,7 +46,7 @@ func (s *TemplateService) SaveTemplate(ctx context.Context, template *model.Temp
 		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("template already exists")
+		return nil, ErrConflict
 	}
 
 	err = s.repository.Save(ctx, template)
@@ -80,7 +63,7 @@ func (s *TemplateService) DeleteTemplate(ctx context.Context, id uint) error {
 		return err
 	}
 	if template == nil {
-		return fmt.Errorf("template doesn't exist")
+		return ErrNotFound
 	}
 	return s.repository.Delete(ctx, template)
 }

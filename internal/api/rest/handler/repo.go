@@ -6,6 +6,7 @@ import (
 
 	"github.com/4thena-io/abyss/internal/api/rest/response"
 	"github.com/4thena-io/abyss/internal/service"
+	"github.com/rs/zerolog/log"
 )
 
 type RepoHandler struct {
@@ -19,7 +20,8 @@ func NewRepoHandler(service *service.RepoService) *RepoHandler {
 func (h *RepoHandler) GetAllRepos(w http.ResponseWriter, r *http.Request) {
 	repos, err := h.service.GetRepos(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("failed to get repos")
+		response.InternalError(w)
 		return
 	}
 

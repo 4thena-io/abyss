@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/4thena-io/abyss/internal/model"
 )
@@ -62,7 +61,7 @@ func (s *TeamService) GetTeamByID(ctx context.Context, id uint) (*TeamStats, err
 		return nil, err
 	}
 	if team == nil {
-		return nil, fmt.Errorf("team not found")
+		return nil, ErrNotFound
 	}
 
 	memberCount, _ := s.teamRepo.CountMembers(ctx, id)
@@ -83,7 +82,7 @@ func (s *TeamService) SaveTeam(ctx context.Context, team *model.Team) (*model.Te
 		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("team already exists")
+		return nil, ErrConflict
 	}
 
 	if err := s.teamRepo.Save(ctx, team); err != nil {
@@ -98,7 +97,7 @@ func (s *TeamService) DeleteTeam(ctx context.Context, id uint) error {
 		return err
 	}
 	if team == nil {
-		return fmt.Errorf("team not found")
+		return ErrNotFound
 	}
 	return s.teamRepo.Delete(ctx, team)
 }

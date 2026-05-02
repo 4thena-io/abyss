@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -81,7 +80,7 @@ func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) 
 		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
 	if existing != nil {
-		return nil, errors.New("app already exists")
+		return nil, ErrConflict
 	}
 
 	// Create empty repo in forge
@@ -174,7 +173,7 @@ func (s *AppService) CreateAppFromRepo(ctx context.Context, app *model.App) (*mo
 		return nil, fmt.Errorf("there was an error reading the data: %w", err)
 	}
 	if existing != nil {
-		return nil, errors.New("app already exists")
+		return nil, ErrConflict
 	}
 
 	// Validate repo exists in forge
@@ -268,14 +267,7 @@ func (s *AppService) GetAllApps(ctx context.Context) ([]model.App, error) {
 }
 
 func (s *AppService) GetAppByID(ctx context.Context, id uint) (*model.App, error) {
-	app, err := s.appRepository.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if app == nil {
-		return nil, fmt.Errorf("app not found")
-	}
-	return app, nil
+	return s.appRepository.GetByID(ctx, id)
 }
 
 func (s *AppService) GetAppBuilds(ctx context.Context, id uint) ([]model.Build, error) {
@@ -284,7 +276,7 @@ func (s *AppService) GetAppBuilds(ctx context.Context, id uint) ([]model.Build, 
 		return nil, err
 	}
 	if app == nil {
-		return nil, fmt.Errorf("app not found")
+		return nil, ErrNotFound
 	}
 	return s.ci.GetBuilds(ctx, app.CIID, app.CISlug)
 }
@@ -295,14 +287,10 @@ func (s *AppService) GetAppsByProject(ctx context.Context, id uint) ([]model.App
 		return nil, err
 	}
 	if project == nil {
-		return nil, fmt.Errorf("project not found")
+		return nil, ErrNotFound
 	}
 
-	apps, err := s.appRepository.GetByProject(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return apps, nil
+	return s.appRepository.GetByProject(ctx, id)
 }
 
 func (s *AppService) GetAppsByTemplate(ctx context.Context, id uint) ([]model.App, error) {
@@ -311,14 +299,10 @@ func (s *AppService) GetAppsByTemplate(ctx context.Context, id uint) ([]model.Ap
 		return nil, err
 	}
 	if template == nil {
-		return nil, fmt.Errorf("template not found")
+		return nil, ErrNotFound
 	}
 
-	apps, err := s.appRepository.GetByTemplate(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return apps, nil
+	return s.appRepository.GetByTemplate(ctx, id)
 }
 
 func (s *AppService) DeleteApp(ctx context.Context, id uint) error {
@@ -327,7 +311,7 @@ func (s *AppService) DeleteApp(ctx context.Context, id uint) error {
 		return err
 	}
 	if app == nil {
-		return fmt.Errorf("app doesn't exist")
+		return ErrNotFound
 	}
 
 	err = s.ci.DeleteRepo(ctx, app.CIID, app.CISlug)
