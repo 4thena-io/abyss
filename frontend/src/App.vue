@@ -1,5 +1,8 @@
 <template>
-  <div class="app flex flex-col h-screen overflow-hidden">
+  <!-- Standalone pages (setup, login) render without the app shell -->
+  <RouterView v-if="isStandalone" />
+
+  <div v-else class="app flex flex-col h-screen overflow-hidden">
     <Header class="shrink-0" @toggle-sidebar="sidebarExpanded = !sidebarExpanded" />
     <div class="flex flex-1 min-h-0">
       <Sidebar class="shrink-0" :expanded="sidebarExpanded" />
@@ -11,10 +14,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { RouterView } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRoute, RouterView } from 'vue-router';
 import Header from './components/layout/Header.vue';
 import Sidebar from './components/layout/Sidebar.vue';
 
+const route = useRoute();
 const sidebarExpanded = ref(false);
+
+const standaloneRoutes = ['/setup', '/login'];
+const isStandalone = computed(() => standaloneRoutes.includes(route.path));
 </script>
