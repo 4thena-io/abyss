@@ -10,6 +10,7 @@ import (
 
 type GiteaForge struct {
 	client *gt.Client
+	url    string
 }
 
 func NewGiteaForge(url, secret string) (*GiteaForge, error) {
@@ -17,7 +18,55 @@ func NewGiteaForge(url, secret string) (*GiteaForge, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gitea client: %w", err)
 	}
-	return &GiteaForge{client}, nil
+	return &GiteaForge{client: client, url: url}, nil
+}
+
+func (f *GiteaForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
+	user, _, err := f.client.GetMyUserInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get authenticated user: %w", err)
+	}
+	name := user.FullName
+	if name == "" {
+		name = user.UserName
+	}
+	return &model.ForgeUser{
+		ID:        user.ID,
+		Username:  user.UserName,
+		FullName:  name,
+		Email:     user.Email,
+		AvatarURL: user.AvatarURL,
+	}, nil
+}
+
+func (f *GiteaForge) GetUserByToken(ctx context.Context, token string) (*model.ForgeUser, error) {
+	client, err := gt.NewClient(f.url, gt.SetToken(token))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user client: %w", err)
+	}
+	user, _, err := client.GetMyUserInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user info: %w", err)
+	}
+	name := user.FullName
+	if name == "" {
+		name = user.UserName
+	}
+	return &model.ForgeUser{
+		ID:        user.ID,
+		Username:  user.UserName,
+		FullName:  name,
+		Email:     user.Email,
+		AvatarURL: user.AvatarURL,
+	}, nil
+}
+
+func (f *GiteaForge) IsMemberOfOwner(ctx context.Context, owner, username string) (bool, error) {
+	member, _, err := f.client.CheckOrgMembership(owner, username)
+	if err != nil {
+		return false, fmt.Errorf("failed to check org membership: %w", err)
+	}
+	return member, nil
 }
 
 func (f *GiteaForge) CreateRepo(ctx context.Context, owner, name string) (*model.Repo, error) {

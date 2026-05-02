@@ -10,6 +10,7 @@ import (
 
 type ForgejoForge struct {
 	client *fg.Client
+	url    string
 }
 
 func NewForgejoForge(url, secret string) (*ForgejoForge, error) {
@@ -17,7 +18,55 @@ func NewForgejoForge(url, secret string) (*ForgejoForge, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Forgejo client: %w", err)
 	}
-	return &ForgejoForge{client}, nil
+	return &ForgejoForge{client: client, url: url}, nil
+}
+
+func (f *ForgejoForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
+	user, _, err := f.client.GetMyUserInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get authenticated user: %w", err)
+	}
+	name := user.FullName
+	if name == "" {
+		name = user.UserName
+	}
+	return &model.ForgeUser{
+		ID:        user.ID,
+		Username:  user.UserName,
+		FullName:  name,
+		Email:     user.Email,
+		AvatarURL: user.AvatarURL,
+	}, nil
+}
+
+func (f *ForgejoForge) GetUserByToken(ctx context.Context, token string) (*model.ForgeUser, error) {
+	client, err := fg.NewClient(f.url, fg.SetToken(token))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user client: %w", err)
+	}
+	user, _, err := client.GetMyUserInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user info: %w", err)
+	}
+	name := user.FullName
+	if name == "" {
+		name = user.UserName
+	}
+	return &model.ForgeUser{
+		ID:        user.ID,
+		Username:  user.UserName,
+		FullName:  name,
+		Email:     user.Email,
+		AvatarURL: user.AvatarURL,
+	}, nil
+}
+
+func (f *ForgejoForge) IsMemberOfOwner(ctx context.Context, owner, username string) (bool, error) {
+	member, _, err := f.client.CheckOrgMembership(owner, username)
+	if err != nil {
+		return false, fmt.Errorf("failed to check org membership: %w", err)
+	}
+	return member, nil
 }
 
 func (f *ForgejoForge) CreateRepo(ctx context.Context, owner, name string) (*model.Repo, error) {
