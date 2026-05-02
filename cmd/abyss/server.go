@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -31,7 +32,7 @@ func newServer(cfg Config, handler http.Handler) *Server {
 }
 
 func (s *Server) start() error {
-	slog.Info("server running", "addr", "http://"+s.http.Addr)
+	log.Info().Str("addr", "http://"+s.http.Addr).Msg("server running")
 	return s.http.ListenAndServe()
 }
 
