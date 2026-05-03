@@ -128,3 +128,22 @@ func (f *ForgejoForge) DeleteRepo(ctx context.Context, owner, name string) error
 	}
 	return nil
 }
+
+func (f *ForgejoForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret string) error {
+	active := true
+	_, _, err := f.client.CreateRepoHook(owner, repo, fg.CreateHookOption{
+		Type: fg.HookTypeGitea,
+		Config: map[string]string{
+			"url":          callbackURL,
+			"content_type": "json",
+			"secret":       secret,
+		},
+		Events:       []string{"push"},
+		BranchFilter: "main,master",
+		Active:       active,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create webhook: %w", err)
+	}
+	return nil
+}
