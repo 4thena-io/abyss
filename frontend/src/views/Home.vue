@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-white">Dashboard</h1>
-      <p class="text-gray-400 mt-1">Overview of your development platform</p>
+      <h1 class="text-2xl font-semibold text-t1">Dashboard</h1>
+      <p class="text-t2 mt-1">Overview of your development platform</p>
     </div>
 
     <!-- Stats -->
@@ -28,44 +28,44 @@
       />
 
       <!-- Quick Actions -->
-      <div class="bg-gray-800 rounded-lg border border-gray-700">
-        <div class="px-5 py-4 border-b border-gray-700">
-          <h2 class="text-lg font-medium text-white">Quick Actions</h2>
+      <div class="bg-panel rounded-lg border border-b1">
+        <div class="px-5 py-4 border-b border-b1">
+          <h2 class="text-lg font-medium text-t1">Quick Actions</h2>
         </div>
         <div class="p-4 space-y-2">
-          <button 
-            v-for="action in quickActions" 
-            :key="action.label" 
+          <button
+            v-for="action in quickActions"
+            :key="action.label"
             @click="action.onClick"
             class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left
-                   bg-gray-700/50 hover:bg-gray-700 transition-colors group"
+                   bg-surface hover:bg-hover transition-colors group"
           >
-            <component :is="action.icon" class="w-5 h-5 text-gray-400 group-hover:text-white" />
-            <span class="text-gray-300 group-hover:text-white text-sm">{{ action.label }}</span>
+            <component :is="action.icon" class="w-5 h-5 text-t3 group-hover:text-t1" />
+            <span class="text-t2 group-hover:text-t1 text-sm">{{ action.label }}</span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- Recent Builds -->
-    <div class="bg-gray-800 rounded-lg border border-gray-700">
-      <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
-        <h2 class="text-lg font-medium text-white">Recent Builds</h2>
-        <router-link to="/apps" class="text-sm text-blue-400 hover:text-blue-300">View all</router-link>
+    <div class="bg-panel rounded-lg border border-b1">
+      <div class="px-5 py-4 border-b border-b1 flex items-center justify-between">
+        <h2 class="text-lg font-medium text-t1">Recent Builds</h2>
+        <router-link to="/apps" class="text-sm text-acc hover:opacity-80">View all</router-link>
       </div>
-      
+
       <div v-if="loadingBuilds" class="px-5 py-8 flex justify-center">
         <Spinner size="md" />
       </div>
-      
-      <div v-else-if="recentBuilds.length === 0" class="px-5 py-8 text-center text-gray-500">
+
+      <div v-else-if="recentBuilds.length === 0" class="px-5 py-8 text-center text-t3">
         No recent builds
       </div>
-      
+
       <div v-else class="overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="text-left text-gray-400 text-sm border-b border-gray-700">
+            <tr class="text-left text-t3 text-sm border-b border-b1">
               <th class="px-5 py-3 font-medium">Application</th>
               <th class="px-5 py-3 font-medium">Build</th>
               <th class="px-5 py-3 font-medium">Status</th>
@@ -74,23 +74,23 @@
               <th class="px-5 py-3 font-medium">Time</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-700">
-            <tr 
-              v-for="build in recentBuilds" 
-              :key="`${build.appId}-${build.id}`" 
-              class="hover:bg-gray-750 transition-colors"
+          <tbody class="divide-y divide-b1">
+            <tr
+              v-for="build in recentBuilds"
+              :key="`${build.appId}-${build.id}`"
+              class="hover:bg-hover transition-colors"
             >
               <td class="px-5 py-4">
-                <router-link :to="`/apps/${build.appId}`" class="text-white text-sm hover:text-blue-400">
+                <router-link :to="`/apps/${build.appId}`" class="text-t1 text-sm hover:text-acc">
                   {{ build.appName }}
                 </router-link>
               </td>
               <td class="px-5 py-4">
-                <a 
-                  :href="build.link" 
-                  target="_blank" 
+                <a
+                  :href="build.link"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  class="text-blue-400 hover:text-blue-300 text-sm"
+                  class="text-acc hover:opacity-80 text-sm"
                 >
                   #{{ build.number }}
                 </a>
@@ -98,9 +98,9 @@
               <td class="px-5 py-4">
                 <StatusBadge :status="build.status" />
               </td>
-              <td class="px-5 py-4 text-gray-400 text-sm">{{ build.branch || '-' }}</td>
-              <td class="px-5 py-4 text-gray-400 text-sm">{{ formatDuration(build.duration) }}</td>
-              <td class="px-5 py-4 text-gray-500 text-sm">{{ formatTime(build.startedAt) }}</td>
+              <td class="px-5 py-4 text-t2 text-sm">{{ build.branch || '-' }}</td>
+              <td class="px-5 py-4 text-t2 text-sm">{{ formatDuration(build.duration) }}</td>
+              <td class="px-5 py-4 text-t3 text-sm">{{ formatTime(build.startedAt) }}</td>
             </tr>
           </tbody>
         </table>

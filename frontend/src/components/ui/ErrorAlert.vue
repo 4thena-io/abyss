@@ -1,6 +1,6 @@
 <template>
-  <div class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-    <p class="text-red-400 text-sm">{{ message }}</p>
+  <div class="p-3 bg-fail-s border border-fail/30 rounded-lg">
+    <p class="text-fail text-sm">{{ message }}</p>
   </div>
 </template>
 

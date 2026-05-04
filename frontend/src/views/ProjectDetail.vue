@@ -9,7 +9,7 @@
       :icon="FolderIcon"
       title="Project not found"
     >
-      <router-link to="/projects" class="text-blue-400 hover:text-blue-300">
+      <router-link to="/projects" class="text-acc hover:opacity-80">
         Back to projects
       </router-link>
     </EmptyState>

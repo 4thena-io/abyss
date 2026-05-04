@@ -1,20 +1,20 @@
 <template>
   <div class="flex items-center justify-end gap-3 pt-2">
-    <button 
-      type="button" 
-      @click="$emit('cancel')" 
-      class="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+    <button
+      type="button"
+      @click="$emit('cancel')"
+      class="px-4 py-2 text-t2 hover:text-t1 transition-colors"
     >
       {{ cancelLabel }}
     </button>
-    <button 
-      type="submit" 
+    <button
+      type="submit"
       :disabled="disabled || saving"
       :class="[
         'px-4 py-2 rounded-lg font-medium transition-colors',
         !disabled && !saving
-          ? 'bg-blue-600 hover:bg-blue-500 text-white'
-          : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+          ? 'bg-acc hover:opacity-90 text-white'
+          : 'bg-surface text-t3 cursor-not-allowed'
       ]"
     >
       {{ saving ? submittingLabel : submitLabel }}
@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<{
   saving: false,
 });
 
-const submittingLabel = computed(() => 
+const submittingLabel = computed(() =>
   props.submittingLabel || props.submitLabel.replace(/^(\w+)/, '$1ing...')
 );
 

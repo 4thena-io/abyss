@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-medium text-white">Projects</h2>
+      <h2 class="text-lg font-medium text-t1">Projects</h2>
       <RefreshButton :loading="loading" @click="fetchProjects" />
     </div>
 

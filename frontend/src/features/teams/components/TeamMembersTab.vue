@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-medium text-white">Members</h2>
+      <h2 class="text-lg font-medium text-t1">Members</h2>
       <RefreshButton :loading="loading" @click="fetchMembers" />
     </div>
 
@@ -18,13 +18,13 @@
 
     <DataTable v-else :columns="columns" :rows="members" row-key="username">
       <template #cell-username="{ row }">
-        <span class="text-white text-sm">{{ row.username }}</span>
+        <span class="text-t1 text-sm">{{ row.username }}</span>
       </template>
       <template #cell-role="{ row }">
-        <span class="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">{{ row.role }}</span>
+        <span class="px-2 py-0.5 bg-surface border border-b1 rounded text-xs text-t2">{{ row.role }}</span>
       </template>
       <template #cell-joinedAt="{ row }">
-        <span class="text-gray-500 text-sm">{{ formatTime(row.joinedAt) }}</span>
+        <span class="text-t3 text-sm">{{ formatTime(row.joinedAt) }}</span>
       </template>
     </DataTable>
   </div>

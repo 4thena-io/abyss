@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+  <div class="bg-panel border border-b1 rounded-lg overflow-hidden">
     <table class="w-full">
       <thead>
-        <tr class="text-left text-gray-400 text-sm border-b border-gray-700">
-          <th 
-            v-for="column in columns" 
-            :key="column.key" 
+        <tr class="text-left text-t3 text-sm border-b border-b1">
+          <th
+            v-for="column in columns"
+            :key="column.key"
             class="px-5 py-3 font-medium"
             :class="column.class"
           >
@@ -13,16 +13,16 @@
           </th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-700">
-        <tr 
-          v-for="(row, index) in rows" 
-          :key="rowKey ? row[rowKey] : index" 
-          class="hover:bg-gray-750 transition-colors"
+      <tbody class="divide-y divide-b1">
+        <tr
+          v-for="(row, index) in rows"
+          :key="rowKey ? row[rowKey] : index"
+          class="hover:bg-hover transition-colors"
         >
-          <td 
-            v-for="column in columns" 
-            :key="column.key" 
-            class="px-5 py-4"
+          <td
+            v-for="column in columns"
+            :key="column.key"
+            class="px-5 py-4 text-t2"
             :class="column.cellClass"
           >
             <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]">

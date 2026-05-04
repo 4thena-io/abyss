@@ -9,7 +9,7 @@
       :icon="UsersIcon"
       title="Team not found"
     >
-      <router-link to="/teams" class="text-blue-400 hover:text-blue-300">
+      <router-link to="/teams" class="text-acc hover:opacity-80">
         Back to teams
       </router-link>
     </EmptyState>

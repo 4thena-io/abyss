@@ -1,11 +1,11 @@
 <template>
   <div>
-    <label class="block text-gray-400 text-sm mb-2">
+    <label class="block text-t3 text-sm mb-2">
       {{ label }}{{ required ? ' *' : '' }}
     </label>
-    
+
     <!-- Input -->
-    <input 
+    <input
       v-if="type === 'text'"
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
@@ -14,9 +14,9 @@
       :disabled="disabled"
       :class="inputClasses"
     />
-    
+
     <!-- Textarea -->
-    <textarea 
+    <textarea
       v-else-if="type === 'textarea'"
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
@@ -25,7 +25,7 @@
       :disabled="disabled"
       :class="[inputClasses, 'resize-none']"
     />
-    
+
     <!-- Select -->
     <select
       v-else-if="type === 'select'"
@@ -35,17 +35,17 @@
       :class="inputClasses"
     >
       <option v-if="placeholder" value="">{{ placeholder }}</option>
-      <option 
-        v-for="option in options" 
-        :key="option.value" 
+      <option
+        v-for="option in options"
+        :key="option.value"
         :value="option.value"
       >
         {{ option.label }}
       </option>
     </select>
-    
+
     <!-- Helper text -->
-    <p v-if="hint" class="text-xs text-gray-500 mt-1">{{ hint }}</p>
+    <p v-if="hint" class="text-xs text-t3 mt-1">{{ hint }}</p>
   </div>
 </template>
 
@@ -74,10 +74,10 @@ defineEmits<{
 }>();
 
 const inputClasses = computed(() => [
-  'w-full border border-gray-700 rounded-lg px-4 py-2.5 text-white',
-  'placeholder-gray-500 focus:outline-none focus:border-gray-600',
-  props.disabled 
-    ? 'bg-gray-900/50 text-gray-400 cursor-not-allowed' 
-    : 'bg-gray-900',
+  'w-full border border-b1 rounded-lg px-4 py-2.5 text-t1',
+  'placeholder:text-t3 focus:outline-none focus:border-b2',
+  props.disabled
+    ? 'bg-bg/50 text-t3 cursor-not-allowed'
+    : 'bg-bg',
 ]);
 </script>

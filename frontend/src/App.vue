@@ -18,6 +18,9 @@ import { ref, computed } from 'vue';
 import { useRoute, RouterView } from 'vue-router';
 import Header from './components/layout/Header.vue';
 import Sidebar from './components/layout/Sidebar.vue';
+import { useTheme } from './composables/useTheme';
+
+useTheme();
 
 const route = useRoute();
 const sidebarExpanded = ref(false);

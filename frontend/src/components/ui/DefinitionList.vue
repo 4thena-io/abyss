@@ -1,23 +1,23 @@
 <template>
-  <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
-    <h2 v-if="title" class="text-lg font-medium text-white mb-4">{{ title }}</h2>
+  <div class="bg-panel border border-b1 rounded-lg p-6">
+    <h2 v-if="title" class="text-lg font-medium text-t1 mb-4">{{ title }}</h2>
     <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="item in items" :key="item.label">
-        <dt class="text-gray-400 text-sm">{{ item.label }}</dt>
-        <dd class="text-white mt-1">
+        <dt class="text-t3 text-sm">{{ item.label }}</dt>
+        <dd class="text-t1 mt-1">
           <slot :name="item.key || item.label" :item="item">
-            <component 
-              v-if="item.to" 
-              :is="item.external ? 'a' : 'router-link'" 
+            <component
+              v-if="item.to"
+              :is="item.external ? 'a' : 'router-link'"
               :to="!item.external ? item.to : undefined"
               :href="item.external ? item.to : undefined"
               :target="item.external ? '_blank' : undefined"
               :rel="item.external ? 'noopener noreferrer' : undefined"
-              class="text-blue-400 hover:text-blue-300 break-all"
+              class="text-acc hover:opacity-80 break-all"
             >
               {{ item.value || 'Not configured' }}
             </component>
-            <span v-else :class="item.value ? '' : 'text-gray-500'">
+            <span v-else :class="item.value ? '' : 'text-t3'">
               {{ item.value || item.fallback || 'Not configured' }}
             </span>
           </slot>

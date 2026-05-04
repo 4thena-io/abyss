@@ -1,14 +1,14 @@
 <template>
-  <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-700">
-    <span class="text-sm text-gray-400">
+  <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-b1">
+    <span class="text-sm text-t3">
       Showing {{ startItem }} to {{ endItem }} of {{ total }}
     </span>
 
     <div class="flex items-center gap-1">
-      <button 
-        @click="emit('update:modelValue', modelValue - 1)" 
-        :disabled="modelValue === 1" 
-        class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 
+      <button
+        @click="emit('update:modelValue', modelValue - 1)"
+        :disabled="modelValue === 1"
+        class="p-1.5 rounded text-t3 hover:text-t1 hover:bg-surface
                disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronLeftIcon class="w-4 h-4" />
@@ -17,28 +17,28 @@
       <template v-for="page in totalPages" :key="page">
         <button
           v-if="page === 1 || page === totalPages || (page >= modelValue - 1 && page <= modelValue + 1)"
-          @click="emit('update:modelValue', page)" 
+          @click="emit('update:modelValue', page)"
           :class="[
             'px-3 py-1 rounded text-sm transition-colors',
             page === modelValue
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              ? 'bg-acc text-white'
+              : 'text-t3 hover:text-t1 hover:bg-surface'
           ]"
         >
           {{ page }}
         </button>
-        <span 
-          v-else-if="page === modelValue - 2 || page === modelValue + 2" 
-          class="px-2 text-gray-500"
+        <span
+          v-else-if="page === modelValue - 2 || page === modelValue + 2"
+          class="px-2 text-t3"
         >
           ...
         </span>
       </template>
 
-      <button 
-        @click="emit('update:modelValue', modelValue + 1)" 
-        :disabled="modelValue === totalPages" 
-        class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 
+      <button
+        @click="emit('update:modelValue', modelValue + 1)"
+        :disabled="modelValue === totalPages"
+        class="p-1.5 rounded text-t3 hover:text-t1 hover:bg-surface
                disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronRightIcon class="w-4 h-4" />

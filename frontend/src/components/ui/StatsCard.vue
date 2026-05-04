@@ -1,19 +1,19 @@
 <template>
-  <component 
-    :is="to ? 'router-link' : 'div'" 
+  <component
+    :is="to ? 'router-link' : 'div'"
     :to="to"
-    class="bg-gray-800 rounded-lg p-5 border border-gray-700 hover:border-gray-600 transition-colors"
+    class="bg-panel rounded-lg p-5 border border-b1 hover:border-b2 transition-colors"
     :class="{ 'cursor-pointer': to }"
   >
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-gray-400 text-sm">{{ label }}</p>
-        <p class="text-2xl font-semibold text-white mt-1">
-          <span v-if="loading" class="inline-block w-8 h-6 bg-gray-700 rounded animate-pulse"></span>
+        <p class="text-t2 text-sm">{{ label }}</p>
+        <p class="text-2xl font-semibold text-t1 mt-1">
+          <span v-if="loading" class="inline-block w-8 h-6 bg-surface rounded animate-pulse"></span>
           <span v-else>{{ value }}</span>
         </p>
       </div>
-      <component :is="icon" class="w-8 h-8 text-gray-600" />
+      <component :is="icon" class="w-8 h-8 text-t3" />
     </div>
   </component>
 </template>

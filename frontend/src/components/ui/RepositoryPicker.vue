@@ -1,41 +1,41 @@
 <template>
   <div>
-    <label v-if="label" class="block text-gray-400 text-sm mb-2">
+    <label v-if="label" class="block text-t3 text-sm mb-2">
       {{ label }}{{ required ? ' *' : '' }}
     </label>
     <div class="relative">
-      <input 
-        v-model="search" 
-        type="text" 
+      <input
+        v-model="search"
+        type="text"
         :placeholder="placeholder"
         @focus="showDropdown = true"
-        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-               placeholder-gray-500 focus:outline-none focus:border-gray-600" 
+        class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1
+               placeholder:text-t3 focus:outline-none focus:border-b2"
       />
-      <div 
-        v-if="showDropdown && filteredRepos.length > 0" 
-        class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg max-h-48 overflow-y-auto"
+      <div
+        v-if="showDropdown && filteredRepos.length > 0"
+        class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg max-h-48 overflow-y-auto"
       >
-        <button 
-          v-for="repo in filteredRepos" 
-          :key="repo.id" 
+        <button
+          v-for="repo in filteredRepos"
+          :key="repo.id"
           type="button"
           @click="selectRepo(repo)"
-          class="w-full px-4 py-2.5 text-left hover:bg-gray-800 transition-colors"
+          class="w-full px-4 py-2.5 text-left hover:bg-panel transition-colors"
         >
-          <p class="text-white text-sm">{{ repo.fullName }}</p>
+          <p class="text-t1 text-sm">{{ repo.fullName }}</p>
         </button>
       </div>
     </div>
-    <div 
-      v-if="modelValue" 
-      class="mt-2 p-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-between"
+    <div
+      v-if="modelValue"
+      class="mt-2 p-3 bg-bg border border-b1 rounded-lg flex items-center justify-between"
     >
-      <p class="text-white text-sm">{{ modelValue.fullName }}</p>
-      <button 
-        type="button" 
-        @click="clearSelection" 
-        class="text-gray-500 hover:text-white"
+      <p class="text-t1 text-sm">{{ modelValue.fullName }}</p>
+      <button
+        type="button"
+        @click="clearSelection"
+        class="text-t3 hover:text-t1 transition-colors"
       >
         <XMarkIcon class="w-4 h-4" />
       </button>

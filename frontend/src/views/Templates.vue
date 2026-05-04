@@ -49,7 +49,7 @@
         :hoverable="false"
       >
         <template #header-action>
-          <button @click="deleteTemplate(template.id)" class="text-gray-500 hover:text-red-400 transition-colors p-1">
+          <button @click="deleteTemplate(template.id)" class="text-t3 hover:text-fail transition-colors p-1">
             <TrashIcon class="w-4 h-4" />
           </button>
         </template>
@@ -58,7 +58,7 @@
         </template>
         <template #footer>
           <a :href="template.repoUrl" target="_blank"
-            class="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+            class="flex items-center gap-2 text-t3 hover:text-t1 text-sm transition-colors">
             <CodeBracketIcon class="w-4 h-4" />
             <span>View repo</span>
           </a>
@@ -71,39 +71,39 @@
       <form @submit.prevent="createTemplate" class="space-y-4">
         <!-- Repo Selection -->
         <div>
-          <label class="block text-gray-400 text-sm mb-2">Repository *</label>
+          <label class="block text-t3 text-sm mb-2">Repository *</label>
           <div class="relative">
             <input v-model="repoSearch" type="text" placeholder="Search repositories..."
-              @focus="showRepoDropdown = true" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white 
-                     placeholder-gray-500 focus:outline-none focus:border-gray-600" />
+              @focus="showRepoDropdown = true" class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1
+                     placeholder:text-t3 focus:outline-none focus:border-b2" />
 
             <!-- Repo dropdown -->
             <div v-if="showRepoDropdown && filteredRepos.length > 0"
-              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
+              class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg max-h-48 overflow-y-auto">
               <button v-for="repo in filteredRepos" :key="repo.id" type="button" @click="selectRepo(repo)"
-                class="w-full px-4 py-2.5 text-left hover:bg-gray-800 transition-colors">
-                <p class="text-white text-sm">{{ repo.fullName }}</p>
+                class="w-full px-4 py-2.5 text-left hover:bg-panel transition-colors">
+                <p class="text-t1 text-sm">{{ repo.fullName }}</p>
               </button>
             </div>
 
             <!-- No repos found -->
             <div v-if="showRepoDropdown && repoSearch && filteredRepos.length === 0 && !loadingRepos"
-              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-              <p class="text-gray-500 text-sm">No repositories found</p>
+              class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg p-4 text-center">
+              <p class="text-t3 text-sm">No repositories found</p>
             </div>
 
             <!-- Loading repos -->
             <div v-if="loadingRepos"
-              class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
+              class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg p-4 text-center">
               <Spinner size="sm" class="mx-auto" />
             </div>
           </div>
 
           <!-- Selected repo chip -->
           <div v-if="selectedRepo"
-            class="mt-2 p-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-between">
-            <p class="text-white text-sm">{{ selectedRepo.fullName }}</p>
-            <button type="button" @click="clearRepo" class="text-gray-500 hover:text-white">
+            class="mt-2 p-3 bg-bg border border-b1 rounded-lg flex items-center justify-between">
+            <p class="text-t1 text-sm">{{ selectedRepo.fullName }}</p>
+            <button type="button" @click="clearRepo" class="text-t3 hover:text-t1 transition-colors">
               <XMarkIcon class="w-4 h-4" />
             </button>
           </div>

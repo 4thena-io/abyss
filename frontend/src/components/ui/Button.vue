@@ -35,10 +35,10 @@ const sizeClasses = computed(() => ({
 }));
 
 const variantClasses = computed(() => ({
-  'bg-blue-600 hover:bg-blue-500 text-white': props.variant === 'primary' && !props.disabled,
-  'bg-gray-700 text-gray-500': props.variant === 'primary' && props.disabled,
-  'bg-gray-800 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white': props.variant === 'secondary',
-  'text-gray-400 hover:text-white': props.variant === 'ghost',
-  'bg-red-600 hover:bg-red-500 text-white': props.variant === 'danger',
+  'bg-acc hover:opacity-90 text-white': props.variant === 'primary' && !props.disabled,
+  'bg-surface text-t3': props.variant === 'primary' && props.disabled,
+  'bg-panel border border-b1 hover:border-b2 text-t2 hover:text-t1': props.variant === 'secondary',
+  'text-t2 hover:text-t1': props.variant === 'ghost',
+  'bg-fail hover:opacity-90 text-white': props.variant === 'danger',
 }));
 </script>

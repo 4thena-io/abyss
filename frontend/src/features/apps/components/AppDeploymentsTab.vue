@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-medium text-white">Deployments</h2>
+      <h2 class="text-lg font-medium text-t1">Deployments</h2>
       <RefreshButton :loading="loading" @click="fetchDeployments" />
     </div>
 
@@ -21,21 +21,21 @@
         <div
           v-for="{ env, latest } in envStatuses"
           :key="env"
-          class="bg-gray-800 border border-gray-700 rounded-lg p-4"
+          class="bg-panel border border-b1 rounded-lg p-4"
         >
           <div class="flex justify-between items-center mb-2">
-            <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">
+            <span class="text-xs text-t3 font-medium uppercase tracking-wide">
               {{ envLabel(env) }}
             </span>
             <StatusBadge v-if="latest" :status="latest.status" />
-            <span v-else class="px-2 py-0.5 rounded text-xs font-medium bg-gray-700 text-gray-400">
+            <span v-else class="px-2 py-0.5 rounded text-xs font-medium bg-surface text-t3">
               none
             </span>
           </div>
-          <p :class="['text-sm font-mono', latest ? 'text-white' : 'text-gray-500']">
+          <p :class="['text-sm font-mono', latest ? 'text-t1' : 'text-t3']">
             {{ latest ? latest.commit.slice(0, 7) : '—' }}
           </p>
-          <p class="text-xs text-gray-500 mt-1">
+          <p class="text-xs text-t3 mt-1">
             {{ latest ? `Deployed ${formatTime(latest.deployedAt)}` : 'Not deployed' }}
           </p>
         </div>
@@ -51,16 +51,16 @@
           <StatusBadge :status="row.status" />
         </template>
         <template #cell-commit="{ row }">
-          <span class="text-gray-400 text-sm font-mono">{{ row.commit.slice(0, 7) }}</span>
+          <span class="text-t2 text-sm font-mono">{{ row.commit.slice(0, 7) }}</span>
         </template>
         <template #cell-triggeredBy="{ row }">
-          <span class="text-gray-400 text-sm">{{ row.triggeredBy }}</span>
+          <span class="text-t2 text-sm">{{ row.triggeredBy }}</span>
         </template>
         <template #cell-duration="{ row }">
-          <span class="text-gray-400 text-sm">{{ formatDuration(row.duration) }}</span>
+          <span class="text-t2 text-sm">{{ formatDuration(row.duration) }}</span>
         </template>
         <template #cell-deployedAt="{ row }">
-          <span class="text-gray-500 text-sm">{{ formatTime(row.deployedAt) }}</span>
+          <span class="text-t3 text-sm">{{ formatTime(row.deployedAt) }}</span>
         </template>
       </DataTable>
     </template>
@@ -114,7 +114,7 @@ const envBadgeClass = (env: string) => {
     staging: 'bg-orange-900/30 text-orange-400',
     dev: 'bg-indigo-900/30 text-indigo-400',
   };
-  return classes[env] ?? 'bg-gray-700 text-gray-400';
+  return classes[env] ?? 'bg-surface text-t3';
 };
 
 const fetchDeployments = async () => {

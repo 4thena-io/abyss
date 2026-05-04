@@ -9,7 +9,7 @@
       :icon="CubeIcon"
       title="Application not found"
     >
-      <router-link to="/apps" class="text-blue-400 hover:text-blue-300">
+      <router-link to="/apps" class="text-acc hover:opacity-80">
         Back to applications
       </router-link>
     </EmptyState>
@@ -18,8 +18,8 @@
       <DetailHeader :icon="CubeIcon" :title="app.name" :subtitle="app.description">
         <template #actions>
           <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer"
-            class="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700
-                rounded-lg text-gray-300 hover:text-white hover:border-gray-600 transition-colors">
+            class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1
+                rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors">
             <CodeBracketIcon class="w-4 h-4" />
             <span>Source Code</span>
           </a>

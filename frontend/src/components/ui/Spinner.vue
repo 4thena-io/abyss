@@ -1,6 +1,6 @@
 <template>
   <div :class="[
-    'border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin',
+    'border-2 border-b2 border-t-acc rounded-full animate-spin',
     sizeClasses
   ]" />
 </template>

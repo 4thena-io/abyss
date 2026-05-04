@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-medium text-white">Builds</h2>
+      <h2 class="text-lg font-medium text-t1">Builds</h2>
       <RefreshButton :loading="loading" @click="fetchBuilds" />
     </div>
 
@@ -24,7 +24,7 @@
     >
       <template #cell-number="{ row }">
         <a :href="row.link" target="_blank" rel="noopener noreferrer"
-          class="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+          class="text-acc hover:opacity-80 font-medium transition-opacity">
           #{{ row.number }}
         </a>
       </template>
@@ -32,16 +32,16 @@
         <StatusBadge :status="row.status" />
       </template>
       <template #cell-branch="{ row }">
-        <span class="text-gray-300 text-sm">{{ row.branch }}</span>
+        <span class="text-t2 text-sm">{{ row.branch }}</span>
       </template>
       <template #cell-commit="{ row }">
-        <span class="text-gray-400 text-sm font-mono">{{ row.commit?.slice(0, 7) }}</span>
+        <span class="text-t2 text-sm font-mono">{{ row.commit?.slice(0, 7) }}</span>
       </template>
       <template #cell-duration="{ row }">
-        <span class="text-gray-400 text-sm">{{ formatDuration(row.duration) }}</span>
+        <span class="text-t2 text-sm">{{ formatDuration(row.duration) }}</span>
       </template>
       <template #cell-startedAt="{ row }">
-        <span class="text-gray-500 text-sm">{{ formatTime(row.startedAt) }}</span>
+        <span class="text-t3 text-sm">{{ formatTime(row.startedAt) }}</span>
       </template>
       <template #footer>
         <Pagination v-model="currentPage" :total="builds.length" :page-size="pageSize" />

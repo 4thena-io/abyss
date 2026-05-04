@@ -1,30 +1,32 @@
 <template>
-  <aside 
+  <aside
     :class="[
-      'bg-gray-950 flex flex-col items-center py-4 transition-all duration-300 ease-in-out',
+      'bg-panel border-r border-b1 flex flex-col items-center py-4 transition-all duration-300 ease-in-out',
       expanded ? 'w-48' : 'w-12'
     ]"
   >
-    <nav class="flex-1 flex-col flex space-y-2 w-full px-2">
-      <router-link 
-        v-for="item in navItems" 
+    <nav class="flex-1 flex-col flex space-y-1 w-full px-2">
+      <router-link
+        v-for="item in navItems"
         :key="item.to"
-        :to="item.to" 
+        :to="item.to"
         v-slot="{ isExactActive }"
         custom
       >
         <button
           @click="$router.push(item.to)"
           :class="[
-            'flex items-center gap-3 w-full transition-colors p-2 rounded-lg justify-start',
-            isExactActive 
-              ? 'text-white bg-gray-800' 
-              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            'flex items-center gap-3 w-full transition-colors p-2 rounded-lg justify-start relative',
+            isExactActive
+              ? 'text-acc bg-active font-semibold'
+              : 'text-t2 hover:text-t1 hover:bg-surface'
           ]"
         >
+          <span v-if="isExactActive"
+            class="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-acc rounded-r" />
           <component :is="item.icon" class="w-5 h-5 shrink-0" />
-          <span 
-            v-if="expanded" 
+          <span
+            v-if="expanded"
             class="text-sm font-medium whitespace-nowrap"
           >
             {{ item.label }}

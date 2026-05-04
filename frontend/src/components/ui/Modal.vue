@@ -1,10 +1,10 @@
 <template>
   <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/60" @click="$emit('close')" />
-    <div class="relative bg-gray-800 border border-gray-700 rounded-lg w-full p-6" :class="sizeClass">
+    <div class="relative bg-panel border border-b1 rounded-lg w-full p-6" :class="sizeClass">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-white">{{ title }}</h2>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-white">
+        <h2 class="text-xl font-semibold text-t1">{{ title }}</h2>
+        <button @click="$emit('close')" class="text-t3 hover:text-t1 transition-colors">
           <XMarkIcon class="w-5 h-5" />
         </button>
       </div>

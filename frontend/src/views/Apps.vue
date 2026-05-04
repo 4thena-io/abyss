@@ -107,8 +107,8 @@
         />
 
         <!-- Info box -->
-        <div v-if="selectedTemplate && selectedProject" class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-          <p class="text-sm text-blue-400">
+        <div v-if="selectedTemplate && selectedProject" class="bg-acc-s border border-acc-b rounded-lg p-3">
+          <p class="text-sm text-acc">
             This will create a new repository from the <strong>{{ selectedTemplate.name }}</strong> template,
             set up CI, and add it to the <strong>{{ selectedProject.name }}</strong> project.
           </p>
