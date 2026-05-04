@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 
 	"github.com/4thena-io/abyss/internal/constant"
+	"github.com/4thena-io/abyss/internal/git"
 	"github.com/4thena-io/abyss/internal/integration/ci"
 	"github.com/4thena-io/abyss/internal/integration/forge"
-	"github.com/4thena-io/abyss/internal/integration/git"
 	"github.com/4thena-io/abyss/internal/model"
 )
 
