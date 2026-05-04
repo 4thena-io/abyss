@@ -77,7 +77,7 @@ import {
   PlusIcon,
   FolderIcon
 } from '@heroicons/vue/24/outline';
-import type { Project } from '../types/Project';
+import type { Project } from '../features/projects/types';
 import { projectsApi, type CreateProjectRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';

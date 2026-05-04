@@ -1,6 +1,6 @@
 import { api } from './client';
-import type { Project } from '../types/Project';
-import type { App } from '../types/App';
+import type { Project } from '../features/projects/types';
+import type { App } from '../features/apps/types';
 
 export interface CreateProjectRequest {
   name: string;

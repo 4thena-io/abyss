@@ -1,7 +1,5 @@
 import { api } from './client';
-import type { App } from '../types/App';
-import type { Build } from '../types/Build';
-import type { Deployment } from '../types/Deployment';
+import type { App, Build, Deployment } from '../features/apps/types';
 
 export interface CreateAppRequest {
   name: string;

@@ -1,6 +1,6 @@
 import { api } from './client';
-import type { Team, TeamMember } from '../types/Team';
-import type { Project } from '../types/Project';
+import type { Team, TeamMember } from '../features/teams/types';
+import type { Project } from '../features/projects/types';
 
 export interface CreateTeamRequest {
   name: string;

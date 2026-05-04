@@ -79,7 +79,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
 import { PlusIcon, UsersIcon } from '@heroicons/vue/24/outline';
-import type { Team } from '../types/Team';
+import type { Team } from '../features/teams/types';
 import { teamsApi, type CreateTeamRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';

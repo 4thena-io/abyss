@@ -134,8 +134,8 @@ import {
   PlusIcon,
   CubeIcon
 } from '@heroicons/vue/24/outline';
-import type { App } from '../types/App';
-import type { Project } from '../types/Project';
+import type { App } from '../features/apps/types';
+import type { Project } from '../features/projects/types';
 import type { Template } from '../types/Template';
 import { appsApi, projectsApi, templatesApi, type CreateAppRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';

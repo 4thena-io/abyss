@@ -256,10 +256,10 @@ import {
   Cog6ToothIcon,
 } from '@heroicons/vue/24/outline';
 import { appsApi, projectsApi, templatesApi, repoApi, type CreateAppRequest, type CreateProjectRequest, type CreateTemplateRequest } from '../api';
-import type { App } from '../types/App';
-import type { Project } from '../types/Project';
+import type { App } from '../features/apps/types';
+import type { Build } from '../features/apps/types';
+import type { Project } from '../features/projects/types';
 import type { Template } from '../types/Template';
-import type { Build } from '../types/Build';
 import type { Repo } from '../types/Repo';
 import Modal from '../components/ui/Modal.vue';
 import Spinner from '../components/ui/Spinner.vue';
