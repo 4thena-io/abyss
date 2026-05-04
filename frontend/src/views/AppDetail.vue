@@ -211,7 +211,7 @@ const { formatDuration, formatRelativeTime: formatTime, formatUrl } = useFormatt
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
-  { id: 'builds', label: 'CI/CD' },
+  { id: 'builds', label: 'Builds' },
   { id: 'deployments', label: 'Deployments' },
 ];
 
