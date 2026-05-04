@@ -136,7 +136,7 @@ import {
 } from '@heroicons/vue/24/outline';
 import type { App } from '../features/apps/types';
 import type { Project } from '../features/projects/types';
-import type { Template } from '../types/Template';
+import type { Template } from '../features/templates/types';
 import { appsApi, projectsApi, templatesApi, type CreateAppRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';

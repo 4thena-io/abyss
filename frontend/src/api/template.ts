@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Template } from '../types/Template';
+import type { Template } from '../features/templates/types';
 
 export interface CreateTemplateRequest {
   name: string;

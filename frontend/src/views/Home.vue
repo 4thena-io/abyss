@@ -259,7 +259,7 @@ import { appsApi, projectsApi, templatesApi, repoApi, type CreateAppRequest, typ
 import type { App } from '../features/apps/types';
 import type { Build } from '../features/apps/types';
 import type { Project } from '../features/projects/types';
-import type { Template } from '../types/Template';
+import type { Template } from '../features/templates/types';
 import type { Repo } from '../types/Repo';
 import Modal from '../components/ui/Modal.vue';
 import Spinner from '../components/ui/Spinner.vue';

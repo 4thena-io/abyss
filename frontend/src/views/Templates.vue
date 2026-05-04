@@ -166,7 +166,7 @@ import {
   TrashIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline';
-import type { Template } from '../types/Template';
+import type { Template } from '../features/templates/types';
 import type { Repo } from '../types/Repo';
 import { templatesApi, repoApi, type CreateTemplateRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
