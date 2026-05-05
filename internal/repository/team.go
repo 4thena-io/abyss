@@ -56,7 +56,13 @@ func (r *TeamRepository) Delete(ctx context.Context, team *model.Team) error {
 
 func (r *TeamRepository) GetMembers(ctx context.Context, teamID uint) ([]model.TeamMember, error) {
 	var members []model.TeamMember
-	result := r.db.WithContext(ctx).Where("team_id = ?", teamID).Find(&members)
+	result := r.db.WithContext(ctx).Where("team_id = ?", teamID).Preload("User").Find(&members)
+	return members, result.Error
+}
+
+func (r *TeamRepository) GetByUserID(ctx context.Context, userID uint) ([]model.TeamMember, error) {
+	var members []model.TeamMember
+	result := r.db.WithContext(ctx).Where("user_id = ?", userID).Preload("User").Find(&members)
 	return members, result.Error
 }
 

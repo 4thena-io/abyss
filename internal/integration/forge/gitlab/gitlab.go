@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	gl "gitlab.com/gitlab-org/api/client-go"
 	"github.com/4thena-io/abyss/internal/model"
@@ -159,13 +160,32 @@ func (f *GitlabForge) DeleteRepo(ctx context.Context, owner, name string) error 
 	return nil
 }
 
-func (f *GitlabForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret string) error {
+func (f *GitlabForge) DeleteWebhook(ctx context.Context, owner, repo, callbackURL string) error {
+	pid := owner + "/" + repo
+	base, _, _ := strings.Cut(callbackURL, "?")
+	hooks, _, err := f.client.Projects.ListProjectHooks(pid, nil, gl.WithContext(ctx))
+	if err != nil {
+		return fmt.Errorf("failed to list webhooks: %w", err)
+	}
+	for _, hook := range hooks {
+		u, _, _ := strings.Cut(hook.URL, "?")
+		if u == base {
+			if _, err := f.client.Projects.DeleteProjectHook(pid, int64(hook.ID), gl.WithContext(ctx)); err != nil {
+				return fmt.Errorf("failed to delete webhook %d: %w", hook.ID, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (f *GitlabForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret, branch string) error {
 	pid := owner + "/" + repo
 	pushEvents := true
 	_, _, err := f.client.Projects.AddProjectHook(pid, &gl.AddProjectHookOptions{
-		URL:        gl.Ptr(callbackURL),
-		PushEvents: &pushEvents,
-		Token:      gl.Ptr(secret),
+		URL:                  gl.Ptr(callbackURL),
+		PushEvents:           &pushEvents,
+		Token:                gl.Ptr(secret),
+		PushEventsBranchFilter: gl.Ptr(branch),
 	}, gl.WithContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to create webhook: %w", err)

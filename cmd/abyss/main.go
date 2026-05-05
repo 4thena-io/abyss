@@ -20,7 +20,7 @@ func rootCmd() *cobra.Command {
 		Short: "Abyss - Developer platform",
 	}
 
-	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "path to config file (default: /etc/abyss/config.yaml)")
+	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "path to config file (overrides ABYSS_CONFIG and ABYSS_HOME)")
 	cmd.AddCommand(serveCmd(&configPath))
 
 	return cmd

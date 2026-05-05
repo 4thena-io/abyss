@@ -46,14 +46,29 @@ func Load(configPath string) (*Config, error) {
 	return &cfg, nil
 }
 
-// DefaultPath returns the config file path used when none is specified.
-// Set ABYSS_HOME to override the base directory (defaults to the working directory).
-func DefaultPath() string {
-	base := os.Getenv("ABYSS_HOME")
-	if base == "" {
-		base = "."
+func abyssHome() string {
+	if h := os.Getenv("ABYSS_HOME"); h != "" {
+		return h
 	}
-	return filepath.Join(base, "custom", "conf", "config.yaml")
+	return "."
+}
+
+// DefaultPath returns the config file path used when none is specified.
+// Override with ABYSS_CONFIG or --config; falls back to $ABYSS_HOME/custom/conf/config.yaml.
+func DefaultPath() string {
+	if p := os.Getenv("ABYSS_CONFIG"); p != "" {
+		return p
+	}
+	return filepath.Join(abyssHome(), "custom", "conf", "config.yaml")
+}
+
+// DefaultDataDir returns the root data directory for persistent storage.
+// Override with ABYSS_DATA_DIR; falls back to $ABYSS_HOME/custom/data.
+func DefaultDataDir() string {
+	if d := os.Getenv("ABYSS_DATA_DIR"); d != "" {
+		return d
+	}
+	return filepath.Join(abyssHome(), "custom", "data")
 }
 
 func defaults() map[string]interface{} {

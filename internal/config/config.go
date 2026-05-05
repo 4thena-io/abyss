@@ -25,10 +25,11 @@ type DatabaseConfig struct {
 }
 
 type ForgeConfig struct {
-	Type  string `koanf:"type"`
-	Host  string `koanf:"host"`
-	Token string `koanf:"token"`
-	Owner string `koanf:"owner"`
+	Type   string `koanf:"type"`
+	Host   string `koanf:"host"`
+	Token  string `koanf:"token"`
+	Owner  string `koanf:"owner"`
+	Branch string `koanf:"branch"`
 }
 
 type CIConfig struct {

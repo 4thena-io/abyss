@@ -175,11 +175,14 @@ func (h *TeamHandler) GetTeamMembers(w http.ResponseWriter, r *http.Request) {
 	res := make([]response.TeamMember, len(members))
 	for i, m := range members {
 		res[i] = response.TeamMember{
-			ID:       m.ID,
-			TeamID:   m.TeamID,
-			Username: m.Username,
-			Role:     m.Role,
-			JoinedAt: m.CreatedAt.Format(time.RFC3339),
+			ID:        m.ID,
+			TeamID:    m.TeamID,
+			UserID:    m.UserID,
+			Username:  m.User.Username,
+			Email:     m.User.Email,
+			AvatarURL: m.User.AvatarURL,
+			Role:      m.Role,
+			JoinedAt:  m.CreatedAt.Format(time.RFC3339),
 		}
 	}
 
@@ -206,11 +209,11 @@ func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 		role = "member"
 	}
 
-	member, err := h.service.AddTeamMember(r.Context(), &model.TeamMember{
-		TeamID:   uint(id),
-		Username: req.Username,
-		Role:     role,
-	})
+	member, err := h.service.AddTeamMember(r.Context(), uint(id), req.Username, role)
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "user not found")
+		return
+	}
 	if err != nil {
 		log.Error().Err(err).Msg("failed to add team member")
 		response.InternalError(w)
@@ -220,10 +223,13 @@ func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response.TeamMember{
-		ID:       member.ID,
-		TeamID:   member.TeamID,
-		Username: member.Username,
-		Role:     member.Role,
-		JoinedAt: member.CreatedAt.Format(time.RFC3339),
+		ID:        member.ID,
+		TeamID:    member.TeamID,
+		UserID:    member.UserID,
+		Username:  member.User.Username,
+		Email:     member.User.Email,
+		AvatarURL: member.User.AvatarURL,
+		Role:      member.Role,
+		JoinedAt:  member.CreatedAt.Format(time.RFC3339),
 	})
 }

@@ -31,6 +31,28 @@ func (c *GitClient) Clone(repoURL, localPath string) error {
 	return err
 }
 
+func (c *GitClient) CloneSubset(repoURL, localPath string, directories []string) error {
+	repo, err := gogit.PlainClone(localPath, false, &gogit.CloneOptions{
+		URL:  repoURL,
+		Depth: 1,
+		SingleBranch: true,
+		NoCheckout: true,
+		Auth: c.auth(),
+	})
+	if err != nil {
+		return err
+	}
+
+	wt, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	return wt.Checkout(&gogit.CheckoutOptions{
+		SparseCheckoutDirectories: directories,
+	})
+}
+
 // InitAndPush initializes a new git repo, adds all files, commits, and pushes to remote.
 func (c *GitClient) InitAndPush(localPath, remoteURL, commitMsg string) error {
 	repo, err := gogit.PlainInit(localPath, false)

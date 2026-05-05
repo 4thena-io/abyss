@@ -3,6 +3,7 @@ package forgejo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	fg "codeberg.org/mvdkleijn/forgejo-sdk/forgejo"
 	"github.com/4thena-io/abyss/internal/model"
@@ -129,7 +130,24 @@ func (f *ForgejoForge) DeleteRepo(ctx context.Context, owner, name string) error
 	return nil
 }
 
-func (f *ForgejoForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret string) error {
+func (f *ForgejoForge) DeleteWebhook(ctx context.Context, owner, repo, callbackURL string) error {
+	base, _, _ := strings.Cut(callbackURL, "?")
+	hooks, _, err := f.client.ListRepoHooks(owner, repo, fg.ListHooksOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list webhooks: %w", err)
+	}
+	for _, hook := range hooks {
+		u, _, _ := strings.Cut(hook.Config["url"], "?")
+		if u == base {
+			if _, err := f.client.DeleteRepoHook(owner, repo, hook.ID); err != nil {
+				return fmt.Errorf("failed to delete webhook %d: %w", hook.ID, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (f *ForgejoForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret, branch string) error {
 	active := true
 	_, _, err := f.client.CreateRepoHook(owner, repo, fg.CreateHookOption{
 		Type: fg.HookTypeGitea,
@@ -139,7 +157,7 @@ func (f *ForgejoForge) CreateWebhook(ctx context.Context, owner, repo, callbackU
 			"secret":       secret,
 		},
 		Events:       []string{"push"},
-		BranchFilter: "main,master",
+		BranchFilter: branch,
 		Active:       active,
 	})
 	if err != nil {

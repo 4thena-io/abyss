@@ -56,6 +56,30 @@ func (r *UserRepository) GetByToken(ctx context.Context, token string) (*model.U
 	return &user, nil
 }
 
+func (r *UserRepository) GetByID(ctx context.Context, id uint) (*model.User, error) {
+	var user model.User
+	result := r.db.WithContext(ctx).First(&user, id)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*model.User, error) {
+	var user model.User
+	result := r.db.WithContext(ctx).Where("username = ?", username).First(&user)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) Count(ctx context.Context) (int64, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Model(&model.User{}).Count(&count).Error; err != nil {

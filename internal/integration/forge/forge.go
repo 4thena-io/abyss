@@ -15,7 +15,8 @@ type Forge interface {
 	GetOrgRepos(ctx context.Context, name string) ([]model.Repo, error)
 	DeleteRepo(ctx context.Context, owner, name string) error
 	// CreateWebhook registers a push-event webhook on the given repository.
-	// The webhook fires on every push to main/master; path filtering (docs/,
-	// .abyss.yaml) is handled server-side by the abyss callback handler.
-	CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret string) error
+	CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret, branch string) error
+	// DeleteWebhook removes any webhooks whose URL matches callbackURL (query
+	// params ignored). No-op if none found.
+	DeleteWebhook(ctx context.Context, owner, repo, callbackURL string) error
 }

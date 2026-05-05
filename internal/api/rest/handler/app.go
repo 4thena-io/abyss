@@ -179,6 +179,24 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+func (h *AppHandler) RepairApp(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid id")
+		return
+	}
+	if err := h.service.RepairWebhook(r.Context(), uint(id)); err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			response.NotFound(w, "app not found")
+			return
+		}
+		log.Error().Err(err).Msg("failed to repair app webhook")
+		response.InternalError(w)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

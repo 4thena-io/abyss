@@ -45,9 +45,16 @@ func RequireAuth(svc AuthProvider) func(http.Handler) http.Handler {
 
 			var claims *auth.Claims
 
-			if authHeader := r.Header.Get("Authorization"); strings.HasPrefix(authHeader, "Bearer ") {
-				token := strings.TrimPrefix(authHeader, "Bearer ")
-				user, err := svc.GetUserByToken(r.Context(), token)
+			// Resolve PAT from Bearer header or ?access_token query param.
+			pat := ""
+			if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") {
+				pat = strings.TrimPrefix(h, "Bearer ")
+			} else if q := r.URL.Query().Get("access_token"); q != "" {
+				pat = q
+			}
+
+			if pat != "" {
+				user, err := svc.GetUserByToken(r.Context(), pat)
 				if err != nil || user == nil {
 					response.Unauthorized(w)
 					return

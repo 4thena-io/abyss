@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	gh "github.com/google/go-github/v67/github"
 	"github.com/4thena-io/abyss/internal/model"
@@ -165,7 +166,24 @@ func (f *GithubForge) DeleteRepo(ctx context.Context, owner, name string) error 
 	return nil
 }
 
-func (f *GithubForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret string) error {
+func (f *GithubForge) DeleteWebhook(ctx context.Context, owner, repo, callbackURL string) error {
+	base, _, _ := strings.Cut(callbackURL, "?")
+	hooks, _, err := f.client.Repositories.ListHooks(ctx, owner, repo, nil)
+	if err != nil {
+		return fmt.Errorf("failed to list webhooks: %w", err)
+	}
+	for _, hook := range hooks {
+		u, _, _ := strings.Cut(hook.GetConfig().GetURL(), "?")
+		if u == base {
+			if _, err := f.client.Repositories.DeleteHook(ctx, owner, repo, hook.GetID()); err != nil {
+				return fmt.Errorf("failed to delete webhook %d: %w", hook.GetID(), err)
+			}
+		}
+	}
+	return nil
+}
+
+func (f *GithubForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret, branch string) error {
 	active := true
 	_, _, err := f.client.Repositories.CreateHook(ctx, owner, repo, &gh.Hook{
 		Config: &gh.HookConfig{

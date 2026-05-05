@@ -3,6 +3,7 @@ package gitea
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	gt "code.gitea.io/sdk/gitea"
 	"github.com/4thena-io/abyss/internal/model"
@@ -129,7 +130,24 @@ func (f *GiteaForge) DeleteRepo(ctx context.Context, owner, name string) error {
 	return nil
 }
 
-func (f *GiteaForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret string) error {
+func (f *GiteaForge) DeleteWebhook(ctx context.Context, owner, repo, callbackURL string) error {
+	base, _, _ := strings.Cut(callbackURL, "?")
+	hooks, _, err := f.client.ListRepoHooks(owner, repo, gt.ListHooksOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list webhooks: %w", err)
+	}
+	for _, hook := range hooks {
+		u, _, _ := strings.Cut(hook.Config["url"], "?")
+		if u == base {
+			if _, err := f.client.DeleteRepoHook(owner, repo, hook.ID); err != nil {
+				return fmt.Errorf("failed to delete webhook %d: %w", hook.ID, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (f *GiteaForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL, secret, branch string) error {
 	active := true
 	_, _, err := f.client.CreateRepoHook(owner, repo, gt.CreateHookOption{
 		Type: gt.HookTypeGitea,
@@ -139,7 +157,7 @@ func (f *GiteaForge) CreateWebhook(ctx context.Context, owner, repo, callbackURL
 			"secret":       secret,
 		},
 		Events:       []string{"push"},
-		BranchFilter: "main,master",
+		BranchFilter: branch,
 		Active:       active,
 	})
 	if err != nil {

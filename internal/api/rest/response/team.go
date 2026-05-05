@@ -10,9 +10,12 @@ type Team struct {
 }
 
 type TeamMember struct {
-	ID       uint   `json:"id"`
-	TeamID   uint   `json:"teamId"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	JoinedAt string `json:"joinedAt"`
+	ID        uint   `json:"id"`
+	TeamID    uint   `json:"teamId"`
+	UserID    uint   `json:"userId"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatarUrl"`
+	Role      string `json:"role"`
+	JoinedAt  string `json:"joinedAt"`
 }

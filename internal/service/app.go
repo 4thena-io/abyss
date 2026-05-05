@@ -3,14 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/4thena-io/abyss/internal/constant"
 	"github.com/4thena-io/abyss/internal/git"
 	"github.com/4thena-io/abyss/internal/integration/ci"
 	"github.com/4thena-io/abyss/internal/integration/forge"
 	"github.com/4thena-io/abyss/internal/model"
+	"github.com/rs/zerolog/log"
 )
 
 type AppRepository interface {
@@ -32,6 +35,9 @@ type AppService struct {
 	ci                 ci.CI
 	git                *git.GitClient
 	owner              string
+	baseURL            string
+	webhookSecret      string
+	branch             string
 }
 
 func NewAppService(
@@ -42,6 +48,9 @@ func NewAppService(
 	ci ci.CI,
 	gitClient *git.GitClient,
 	owner string,
+	baseURL string,
+	webhookSecret string,
+	branch string,
 ) *AppService {
 	return &AppService{
 		appRepository:      appRepository,
@@ -51,6 +60,25 @@ func NewAppService(
 		ci:                 ci,
 		git:                gitClient,
 		owner:              owner,
+		baseURL:            baseURL,
+		webhookSecret:      webhookSecret,
+		branch:             branch,
+	}
+}
+
+// registerDocsWebhook creates a push-event webhook on the repo so that changes
+// to docs/ or .abyss.yml trigger a re-render. Failures are non-fatal.
+func (s *AppService) registerDocsWebhook(ctx context.Context, app *model.App) {
+	if s.baseURL == "" {
+		return
+	}
+	owner, repoName, ok := strings.Cut(app.RepoFullName, "/")
+	if !ok {
+		return
+	}
+	callbackURL := fmt.Sprintf("%s/api/hooks/forge/%d?access_token=%s", s.baseURL, app.ID, url.QueryEscape(s.webhookSecret))
+	if err := s.forge.CreateWebhook(ctx, owner, repoName, callbackURL, s.webhookSecret, s.branch); err != nil {
+		log.Warn().Err(err).Uint("app_id", app.ID).Msg("failed to register docs webhook")
 	}
 }
 
@@ -115,6 +143,7 @@ func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) 
 		return nil, err
 	}
 
+	s.registerDocsWebhook(ctx, app)
 	return app, nil
 }
 
@@ -207,6 +236,7 @@ func (s *AppService) CreateAppFromRepo(ctx context.Context, app *model.App) (*mo
 		return nil, err
 	}
 
+	s.registerDocsWebhook(ctx, app)
 	return app, nil
 }
 
@@ -303,6 +333,31 @@ func (s *AppService) GetAppsByTemplate(ctx context.Context, id uint) ([]model.Ap
 	}
 
 	return s.appRepository.GetByTemplate(ctx, id)
+}
+
+func (s *AppService) RepairWebhook(ctx context.Context, id uint) error {
+	app, err := s.appRepository.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if app == nil {
+		return ErrNotFound
+	}
+
+	owner, repoName, ok := strings.Cut(app.RepoFullName, "/")
+	if !ok {
+		return fmt.Errorf("invalid repo full name: %s", app.RepoFullName)
+	}
+
+	callbackURL := fmt.Sprintf("%s/api/hooks/forge/%d?access_token=%s", s.baseURL, app.ID, url.QueryEscape(s.webhookSecret))
+
+	if err := s.forge.DeleteWebhook(ctx, owner, repoName, callbackURL); err != nil {
+		return fmt.Errorf("failed to remove old webhook: %w", err)
+	}
+	if err := s.forge.CreateWebhook(ctx, owner, repoName, callbackURL, s.webhookSecret, s.branch); err != nil {
+		return fmt.Errorf("failed to register webhook: %w", err)
+	}
+	return nil
 }
 
 func (s *AppService) DeleteApp(ctx context.Context, id uint) error {

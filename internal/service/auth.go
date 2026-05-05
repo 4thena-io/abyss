@@ -16,6 +16,8 @@ type UserRepository interface {
 	Save(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
 	GetAll(ctx context.Context) ([]model.User, error)
+	GetByID(ctx context.Context, id uint) (*model.User, error)
+	GetByUsername(ctx context.Context, username string) (*model.User, error)
 	GetByForgeID(ctx context.Context, forgeID int64) (*model.User, error)
 	GetByToken(ctx context.Context, token string) (*model.User, error)
 	Count(ctx context.Context) (int64, error)
@@ -26,6 +28,7 @@ type AuthService struct {
 	forge          forge.Forge
 	clientID       string
 	clientSecret   string
+	forgeType      string
 	forgeHost      string
 	callbackURL    string
 	sessionSecret  string
@@ -35,18 +38,30 @@ type AuthService struct {
 func NewAuthService(
 	userRepository UserRepository,
 	forge forge.Forge,
-	clientID, clientSecret, forgeHost, callbackURL, sessionSecret, owner string,
+	clientID, clientSecret, forgeType, forgeHost, callbackURL, sessionSecret, owner string,
 ) *AuthService {
 	return &AuthService{
 		userRepository: userRepository,
 		forge:          forge,
 		clientID:       clientID,
 		clientSecret:   clientSecret,
+		forgeType:      forgeType,
 		forgeHost:      forgeHost,
 		callbackURL:    callbackURL,
 		sessionSecret:  sessionSecret,
 		owner:          owner,
 	}
+}
+
+func (s *AuthService) ForgeType() string { return s.forgeType }
+func (s *AuthService) ForgeHost() string { return s.forgeHost }
+
+func (s *AuthService) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	return s.userRepository.GetAll(ctx)
+}
+
+func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+	return s.userRepository.GetByUsername(ctx, username)
 }
 
 // oauthConfig builds the OAuth2 config for the configured forge.
@@ -105,6 +120,7 @@ func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.Forg
 	}
 	if user != nil {
 		user.AvatarURL = forgeUser.AvatarURL
+		user.Email = forgeUser.Email
 		if err := s.userRepository.Update(ctx, user); err != nil {
 			return nil, err
 		}
@@ -120,6 +136,7 @@ func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.Forg
 	user = &model.User{
 		ForgeID:   forgeUser.ID,
 		Username:  forgeUser.Username,
+		Email:     forgeUser.Email,
 		IsAdmin:   count == 0,
 		AvatarURL: forgeUser.AvatarURL,
 	}
@@ -155,7 +172,18 @@ func (s *AuthService) GeneratePersonalToken(ctx context.Context, user *model.Use
 	return token, nil
 }
 
+// GetUserByID fetches a user by their primary key.
+func (s *AuthService) GetUserByID(ctx context.Context, id uint) (*model.User, error) {
+	return s.userRepository.GetByID(ctx, id)
+}
+
 // GetUserByToken looks up a user by their PAT. Used by the auth middleware.
 func (s *AuthService) GetUserByToken(ctx context.Context, token string) (*model.User, error) {
 	return s.userRepository.GetByToken(ctx, token)
+}
+
+// RevokePersonalToken clears the user's PAT.
+func (s *AuthService) RevokePersonalToken(ctx context.Context, user *model.User) error {
+	user.Token = nil
+	return s.userRepository.Update(ctx, user)
 }

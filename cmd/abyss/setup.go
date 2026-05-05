@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"path/filepath"
 
 	"github.com/4thena-io/abyss/internal/api/rest/handler"
 	"github.com/4thena-io/abyss/internal/api/rest/middleware"
@@ -33,8 +34,10 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 
 	// When OAuth is not configured yet, skip forge/CI setup — the setup wizard handles it.
 	var (
-		gitClient   *git.GitClient
-		authService *service.AuthService
+		gitClient     *git.GitClient
+		authService   *service.AuthService
+		baseURL       string
+		webhookSecret string
 	)
 
 	appRepo := repository.NewAppRepository(db)
@@ -44,12 +47,18 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 	teamRepo := repository.NewTeamRepository(db)
 	userRepo := repository.NewUserRepository(db)
 
-	appService := service.NewAppService(appRepo, projectRepo, templateRepo, nil, nil, gitClient, cfg.Forge.Owner)
+	branch := cfg.Forge.Branch
+	if branch == "" {
+		branch = "main"
+	}
+
+	appService := service.NewAppService(appRepo, projectRepo, templateRepo, nil, nil, gitClient, cfg.Forge.Owner, "", "", branch)
 	deploymentService := service.NewDeploymentService(deploymentRepo)
 	projectService := service.NewProjectService(projectRepo)
 	templateService := service.NewTemplateService(templateRepo)
 	repoService := service.NewRepoService(nil, cfg.Forge.Owner)
-	teamService := service.NewTeamService(teamRepo, projectRepo, appRepo)
+	teamService := service.NewTeamService(teamRepo, projectRepo, appRepo, userRepo)
+	docsService := service.NewDocsService(appRepo, gitClient, filepath.Join(config.DefaultDataDir(), "docs"))
 
 	if cfg.Auth.ClientID != "" {
 		forgeProvider, err := forge.NewForge(cfg.Forge)
@@ -72,16 +81,29 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 			log.Fatal().Err(err).Msg("failed to provision jwt secret")
 		}
 
+		webhookSecret, err = ensureWebhookSecret(db)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to provision webhook secret")
+		}
+
+		host := cfg.Server.Host
+		if host == "" || host == "0.0.0.0" {
+			host = "localhost"
+		}
+		baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
+
 		gitClient = git.New(cfg.Forge.Token, botUser.FullName, botUser.Email)
 
-		appService = service.NewAppService(appRepo, projectRepo, templateRepo, forgeProvider, ciProvider, gitClient, cfg.Forge.Owner)
+		appService = service.NewAppService(appRepo, projectRepo, templateRepo, forgeProvider, ciProvider, gitClient, cfg.Forge.Owner, baseURL, webhookSecret, branch)
 		repoService = service.NewRepoService(forgeProvider, cfg.Forge.Owner)
+		docsService = service.NewDocsService(appRepo, gitClient, filepath.Join(config.DefaultDataDir(), "docs"))
 
 		authService = service.NewAuthService(
 			userRepo,
 			forgeProvider,
 			cfg.Auth.ClientID,
 			cfg.Auth.ClientSecret,
+			cfg.Forge.Type,
 			cfg.Forge.Host,
 			cfg.Auth.CallbackURL,
 			jwtSecret,
@@ -108,21 +130,32 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		handler.NewTemplateHandler(templateService),
 		handler.NewRepoHandler(repoService),
 		handler.NewTeamHandler(teamService),
+		handler.NewUserHandler(teamService),
+		handler.NewHookHandler(docsService, branch, webhookSecret),
+		handler.NewDocsHandler(docsService),
 	)
 
 	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r)
+}
+
+func ensureWebhookSecret(db *gorm.DB) (string, error) {
+	return ensureSecret(db, "webhook-secret")
 }
 
 // ensureJWTSecret loads the JWT signing secret from the database, generating and
 // persisting a new one if it does not exist yet. This keeps the secret out of
 // config files and rotates automatically on a fresh install.
 func ensureJWTSecret(db *gorm.DB) (string, error) {
+	return ensureSecret(db, "jwt-secret")
+}
+
+func ensureSecret(db *gorm.DB, key string) (string, error) {
 	repo := repository.NewServerConfigRepository(db)
 	ctx := context.Background()
 
-	secret, err := repo.Get(ctx, "jwt-secret")
+	secret, err := repo.Get(ctx, key)
 	if err != nil {
-		return "", fmt.Errorf("read jwt secret: %w", err)
+		return "", fmt.Errorf("read %s: %w", key, err)
 	}
 	if secret != "" {
 		return secret, nil
@@ -130,13 +163,13 @@ func ensureJWTSecret(db *gorm.DB) (string, error) {
 
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate jwt secret: %w", err)
+		return "", fmt.Errorf("generate %s: %w", key, err)
 	}
 	secret = hex.EncodeToString(b)
 
-	if err := repo.Set(ctx, "jwt-secret", secret); err != nil {
-		return "", fmt.Errorf("store jwt secret: %w", err)
+	if err := repo.Set(ctx, key, secret); err != nil {
+		return "", fmt.Errorf("store %s: %w", key, err)
 	}
-	log.Info().Msg("generated new jwt secret and stored it in database")
+	log.Info().Str("key", key).Msg("generated new secret and stored it in database")
 	return secret, nil
 }

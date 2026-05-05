@@ -18,7 +18,8 @@ type Team struct {
 type TeamMember struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement"`
 	TeamID    uint      `gorm:"not null;index"`
-	Username  string    `gorm:"not null"`
+	UserID    uint      `gorm:"not null;index"`
+	User      User
 	Role      string    `gorm:"not null;default:member"`
 	CreatedAt time.Time
 	UpdatedAt time.Time

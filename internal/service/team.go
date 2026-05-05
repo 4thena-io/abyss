@@ -12,9 +12,15 @@ type TeamRepository interface {
 	GetByID(ctx context.Context, id uint) (*model.Team, error)
 	GetByName(ctx context.Context, name string) (*model.Team, error)
 	GetMembers(ctx context.Context, teamID uint) ([]model.TeamMember, error)
+	GetByUserID(ctx context.Context, userID uint) ([]model.TeamMember, error)
 	SaveMember(ctx context.Context, member *model.TeamMember) error
 	CountMembers(ctx context.Context, teamID uint) (int64, error)
 	Delete(ctx context.Context, team *model.Team) error
+}
+
+type UserLookup interface {
+	GetByID(ctx context.Context, id uint) (*model.User, error)
+	GetByUsername(ctx context.Context, username string) (*model.User, error)
 }
 
 type TeamStats struct {
@@ -24,14 +30,30 @@ type TeamStats struct {
 	AppCount     int64
 }
 
+type UserTeamInfo struct {
+	Team        model.Team
+	Role        string
+	MemberCount int64
+	ProjectCount int64
+}
+
+type UserStats struct {
+	User         model.User
+	TeamCount    int64
+	ProjectCount int64
+	AppCount     int64
+	Teams        []UserTeamInfo
+}
+
 type TeamService struct {
 	teamRepo    TeamRepository
 	projectRepo ProjectRepository
 	appRepo     AppRepository
+	userRepo    UserLookup
 }
 
-func NewTeamService(teamRepo TeamRepository, projectRepo ProjectRepository, appRepo AppRepository) *TeamService {
-	return &TeamService{teamRepo, projectRepo, appRepo}
+func NewTeamService(teamRepo TeamRepository, projectRepo ProjectRepository, appRepo AppRepository, userRepo UserLookup) *TeamService {
+	return &TeamService{teamRepo, projectRepo, appRepo, userRepo}
 }
 
 func (s *TeamService) GetAllTeams(ctx context.Context) ([]TeamStats, error) {
@@ -110,9 +132,66 @@ func (s *TeamService) GetTeamMembers(ctx context.Context, teamID uint) ([]model.
 	return s.teamRepo.GetMembers(ctx, teamID)
 }
 
-func (s *TeamService) AddTeamMember(ctx context.Context, member *model.TeamMember) (*model.TeamMember, error) {
+func (s *TeamService) AddTeamMember(ctx context.Context, teamID uint, username, role string) (*model.TeamMember, error) {
+	user, err := s.userRepo.GetByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrNotFound
+	}
+
+	member := &model.TeamMember{
+		TeamID: teamID,
+		UserID: user.ID,
+		Role:   role,
+	}
 	if err := s.teamRepo.SaveMember(ctx, member); err != nil {
 		return nil, err
 	}
+	member.User = *user
 	return member, nil
+}
+
+func (s *TeamService) GetUserStats(ctx context.Context, userID uint) (*UserStats, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrNotFound
+	}
+
+	memberships, err := s.teamRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	teams := make([]UserTeamInfo, 0, len(memberships))
+	var totalProjects, totalApps int64
+	for _, m := range memberships {
+		team, err := s.teamRepo.GetByID(ctx, m.TeamID)
+		if err != nil || team == nil {
+			continue
+		}
+		memberCount, _ := s.teamRepo.CountMembers(ctx, team.ID)
+		projectCount, _ := s.projectRepo.CountByTeam(ctx, team.ID)
+		appCount, _ := s.appRepo.CountByTeam(ctx, team.ID)
+		totalProjects += projectCount
+		totalApps += appCount
+		teams = append(teams, UserTeamInfo{
+			Team:         *team,
+			Role:         m.Role,
+			MemberCount:  memberCount,
+			ProjectCount: projectCount,
+		})
+	}
+
+	return &UserStats{
+		User:         *user,
+		TeamCount:    int64(len(memberships)),
+		ProjectCount: totalProjects,
+		AppCount:     totalApps,
+		Teams:        teams,
+	}, nil
 }

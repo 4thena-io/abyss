@@ -103,13 +103,75 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		response.Unauthorized(w)
 		return
 	}
+	user, err := h.service.GetUserByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		response.InternalError(w)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"id":         claims.UserID,
-		"username":   claims.Username,
-		"is_admin":   claims.IsAdmin,
-		"avatar_url": claims.AvatarURL,
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"is_admin":   user.IsAdmin,
+		"avatar_url": user.AvatarURL,
+		"forge_type": h.service.ForgeType(),
+		"forge_host": h.service.ForgeHost(),
 	})
+}
+
+func (h *AuthHandler) TokenStatus(w http.ResponseWriter, r *http.Request) {
+	claims, _ := r.Context().Value(middleware.ContextKeyUser).(*auth.Claims)
+	if claims == nil {
+		response.Unauthorized(w)
+		return
+	}
+	user, err := h.service.GetUserByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		response.InternalError(w)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"has_token": user.Token != nil})
+}
+
+func (h *AuthHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
+	claims, _ := r.Context().Value(middleware.ContextKeyUser).(*auth.Claims)
+	if claims == nil {
+		response.Unauthorized(w)
+		return
+	}
+	user, err := h.service.GetUserByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		response.InternalError(w)
+		return
+	}
+	token, err := h.service.GeneratePersonalToken(r.Context(), user)
+	if err != nil {
+		response.InternalError(w)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
+
+func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
+	claims, _ := r.Context().Value(middleware.ContextKeyUser).(*auth.Claims)
+	if claims == nil {
+		response.Unauthorized(w)
+		return
+	}
+	user, err := h.service.GetUserByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		response.InternalError(w)
+		return
+	}
+	if err := h.service.RevokePersonalToken(r.Context(), user); err != nil {
+		response.InternalError(w)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
