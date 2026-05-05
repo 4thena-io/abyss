@@ -345,7 +345,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/solid';
 import logo from '../assets/logo-white.svg';
 import { setupApi } from '../api/setup';
@@ -402,6 +402,18 @@ const ciOptions = [
   { value: 'github-actions', label: 'GitHub Actions' },
   { value: 'gitlab-ci',      label: 'GitLab CI' },
 ];
+
+const nativeCiType: Record<string, string> = {
+  gitea:   'gitea-actions',
+  forgejo: 'forgejo-actions',
+  github:  'github-actions',
+  gitlab:  'gitlab-ci',
+};
+
+watch(() => form.forge_type, (type) => {
+  const native = nativeCiType[type];
+  if (native) form.ci_type = native;
+});
 
 const ciNeedsCredentials = computed(() =>
   form.ci_type === 'woodpecker' || form.ci_type === 'drone'

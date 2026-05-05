@@ -14,14 +14,6 @@
       </div>
     </div>
     <div class="flex items-center justify-end gap-1 pr-4">
-      <!-- Theme toggle -->
-      <button @click="toggle"
-        class="text-t3 hover:text-t1 transition-colors p-2 rounded-lg hover:bg-surface"
-        :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-        <SunIcon v-if="theme === 'dark'" class="w-5 h-5" />
-        <MoonIcon v-else class="w-5 h-5" />
-      </button>
-
       <button class="text-t3 hover:text-t1 transition-colors relative p-2 rounded-lg hover:bg-surface"
         aria-label="Notifications">
         <BellIcon class="w-5 h-5" />
@@ -44,12 +36,12 @@
             <p class="text-sm font-medium text-t1 truncate">{{ user?.username }}</p>
           </div>
           <div class="border-b border-b1">
-            <button
+            <button @click="goToProfile"
               class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-t2 hover:bg-surface hover:text-t1 transition-colors">
               <UserIcon class="w-4 h-4" />
               Profile
             </button>
-            <button
+            <button @click="goToSettings"
               class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-t2 hover:bg-surface hover:text-t1 transition-colors">
               <Cog6ToothIcon class="w-4 h-4" />
               Settings
@@ -68,25 +60,35 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Bars3Icon, BellIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/outline';
+import { useRouter } from 'vue-router';
+import { Bars3Icon, BellIcon } from '@heroicons/vue/24/outline';
 import SearchInput from '../ui/SearchInput.vue';
 import { UserCircleIcon, ArrowRightStartOnRectangleIcon, UserIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline';
 import logo from '../../assets/logo-white.svg';
 import { useClickOutside } from '../../composables/useClickOutside';
 import { useCurrentUser } from '../../features/auth/composables/useCurrentUser';
-import { useTheme } from '../../composables/useTheme';
 
 defineEmits<{
   'toggle-sidebar': []
 }>();
 
 const { user, fetch, clear } = useCurrentUser();
-const { theme, toggle } = useTheme();
+const router = useRouter();
 const search = ref('');
 const menuOpen = ref(false);
 const menuRef = ref<HTMLElement | null>(null);
 
 useClickOutside(menuRef, () => { menuOpen.value = false; });
+
+function goToProfile() {
+  menuOpen.value = false;
+  if (user.value) router.push(`/users/${user.value.id}`);
+}
+
+function goToSettings() {
+  menuOpen.value = false;
+  router.push('/settings');
+}
 
 onMounted(fetch);
 

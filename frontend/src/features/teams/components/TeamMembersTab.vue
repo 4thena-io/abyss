@@ -16,38 +16,65 @@
       message="This team has no members yet"
     />
 
-    <DataTable v-else :columns="columns" :rows="members" row-key="username">
-      <template #cell-username="{ row }">
-        <span class="text-t1 text-sm">{{ row.username }}</span>
-      </template>
-      <template #cell-role="{ row }">
-        <span class="px-2 py-0.5 bg-surface border border-b1 rounded text-xs text-t2">{{ row.role }}</span>
-      </template>
-      <template #cell-joinedAt="{ row }">
-        <span class="text-t3 text-sm">{{ formatTime(row.joinedAt) }}</span>
-      </template>
-    </DataTable>
+    <div v-else class="bg-panel border border-b1 rounded-xl overflow-hidden">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr>
+            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Member</th>
+            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Role</th>
+            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="member in members"
+            :key="member.id"
+            class="cursor-pointer hover:bg-surface transition-colors"
+            @click="router.push(`/users/${member.userId}`)"
+          >
+            <td class="px-4 py-3 border-b border-b0">
+              <div class="flex items-center gap-3">
+                <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="member.username"
+                  class="w-8 h-8 rounded-full object-cover shrink-0" />
+                <div v-else
+                  class="w-8 h-8 rounded-full bg-acc-s border border-acc-b flex items-center justify-center shrink-0">
+                  <span class="text-xs font-semibold text-acc font-mono">{{ member.username.slice(0, 2) }}</span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-t1">{{ member.username }}</p>
+                  <p v-if="member.email" class="text-xs text-t3 font-mono">{{ member.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 border-b border-b0">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="member.role === 'owner' ? 'bg-ok-s text-ok' : 'bg-surface border border-b1 text-t2'">
+                {{ member.role }}
+              </span>
+            </td>
+            <td class="px-4 py-3 border-b border-b0 text-sm text-t3">
+              {{ formatTime(member.joinedAt) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { UsersIcon } from '@heroicons/vue/24/outline';
 import type { TeamMember } from '../types';
 import { useFormatters } from '../../../composables/useFormatters';
 import Spinner from '../../../components/ui/Spinner.vue';
 import EmptyState from '../../../components/ui/EmptyState.vue';
 import RefreshButton from '../../../components/ui/RefreshButton.vue';
-import DataTable from '../../../components/ui/DataTable.vue';
 
 const props = defineProps<{ teamId: number }>();
+const router = useRouter();
 const { formatRelativeTime: formatTime } = useFormatters();
-
-const columns = [
-  { key: 'username', label: 'Member' },
-  { key: 'role', label: 'Role' },
-  { key: 'joinedAt', label: 'Joined' },
-];
 
 const members = ref<TeamMember[]>([]);
 const loading = ref(false);

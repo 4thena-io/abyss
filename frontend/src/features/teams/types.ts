@@ -8,7 +8,12 @@ export interface Team {
 }
 
 export interface TeamMember {
+  id: number;
+  teamId: number;
+  userId: number;
   username: string;
-  role: 'owner' | 'member';
+  email: string;
+  avatarUrl: string;
+  role: string;
   joinedAt: string;
 }

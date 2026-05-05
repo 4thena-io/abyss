@@ -21,6 +21,23 @@ export interface Build {
   link: string;
 }
 
+export interface DocPage {
+  path: string;
+  html: string;
+}
+
+export interface TOCItem {
+  title: string;
+  anchor: string;
+  level: number;
+}
+
+export interface RenderedDocs {
+  pages: DocPage[];
+  toc: TOCItem[];
+  structure: string[];
+}
+
 export interface Deployment {
   id: number;
   environment: 'production' | 'staging' | 'dev';

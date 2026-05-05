@@ -1,39 +1,56 @@
 <template>
-  <div class="space-y-6">
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <Spinner size="lg" />
+  <div class="flex items-center justify-center py-12" v-if="loading">
+    <Spinner size="lg" />
+  </div>
+
+  <EmptyState
+    v-else-if="!app"
+    :icon="CubeIcon"
+    title="Application not found"
+  >
+    <router-link to="/apps" class="text-acc hover:opacity-80">
+      Back to applications
+    </router-link>
+  </EmptyState>
+
+  <!-- Docs tab: full-height three-column layout, breaks out of main padding -->
+  <div v-else-if="activeTab === 'docs'" class="h-full flex flex-col gap-6">
+    <DetailHeader :icon="CubeIcon" :title="app.name" :subtitle="app.description">
+      <template #actions>
+        <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer"
+          class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1
+              rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors">
+          <CodeBracketIcon class="w-4 h-4" />
+          <span>Source Code</span>
+        </a>
+      </template>
+    </DetailHeader>
+
+    <Tabs v-model="activeTab" :tabs="tabs" />
+
+    <AppDocsTab class="flex-1 min-h-0" :app-id="app.id" />
+  </div>
+
+  <!-- All other tabs: normal scrollable layout -->
+  <div v-else class="space-y-6">
+    <DetailHeader :icon="CubeIcon" :title="app.name" :subtitle="app.description">
+      <template #actions>
+        <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer"
+          class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1
+              rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors">
+          <CodeBracketIcon class="w-4 h-4" />
+          <span>Source Code</span>
+        </a>
+      </template>
+    </DetailHeader>
+
+    <Tabs v-model="activeTab" :tabs="tabs" />
+
+    <div class="mt-6">
+      <AppOverviewTab v-if="activeTab === 'overview'" :app="app" />
+      <AppBuildsTab v-else-if="activeTab === 'builds'" :app-id="app.id" />
+      <AppDeploymentsTab v-else-if="activeTab === 'deployments'" :app-id="app.id" />
     </div>
-
-    <EmptyState
-      v-else-if="!app"
-      :icon="CubeIcon"
-      title="Application not found"
-    >
-      <router-link to="/apps" class="text-acc hover:opacity-80">
-        Back to applications
-      </router-link>
-    </EmptyState>
-
-    <template v-else>
-      <DetailHeader :icon="CubeIcon" :title="app.name" :subtitle="app.description">
-        <template #actions>
-          <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer"
-            class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1
-                rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors">
-            <CodeBracketIcon class="w-4 h-4" />
-            <span>Source Code</span>
-          </a>
-        </template>
-      </DetailHeader>
-
-      <Tabs v-model="activeTab" :tabs="tabs" />
-
-      <div class="mt-6">
-        <AppOverviewTab v-if="activeTab === 'overview'" :app="app" />
-        <AppBuildsTab v-else-if="activeTab === 'builds'" :app-id="app.id" />
-        <AppDeploymentsTab v-else-if="activeTab === 'deployments'" :app-id="app.id" />
-      </div>
-    </template>
   </div>
 </template>
 
@@ -50,6 +67,7 @@ import DetailHeader from '../components/ui/DetailHeader.vue';
 import AppOverviewTab from '../features/apps/components/AppOverviewTab.vue';
 import AppBuildsTab from '../features/apps/components/AppBuildsTab.vue';
 import AppDeploymentsTab from '../features/apps/components/AppDeploymentsTab.vue';
+import AppDocsTab from '../features/apps/components/AppDocsTab.vue';
 
 const route = useRoute();
 const { formatUrl } = useFormatters();
@@ -58,6 +76,7 @@ const tabs = [
   { id: 'overview', label: 'Overview' },
   { id: 'builds', label: 'Builds' },
   { id: 'deployments', label: 'Deployments' },
+  { id: 'docs', label: 'Docs' },
 ];
 
 const app = ref<App | null>(null);

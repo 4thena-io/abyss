@@ -9,6 +9,8 @@ import Teams from "./views/Teams.vue";
 import TeamDetail from "./views/TeamDetail.vue";
 import Setup from "./views/Setup.vue";
 import Login from "./views/Login.vue";
+import Settings from "./views/Settings.vue";
+import UserProfile from "./views/UserProfile.vue";
 
 const routes = [
   { path: "/setup", component: Setup },
@@ -21,6 +23,8 @@ const routes = [
   { path: "/projects", component: Projects },
   { path: "/projects/:id", component: ProjectDetail },
   { path: "/templates", component: Templates },
+  { path: "/settings", component: Settings },
+  { path: "/users/:id", component: UserProfile },
 ];
 
 const router = createRouter({
