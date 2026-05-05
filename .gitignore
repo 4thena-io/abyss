@@ -42,5 +42,5 @@ go.work
 build/
 
 # Abyss local config (copy custom/conf/config.example.yaml to get started)
-custom/
+custom/*
 !custom/conf/config.example.yaml
