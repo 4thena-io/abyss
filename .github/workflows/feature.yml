@@ -1,0 +1,34 @@
+name: feature
+
+on:
+  push:
+    branches:
+      - "feat/**"
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.3"
+
+      - name: Install UI dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      - name: Build UI
+        working-directory: frontend
+        run: bun run build
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.2"
+
+      - name: Vendor Go modules
+        run: go mod vendor
+
+      - name: Build binary
+        run: go build -ldflags="-s -w" -o build/abyss .
