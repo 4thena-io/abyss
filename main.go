@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
-	"github.com/4thena-io/abyss/internal/cli"
+	"github.com/4thena-io/abyss/internal/cmd"
 )
 
 func main() {
-	if err := cli.Root().Execute(); err != nil {
+	if err := cmd.Root().Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
