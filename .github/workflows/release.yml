@@ -63,7 +63,10 @@ jobs:
 
   build-docker:
     needs: build-binary
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -86,9 +89,9 @@ jobs:
 
       - uses: docker/login-action@v3
         with:
-          registry: git.internal.4thena.io
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: docker/build-push-action@v6
         with:
@@ -97,5 +100,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            git.internal.4thena.io/${{ github.repository }}:${{ github.ref_name }}
-            git.internal.4thena.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:latest
