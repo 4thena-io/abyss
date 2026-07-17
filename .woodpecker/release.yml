@@ -48,7 +48,7 @@ steps:
   build-docker:
     depends_on:
       - build-binary
-    image: woodpeckerci/plugin-docker-buildx:6.0.3
+    image: woodpeckerci/plugin-docker-buildx:6.1.0
     settings:
       registry: git.internal.4thena.io
       repo: "git.internal.4thena.io/${CI_REPO}"
