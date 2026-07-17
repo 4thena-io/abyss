@@ -7,3 +7,7 @@
 ## Introduction
 
 Abyss is a tool to create applications. Each application will have a code sample depending on the template, a Jenkins pipeline and cloud infrastructure depending on the provider you select.
+
+## License
+
+Abyss is licensed under the [GNU Affero General Public License v3.0](./LICENSE).
