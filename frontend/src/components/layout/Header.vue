@@ -8,7 +8,7 @@
       </button>
     </div>
     <div class="flex-1 flex items-center justify-start min-w-0">
-      <img :src="logo" alt="logo" class="w-auto h-8 cursor-pointer hover:opacity-80 transition-opacity ml-1" />
+      <img :src="theme === 'dark' ? logoDark : logoLight" alt="logo" class="w-auto h-8 cursor-pointer hover:opacity-80 transition-opacity ml-1" />
       <div class="flex-1 flex justify-center px-8 min-w-0">
         <SearchInput v-model="search" placeholder="Search for projects and applications..." max-width="max-w-2xl" />
       </div>
@@ -64,9 +64,13 @@ import { useRouter } from 'vue-router';
 import { Bars3Icon, BellIcon } from '@heroicons/vue/24/outline';
 import SearchInput from '../ui/SearchInput.vue';
 import { UserCircleIcon, ArrowRightStartOnRectangleIcon, UserIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline';
-import logo from '../../assets/logo-white.svg';
+import logoDark from '../../assets/logo-white.svg';
+import logoLight from '../../assets/logo-black.svg';
 import { useClickOutside } from '../../composables/useClickOutside';
 import { useCurrentUser } from '../../features/auth/composables/useCurrentUser';
+import { useTheme } from '../../composables/useTheme';
+
+const { theme } = useTheme();
 
 defineEmits<{
   'toggle-sidebar': []
