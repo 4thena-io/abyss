@@ -51,7 +51,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
 
 const props = withDefaults(defineProps<{
-  modelValue: string | number;
+  modelValue: string | number | null | undefined;
   options: Array<{ value: string | number; label: string }>;
   placeholder?: string;
   allLabel?: string;
