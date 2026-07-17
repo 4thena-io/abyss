@@ -16,7 +16,7 @@ watch-frontend:
 build: build-frontend build-backend
 
 build-backend:
-    go build -o build/abyss ./cmd/abyss
+    go build -o build/abyss ./cmd
 
 build-frontend:
     cd {{frontend}} && bun run build

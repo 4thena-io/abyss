@@ -52,30 +52,21 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		branch = "main"
 	}
 
+	ciHost := cfg.CI.Host
+	if ciHost == "" {
+		ciHost = cfg.Forge.Host
+	}
+	healthService := service.NewHealthService(cfg.Forge.Host, cfg.CI.Type, ciHost)
+
 	appService := service.NewAppService(appRepo, projectRepo, templateRepo, nil, nil, gitClient, cfg.Forge.Owner, "", "", branch)
 	deploymentService := service.NewDeploymentService(deploymentRepo)
 	projectService := service.NewProjectService(projectRepo)
-	templateService := service.NewTemplateService(templateRepo)
+	templateService := service.NewTemplateService(templateRepo, nil, cfg.Forge.Owner)
 	repoService := service.NewRepoService(nil, cfg.Forge.Owner)
 	teamService := service.NewTeamService(teamRepo, projectRepo, appRepo, userRepo)
 	docsService := service.NewDocsService(appRepo, gitClient, filepath.Join(config.DefaultDataDir(), "docs"))
 
 	if cfg.Auth.ClientID != "" {
-		forgeProvider, err := forge.NewForge(cfg.Forge)
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to create forge provider")
-		}
-		ciProvider, err := ci.NewCi(cfg.CI, cfg.Forge)
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to create ci provider")
-		}
-
-		botUser, err := forgeProvider.GetAuthenticatedUser(context.Background())
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to get forge bot user")
-		}
-		log.Info().Str("username", botUser.Username).Msg("forge bot user identified")
-
 		jwtSecret, err := ensureJWTSecret(db)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to provision jwt secret")
@@ -92,9 +83,27 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		}
 		baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
 
-		gitClient = git.New(cfg.Forge.Token, botUser.FullName, botUser.Email)
+		forgeProvider, err := forge.NewForge(cfg.Forge)
+		if err != nil {
+			log.Warn().Err(err).Msg("forge unavailable at startup — forge-dependent features disabled")
+		} else {
+			botUser, err := forgeProvider.GetAuthenticatedUser(context.Background())
+			if err != nil {
+				log.Warn().Err(err).Msg("could not identify forge bot user — forge-dependent features disabled")
+				forgeProvider = nil
+			} else {
+				log.Info().Str("username", botUser.Username).Msg("forge bot user identified")
+				gitClient = git.New(cfg.Forge.Token, botUser.FullName, botUser.Email, branch)
+			}
+		}
+
+		ciProvider, err := ci.NewCi(cfg.CI, cfg.Forge)
+		if err != nil {
+			log.Warn().Err(err).Msg("CI unavailable at startup — CI-dependent features disabled")
+		}
 
 		appService = service.NewAppService(appRepo, projectRepo, templateRepo, forgeProvider, ciProvider, gitClient, cfg.Forge.Owner, baseURL, webhookSecret, branch)
+		templateService = service.NewTemplateService(templateRepo, forgeProvider, cfg.Forge.Owner)
 		repoService = service.NewRepoService(forgeProvider, cfg.Forge.Owner)
 		docsService = service.NewDocsService(appRepo, gitClient, filepath.Join(config.DefaultDataDir(), "docs"))
 
@@ -127,12 +136,13 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		handler.NewAuthHandler(authService),
 		handler.NewAppHandler(appService, deploymentService),
 		handler.NewProjectHandler(projectService, appService),
-		handler.NewTemplateHandler(templateService),
+		handler.NewTemplateHandler(templateService, appService),
 		handler.NewRepoHandler(repoService),
 		handler.NewTeamHandler(teamService),
 		handler.NewUserHandler(teamService),
 		handler.NewHookHandler(docsService, branch, webhookSecret),
 		handler.NewDocsHandler(docsService),
+		handler.NewHealthHandler(healthService),
 	)
 
 	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r)

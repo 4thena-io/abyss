@@ -43,7 +43,7 @@ steps:
       - build-ui
       - vendor
     commands:
-      - go build -ldflags="-s -w" -o build/abyss-${os}-${arch} ./cmd/abyss
+      - go build -ldflags="-s -w" -o build/abyss-${os}-${arch} ./cmd
 
   build-docker:
     depends_on:

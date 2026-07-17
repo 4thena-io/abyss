@@ -2,7 +2,7 @@ root = "."
 tmp_dir = ".air"
 
 [build]
-cmd = "go build -o ./.air/abyss ./cmd/abyss"
+cmd = "go build -o ./.air/abyss ./cmd"
 full_bin = "./.air/abyss serve"
 include_dir = ["cmd", "internal"]
 include_ext = ["go"]
