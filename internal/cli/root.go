@@ -1,18 +1,10 @@
-package main
+package cli
 
 import (
-	"log"
-
 	"github.com/spf13/cobra"
 )
 
-func main() {
-	if err := rootCmd().Execute(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func rootCmd() *cobra.Command {
+func Root() *cobra.Command {
 	var configPath string
 
 	cmd := &cobra.Command{

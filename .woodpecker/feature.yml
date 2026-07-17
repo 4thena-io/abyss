@@ -32,4 +32,4 @@ steps:
       - build-ui
       - vendor
     commands:
-      - go build -ldflags="-s -w" -o build/abyss ./cmd
+      - go build -ldflags="-s -w" -o build/abyss .
