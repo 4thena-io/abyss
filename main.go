@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/4thena-io/abyss/internal/cmd"
+	"github.com/4thena-io/abyss/cmd"
 )
 
 func main() {

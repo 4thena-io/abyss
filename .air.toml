@@ -4,7 +4,7 @@ tmp_dir = ".air"
 [build]
 cmd = "go build -o ./.air/abyss ."
 full_bin = "./.air/abyss serve"
-include_dir = ["internal"]
+include_dir = ["cmd", "internal"]
 include_ext = ["go"]
 
 [log]
