@@ -3,6 +3,7 @@ import Home from './views/Home.vue';
 import Apps from "./views/Apps.vue";
 import Projects from "./views/Projects.vue";
 import Templates from "./views/Templates.vue";
+import TemplateDetail from "./views/TemplateDetail.vue";
 import AppDetail from "./views/AppDetail.vue";
 import ProjectDetail from "./views/ProjectDetail.vue";
 import Teams from "./views/Teams.vue";
@@ -23,6 +24,7 @@ const routes = [
   { path: "/projects", component: Projects },
   { path: "/projects/:id", component: ProjectDetail },
   { path: "/templates", component: Templates },
+  { path: "/templates/:id", component: TemplateDetail },
   { path: "/settings", component: Settings },
   { path: "/users/:id", component: UserProfile },
 ];

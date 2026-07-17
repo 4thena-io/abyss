@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/4thena-io/abyss/internal/api/rest/middleware"
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
 	"github.com/4thena-io/abyss/internal/model"
@@ -31,10 +32,12 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	claims := middleware.ClaimsFromContext(r.Context())
 	project, err := h.projectService.SaveProject(r.Context(), &model.Project{
 		Name:        req.Name,
 		Description: req.Description,
 		TeamID:      req.TeamID,
+		CreatorID:   claims.UserID,
 	})
 	if errors.Is(err, service.ErrConflict) {
 		response.Conflict(w, "project already exists")
@@ -48,12 +51,41 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response.Project{
-		ID:          project.ID,
-		Name:        project.Name,
-		Description: project.Description,
-		TeamID:      project.TeamID,
-	})
+	json.NewEncoder(w).Encode(toProjectResponse(project))
+}
+
+func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid id")
+		return
+	}
+
+	var req request.UpdateProject
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "invalid request body")
+		return
+	}
+	defer r.Body.Close()
+
+	claims := middleware.ClaimsFromContext(r.Context())
+	project, err := h.projectService.UpdateProject(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Name, req.Description, req.TeamID)
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "project not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
+		return
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("failed to update project")
+		response.InternalError(w)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(toProjectResponse(project))
 }
 
 func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
@@ -66,12 +98,7 @@ func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 
 	res := make([]response.Project, len(projects))
 	for i, project := range projects {
-		res[i] = response.Project{
-			ID:          project.ID,
-			Name:        project.Name,
-			Description: project.Description,
-			TeamID:      project.TeamID,
-		}
+		res[i] = toProjectResponse(&project)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -97,12 +124,7 @@ func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response.Project{
-		ID:          project.ID,
-		Name:        project.Name,
-		Description: project.Description,
-		TeamID:      project.TeamID,
-	})
+	json.NewEncoder(w).Encode(toProjectResponse(project))
 }
 
 func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) {
@@ -125,18 +147,7 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 
 	res := make([]response.App, len(apps))
 	for i, app := range apps {
-		res[i] = response.App{
-			ID:           app.ID,
-			Name:         app.Name,
-			Description:  app.Description,
-			Kind:         app.Kind,
-			Language:     app.Language,
-			RepoFullName: app.RepoFullName,
-			RepoURL:      app.RepoURL,
-			CiURL:        app.CIURL,
-			ProjectID:    app.ProjectID,
-			TemplateID:   app.TemplateID,
-		}
+		res[i] = toAppResponse(&app)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -150,9 +161,14 @@ func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.projectService.DeleteProject(r.Context(), uint(id))
+	claims := middleware.ClaimsFromContext(r.Context())
+	err = h.projectService.DeleteProject(r.Context(), uint(id), claims.UserID, claims.IsAdmin)
 	if errors.Is(err, service.ErrNotFound) {
 		response.NotFound(w, "project not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
 		return
 	}
 	if err != nil {
@@ -162,4 +178,18 @@ func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func toProjectResponse(p *model.Project) response.Project {
+	r := response.Project{
+		ID:          p.ID,
+		Name:        p.Name,
+		Description: p.Description,
+		TeamID:      p.TeamID,
+		CreatorID:   p.CreatorID,
+	}
+	if p.Creator.Username != "" {
+		r.CreatorUsername = p.Creator.Username
+	}
+	return r
 }

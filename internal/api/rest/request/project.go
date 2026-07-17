@@ -5,3 +5,9 @@ type CreateProject struct {
 	Description string `json:"description"`
 	TeamID      *uint  `json:"teamId"`
 }
+
+type UpdateProject struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	TeamID      *uint  `json:"teamId"`
+}

@@ -1,10 +1,6 @@
 package model
 
-import (
-	"time"
-
-	"github.com/4thena-io/abyss/internal/constant"
-)
+import "time"
 
 type Template struct {
 	ID          uint `gorm:"primaryKey;autoIncrement"`
@@ -14,7 +10,8 @@ type Template struct {
 	Language    string
 	RepoURL     string
 	CloneURL    string
-	Status      constant.Status
+	CreatorID   uint
+	Creator     User `gorm:"foreignKey:CreatorID;constraint:OnDelete:RESTRICT"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/4thena-io/abyss/internal/api/rest/middleware"
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
 	"github.com/4thena-io/abyss/internal/model"
@@ -31,6 +32,8 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	claims := middleware.ClaimsFromContext(r.Context())
+
 	var app *model.App
 	var err error
 
@@ -42,6 +45,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 			Language:    req.Language,
 			ProjectID:   req.ProjectID,
 			RepoID:      req.RepoID,
+			CreatorID:   claims.UserID,
 		})
 	} else if req.TemplateID != 0 {
 		app, err = h.service.CreateAppFromTemplate(r.Context(), &model.App{
@@ -51,6 +55,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 			Language:    req.Language,
 			ProjectID:   req.ProjectID,
 			TemplateID:  &req.TemplateID,
+			CreatorID:   claims.UserID,
 		})
 	} else {
 		response.BadRequest(w, "must specify either templateId or repoId")
@@ -69,18 +74,41 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response.App{
-		ID:           app.ID,
-		Name:         app.Name,
-		Description:  app.Description,
-		Kind:         app.Kind,
-		Language:     app.Language,
-		RepoFullName: app.RepoFullName,
-		RepoURL:      app.RepoURL,
-		CiURL:        app.CIURL,
-		ProjectID:    app.ProjectID,
-		TemplateID:   app.TemplateID,
-	})
+	json.NewEncoder(w).Encode(toAppResponse(app))
+}
+
+func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid id")
+		return
+	}
+
+	var req request.UpdateApp
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "invalid request body")
+		return
+	}
+	defer r.Body.Close()
+
+	claims := middleware.ClaimsFromContext(r.Context())
+	app, err := h.service.UpdateApp(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Name, req.Description, req.ProjectID)
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "app not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
+		return
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("failed to update app")
+		response.InternalError(w)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(toAppResponse(app))
 }
 
 func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
@@ -93,18 +121,7 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 
 	res := make([]response.App, len(apps))
 	for i, app := range apps {
-		res[i] = response.App{
-			ID:           app.ID,
-			Name:         app.Name,
-			Description:  app.Description,
-			Kind:         app.Kind,
-			Language:     app.Language,
-			RepoFullName: app.RepoFullName,
-			RepoURL:      app.RepoURL,
-			CiURL:        app.CIURL,
-			ProjectID:    app.ProjectID,
-			TemplateID:   app.TemplateID,
-		}
+		res[i] = toAppResponse(&app)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -130,18 +147,7 @@ func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response.App{
-		ID:           app.ID,
-		Name:         app.Name,
-		Description:  app.Description,
-		Kind:         app.Kind,
-		Language:     app.Language,
-		RepoFullName: app.RepoFullName,
-		RepoURL:      app.RepoURL,
-		CiURL:        app.CIURL,
-		ProjectID:    app.ProjectID,
-		TemplateID:   app.TemplateID,
-	})
+	json.NewEncoder(w).Encode(toAppResponse(app))
 }
 
 func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
@@ -204,9 +210,14 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.DeleteApp(r.Context(), uint(id))
+	claims := middleware.ClaimsFromContext(r.Context())
+	err = h.service.DeleteApp(r.Context(), uint(id), claims.UserID, claims.IsAdmin)
 	if errors.Is(err, service.ErrNotFound) {
 		response.NotFound(w, "app not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
 		return
 	}
 	if err != nil {
@@ -248,4 +259,24 @@ func (h *AppHandler) GetAppDeployments(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+func toAppResponse(app *model.App) response.App {
+	r := response.App{
+		ID:           app.ID,
+		Name:         app.Name,
+		Description:  app.Description,
+		Kind:         app.Kind,
+		Language:     app.Language,
+		RepoFullName: app.RepoFullName,
+		RepoURL:      app.RepoURL,
+		CiURL:        app.CIURL,
+		ProjectID:    app.ProjectID,
+		TemplateID:   app.TemplateID,
+		CreatorID:    app.CreatorID,
+	}
+	if app.Creator.Username != "" {
+		r.CreatorUsername = app.Creator.Username
+	}
+	return r
 }

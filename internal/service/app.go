@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/4thena-io/abyss/internal/constant"
 	"github.com/4thena-io/abyss/internal/git"
 	"github.com/4thena-io/abyss/internal/integration/ci"
 	"github.com/4thena-io/abyss/internal/integration/forge"
@@ -23,6 +22,7 @@ type AppRepository interface {
 	GetByName(ctx context.Context, name string) (*model.App, error)
 	GetByProject(ctx context.Context, id uint) ([]model.App, error)
 	GetByTemplate(ctx context.Context, id uint) ([]model.App, error)
+	Update(ctx context.Context, app *model.App) error
 	Delete(ctx context.Context, app *model.App) error
 	CountByTeam(ctx context.Context, teamID uint) (int64, error)
 }
@@ -136,7 +136,7 @@ func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) 
 	app.CIID = ciRepo.ID
 	app.CISlug = ciRepo.Slug
 	app.CIURL = ciRepo.URL
-	app.Status = constant.StatusNew
+
 
 	err = s.appRepository.Save(ctx, app)
 	if err != nil {
@@ -229,7 +229,7 @@ func (s *AppService) CreateAppFromRepo(ctx context.Context, app *model.App) (*mo
 	app.CIID = ciRepo.ID
 	app.CISlug = ciRepo.Slug
 	app.CIURL = ciRepo.URL
-	app.Status = constant.StatusNew
+
 
 	err = s.appRepository.Save(ctx, app)
 	if err != nil {
@@ -360,13 +360,42 @@ func (s *AppService) RepairWebhook(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (s *AppService) DeleteApp(ctx context.Context, id uint) error {
+func (s *AppService) UpdateApp(ctx context.Context, id, callerID uint, isAdmin bool, name, description string, projectID *uint) (*model.App, error) {
+	app, err := s.appRepository.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if app == nil {
+		return nil, ErrNotFound
+	}
+	if !isAdmin && app.CreatorID != callerID {
+		return nil, ErrForbidden
+	}
+
+	app.Name = name
+	app.Description = description
+	if projectID != nil {
+		app.ProjectID = *projectID
+	} else {
+		app.ProjectID = 0
+	}
+
+	if err := s.appRepository.Update(ctx, app); err != nil {
+		return nil, err
+	}
+	return app, nil
+}
+
+func (s *AppService) DeleteApp(ctx context.Context, id, callerID uint, isAdmin bool) error {
 	app, err := s.appRepository.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	if app == nil {
 		return ErrNotFound
+	}
+	if !isAdmin && app.CreatorID != callerID {
+		return ErrForbidden
 	}
 
 	err = s.ci.DeleteRepo(ctx, app.CIID, app.CISlug)

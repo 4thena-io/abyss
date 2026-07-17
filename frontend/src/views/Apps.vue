@@ -12,15 +12,15 @@
     <!-- Filters -->
     <div class="flex items-center gap-4">
       <SearchInput v-model="search" placeholder="Filter applications..." />
-      <Dropdown 
-        v-model="kindFilter" 
-        :options="kindFilterOptions" 
-        all-label="All kinds" 
+      <Dropdown
+        v-model="kindFilter"
+        :options="kindFilterOptions"
+        all-label="All kinds"
       />
-      <Dropdown 
-        v-model="languageFilter" 
-        :options="languageFilterOptions" 
-        all-label="All languages" 
+      <Dropdown
+        v-model="languageFilter"
+        :options="languageFilterOptions"
+        all-label="All languages"
       />
     </div>
 
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Empty State -->
-    <EmptyState 
+    <EmptyState
       v-else-if="filteredApps.length === 0"
       :icon="CubeIcon"
       title="No applications found"
@@ -39,8 +39,8 @@
 
     <!-- App Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <EntityCard 
-        v-for="app in filteredApps" 
+      <EntityCard
+        v-for="app in filteredApps"
         :key="app.id"
         :icon="CubeIcon"
         :title="app.name"
@@ -58,65 +58,139 @@
     <!-- Create App Modal -->
     <Modal :open="showModal" title="New Application" size="lg" @close="closeModal">
       <form @submit.prevent="createApp" class="space-y-4">
-        <FormField 
-          v-model="form.name" 
-          label="Name" 
-          required 
+        <!-- Source toggle -->
+        <div class="space-y-1.5">
+          <label class="block text-sm font-medium text-t2">Source</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              @click="source = 'template'"
+              class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+              :class="source === 'template'
+                ? 'border-acc bg-acc-s text-t1'
+                : 'border-b1 bg-bg text-t2 hover:border-b2'"
+            >
+              <DocumentDuplicateIcon class="w-4 h-4 shrink-0" />
+              <div class="text-left">
+                <p class="font-medium">From template</p>
+                <p class="text-xs font-normal opacity-70">Create a new repo from a template</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              @click="source = 'repo'"
+              class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+              :class="source === 'repo'
+                ? 'border-acc bg-acc-s text-t1'
+                : 'border-b1 bg-bg text-t2 hover:border-b2'"
+            >
+              <CodeBracketIcon class="w-4 h-4 shrink-0" />
+              <div class="text-left">
+                <p class="font-medium">From existing repo</p>
+                <p class="text-xs font-normal opacity-70">Link an already existing repository</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <FormField
+          v-model="form.name"
+          label="Name"
+          required
           placeholder="my-awesome-api"
           hint="Will be used as repository name"
         />
 
-        <Dropdown 
-          v-model="form.projectId" 
-          label="Project" 
+        <!-- Team filter — optional, narrows project list -->
+        <Dropdown
+          v-model="teamFilter"
+          label="Team"
           variant="form"
-          required
-          placeholder="Select project"
+          placeholder="All teams"
+          :options="teamOptions"
+        />
+
+        <!-- Project — optional -->
+        <Dropdown
+          v-model="form.projectId"
+          label="Project"
+          variant="form"
+          placeholder="No project (standalone)"
           :options="projectOptions"
         />
 
-        <Dropdown 
-          v-model="form.templateId" 
-          label="Template" 
-          variant="form"
-          required
-          placeholder="Select template"
-          :options="templateOptions"
-        />
-
-        <!-- Auto-filled from template -->
-        <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
-          <FormField 
-            :model-value="selectedTemplate.kind" 
-            label="Kind" 
-            disabled
+        <!-- Template source -->
+        <template v-if="source === 'template'">
+          <Dropdown
+            v-model="form.templateId"
+            label="Template"
+            variant="form"
+            required
+            placeholder="Select template"
+            :options="templateOptions"
           />
-          <FormField 
-            :model-value="selectedTemplate.language" 
-            label="Language" 
-            disabled
-          />
-        </div>
 
-        <FormField 
-          v-model="form.description" 
-          label="Description" 
-          type="textarea" 
-          :rows="2" 
+          <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
+            <FormField
+              :model-value="selectedTemplate.kind"
+              label="Kind"
+              disabled
+            />
+            <FormField
+              :model-value="selectedTemplate.language"
+              label="Language"
+              disabled
+            />
+          </div>
+        </template>
+
+        <!-- Repo source -->
+        <template v-else>
+          <Dropdown
+            v-model="form.repoId"
+            label="Repository"
+            variant="form"
+            required
+            placeholder="Select repository"
+            :options="repoOptions"
+          />
+          <div class="grid grid-cols-2 gap-4">
+            <FormField v-model="form.kind" label="Kind" placeholder="service, library…" />
+            <FormField v-model="form.language" label="Language" placeholder="go, python…" />
+          </div>
+        </template>
+
+        <FormField
+          v-model="form.description"
+          label="Description"
+          type="textarea"
+          :rows="2"
           placeholder="Application description..."
         />
 
-        <!-- Info box -->
-        <div v-if="selectedTemplate && selectedProject" class="bg-acc-s border border-acc-b rounded-lg p-3">
+        <!-- Summary info box -->
+        <div v-if="source === 'template' && selectedTemplate" class="bg-acc-s border border-acc-b rounded-lg p-3">
           <p class="text-sm text-acc">
-            This will create a new repository from the <strong>{{ selectedTemplate.name }}</strong> template,
-            set up CI, and add it to the <strong>{{ selectedProject.name }}</strong> project.
+            Creates a new repository from <strong>{{ selectedTemplate.name }}</strong>
+            <template v-if="selectedProject">
+              and adds it to <strong>{{ selectedProject.name }}</strong>
+              <template v-if="selectedTeam"> under <strong>{{ selectedTeam.name }}</strong></template>
+            </template>.
+          </p>
+        </div>
+        <div v-else-if="source === 'repo' && selectedRepo" class="bg-acc-s border border-acc-b rounded-lg p-3">
+          <p class="text-sm text-acc">
+            Links <strong>{{ selectedRepo.fullName }}</strong>
+            <template v-if="selectedProject">
+              to <strong>{{ selectedProject.name }}</strong>
+              <template v-if="selectedTeam"> under <strong>{{ selectedTeam.name }}</strong></template>
+            </template>.
           </p>
         </div>
 
         <ErrorAlert v-if="error" :message="error" />
 
-        <FormActions 
+        <FormActions
           submit-label="Create Application"
           submitting-label="Creating..."
           :disabled="!canCreate"
@@ -129,15 +203,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, watch, onMounted } from 'vue';
 import {
   PlusIcon,
-  CubeIcon
+  CubeIcon,
+  DocumentDuplicateIcon,
+  CodeBracketIcon,
 } from '@heroicons/vue/24/outline';
 import type { App } from '../features/apps/types';
 import type { Project } from '../features/projects/types';
 import type { Template } from '../features/templates/types';
-import { appsApi, projectsApi, templatesApi, type CreateAppRequest } from '../api';
+import type { Team } from '../features/teams/types';
+import type { Repo } from '../types/Repo';
+import { appsApi, projectsApi, templatesApi, teamsApi, type CreateAppRequest } from '../api';
+import { repoApi } from '../api/repo';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';
 import Spinner from '../components/ui/Spinner.vue';
@@ -164,17 +243,30 @@ const languageFilter = ref('');
 const showModal = ref(false);
 const saving = ref(false);
 const error = ref('');
+const source = ref<'template' | 'repo'>('template');
 
 // Related data for form
 const projects = ref<Project[]>([]);
+const teams = ref<Team[]>([]);
 const templates = ref<Template[]>([]);
+const repos = ref<Repo[]>([]);
 
 // Form state
+const teamFilter = ref<number | ''>('');
+watch(teamFilter, () => {
+  const project = projects.value.find(p => p.id === form.projectId);
+  if (project && teamFilter.value && project.teamId !== teamFilter.value) {
+    form.projectId = '';
+  }
+});
 const form = reactive({
   name: '',
   description: '',
   projectId: '' as number | '',
   templateId: '' as number | '',
+  repoId: '' as number | '',
+  kind: '',
+  language: '',
 });
 
 // Computed
@@ -197,12 +289,16 @@ const uniqueLanguages = computed(() => {
   return [...new Set(appList.value.map(a => a.language).filter(Boolean))].sort();
 });
 
-const kindFilterOptions = computed(() => 
+const kindFilterOptions = computed(() =>
   uniqueKinds.value.map(k => ({ value: k, label: k }))
 );
 
-const languageFilterOptions = computed(() => 
+const languageFilterOptions = computed(() =>
   uniqueLanguages.value.map(l => ({ value: l, label: l }))
+);
+
+const selectedTeam = computed(() =>
+  teams.value.find(t => t.id === teamFilter.value)
 );
 
 const selectedProject = computed(() =>
@@ -213,16 +309,33 @@ const selectedTemplate = computed(() =>
   templates.value.find(t => t.id === form.templateId)
 );
 
-const canCreate = computed(() =>
-  form.name.trim() !== '' && form.projectId !== '' && form.templateId !== ''
+const selectedRepo = computed(() =>
+  repos.value.find(r => r.id === form.repoId)
 );
 
-const projectOptions = computed(() =>
-  projects.value.map(p => ({ value: p.id, label: p.name }))
+const canCreate = computed(() => {
+  if (!form.name.trim()) return false;
+  if (source.value === 'template') return form.templateId !== '';
+  return form.repoId !== '';
+});
+
+const teamOptions = computed(() =>
+  teams.value.map(t => ({ value: t.id, label: t.name }))
 );
+
+const projectOptions = computed(() => {
+  const filtered = teamFilter.value
+    ? projects.value.filter(p => p.teamId === teamFilter.value)
+    : projects.value;
+  return filtered.map(p => ({ value: p.id, label: p.name }));
+});
 
 const templateOptions = computed(() =>
   templates.value.map(t => ({ value: t.id, label: `${t.name} (${t.language})` }))
+);
+
+const repoOptions = computed(() =>
+  repos.value.map(r => ({ value: r.id, label: r.fullName }))
 );
 
 // Methods
@@ -231,6 +344,11 @@ const resetForm = () => {
   form.description = '';
   form.projectId = '';
   form.templateId = '';
+  form.repoId = '';
+  form.kind = '';
+  form.language = '';
+  source.value = 'template';
+  teamFilter.value = '';
   error.value = '';
 };
 
@@ -241,14 +359,17 @@ const closeModal = () => {
 
 const openModal = async () => {
   showModal.value = true;
-  // Fetch projects and templates for dropdowns
   try {
-    const [projectsData, templatesData] = await Promise.all([
+    const [projectsData, teamsData, templatesData, reposData] = await Promise.all([
       projectsApi.getAll(),
+      teamsApi.getAll(),
       templatesApi.getAll(),
+      repoApi.getRepos(),
     ]);
     projects.value = projectsData;
+    teams.value = teamsData;
     templates.value = templatesData;
+    repos.value = reposData;
   } catch (e) {
     console.error('Failed to fetch data:', e);
   }
@@ -266,20 +387,32 @@ const fetchApps = async () => {
 };
 
 const createApp = async () => {
-  if (!selectedTemplate.value) return;
-
   error.value = '';
   saving.value = true;
 
   try {
-    const request: CreateAppRequest = {
-      name: form.name,
-      description: form.description,
-      projectId: form.projectId as number,
-      templateId: form.templateId as number,
-      kind: selectedTemplate.value.kind,
-      language: selectedTemplate.value.language,
-    };
+    let request: CreateAppRequest;
+
+    if (source.value === 'template') {
+      if (!selectedTemplate.value) return;
+      request = {
+        name: form.name,
+        description: form.description,
+        projectId: form.projectId as number || undefined,
+        templateId: form.templateId as number,
+        kind: selectedTemplate.value.kind,
+        language: selectedTemplate.value.language,
+      };
+    } else {
+      request = {
+        name: form.name,
+        description: form.description,
+        projectId: form.projectId as number || undefined,
+        repoId: form.repoId as number,
+        kind: form.kind,
+        language: form.language,
+      };
+    }
 
     const app = await appsApi.create(request);
     appList.value.push(app);

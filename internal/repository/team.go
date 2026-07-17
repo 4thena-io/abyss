@@ -50,6 +50,10 @@ func (r *TeamRepository) GetByName(ctx context.Context, name string) (*model.Tea
 	return &team, nil
 }
 
+func (r *TeamRepository) Update(ctx context.Context, team *model.Team) error {
+	return r.db.WithContext(ctx).Save(team).Error
+}
+
 func (r *TeamRepository) Delete(ctx context.Context, team *model.Team) error {
 	return r.db.WithContext(ctx).Delete(team).Error
 }
@@ -74,4 +78,8 @@ func (r *TeamRepository) CountMembers(ctx context.Context, teamID uint) (int64, 
 	var count int64
 	result := r.db.WithContext(ctx).Model(&model.TeamMember{}).Where("team_id = ?", teamID).Count(&count)
 	return count, result.Error
+}
+
+func (r *TeamRepository) DeleteMember(ctx context.Context, teamID, memberID uint) error {
+	return r.db.WithContext(ctx).Where("id = ? AND team_id = ?", memberID, teamID).Delete(&model.TeamMember{}).Error
 }

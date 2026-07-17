@@ -8,54 +8,49 @@ import (
 
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 type GitClient struct {
-	token string
-	name  string
-	email string
+	token  string
+	name   string
+	email  string
+	branch string
 }
 
-func New(token, name, email string) *GitClient {
-	return &GitClient{token: token, name: name, email: email}
+func New(token, name, email, branch string) *GitClient {
+	if branch == "" {
+		branch = "main"
+	}
+	return &GitClient{token: token, name: name, email: email, branch: branch}
 }
 
-// Clone clones a repository to a local path.
+// Clone clones a repository to a local path on the configured branch.
 func (c *GitClient) Clone(repoURL, localPath string) error {
 	_, err := gogit.PlainClone(localPath, false, &gogit.CloneOptions{
-		URL:  repoURL,
-		Auth: c.auth(),
+		URL:           repoURL,
+		ReferenceName: plumbing.NewBranchReferenceName(c.branch),
+		Auth:          c.auth(),
 	})
 	return err
 }
 
-func (c *GitClient) CloneSubset(repoURL, localPath string, directories []string) error {
-	repo, err := gogit.PlainClone(localPath, false, &gogit.CloneOptions{
-		URL:  repoURL,
+func (c *GitClient) CloneSubset(repoURL, localPath string, _ []string) error {
+	_, err := gogit.PlainClone(localPath, false, &gogit.CloneOptions{
+		URL:   repoURL,
 		Depth: 1,
-		SingleBranch: true,
-		NoCheckout: true,
-		Auth: c.auth(),
+		Auth:  c.auth(),
 	})
-	if err != nil {
-		return err
-	}
-
-	wt, err := repo.Worktree()
-	if err != nil {
-		return err
-	}
-
-	return wt.Checkout(&gogit.CheckoutOptions{
-		SparseCheckoutDirectories: directories,
-	})
+	return err
 }
 
 // InitAndPush initializes a new git repo, adds all files, commits, and pushes to remote.
 func (c *GitClient) InitAndPush(localPath, remoteURL, commitMsg string) error {
-	repo, err := gogit.PlainInit(localPath, false)
+	repo, err := gogit.PlainInitWithOptions(localPath, &gogit.PlainInitOptions{
+		InitOptions: gogit.InitOptions{DefaultBranch: plumbing.NewBranchReferenceName(c.branch)},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to init repo: %w", err)
 	}
@@ -92,9 +87,11 @@ func (c *GitClient) InitAndPush(localPath, remoteURL, commitMsg string) error {
 		return fmt.Errorf("failed to commit: %w", err)
 	}
 
-	// Push
+	// Push to the configured branch.
+	refspec := config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.branch, c.branch))
 	err = repo.Push(&gogit.PushOptions{
-		Auth: c.auth(),
+		Auth:     c.auth(),
+		RefSpecs: []config.RefSpec{refspec},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to push: %w", err)
@@ -157,8 +154,10 @@ func (c *GitClient) AddCommitPush(localPath, commitMsg string) error {
 		return fmt.Errorf("failed to commit: %w", err)
 	}
 
+	refspec := config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.branch, c.branch))
 	err = repo.Push(&gogit.PushOptions{
-		Auth: c.auth(),
+		Auth:     c.auth(),
+		RefSpecs: []config.RefSpec{refspec},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to push: %w", err)

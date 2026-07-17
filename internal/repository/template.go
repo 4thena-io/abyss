@@ -28,7 +28,7 @@ func (r *TemplateRepository) Save(ctx context.Context, template *model.Template)
 
 func (r *TemplateRepository) GetAll(ctx context.Context) ([]model.Template, error) {
 	var templates []model.Template
-	result := r.db.WithContext(ctx).Find(&templates)
+	result := r.db.WithContext(ctx).Preload("Creator").Find(&templates)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -37,7 +37,7 @@ func (r *TemplateRepository) GetAll(ctx context.Context) ([]model.Template, erro
 
 func (r *TemplateRepository) GetByID(ctx context.Context, id uint) (*model.Template, error) {
 	var template model.Template
-	result := r.db.WithContext(ctx).Where("id = ?", id).First(&template)
+	result := r.db.WithContext(ctx).Preload("Creator").Where("id = ?", id).First(&template)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -57,6 +57,10 @@ func (r *TemplateRepository) GetByName(ctx context.Context, name string) (*model
 		return nil, result.Error
 	}
 	return &template, nil
+}
+
+func (r *TemplateRepository) Update(ctx context.Context, template *model.Template) error {
+	return r.db.WithContext(ctx).Save(template).Error
 }
 
 func (r *TemplateRepository) Delete(ctx context.Context, template *model.Template) error {

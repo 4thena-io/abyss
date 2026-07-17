@@ -31,6 +31,10 @@ func Conflict(w http.ResponseWriter, message string) {
 	WriteError(w, http.StatusConflict, message)
 }
 
+func Forbidden(w http.ResponseWriter) {
+	WriteError(w, http.StatusForbidden, "forbidden")
+}
+
 func InternalError(w http.ResponseWriter) {
 	WriteError(w, http.StatusInternalServerError, "internal server error")
 }

@@ -528,6 +528,7 @@ const createTemplate = async () => {
 
   try {
     const request: CreateTemplateRequest = {
+      source: 'repo',
       name: templateForm.name,
       description: templateForm.description,
       kind: templateForm.kind,

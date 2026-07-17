@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/4thena-io/abyss/internal/api/rest/middleware"
 	"github.com/4thena-io/abyss/internal/api/rest/request"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
-	"github.com/4thena-io/abyss/internal/constant"
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/go-chi/chi/v5"
@@ -32,11 +32,11 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	claims := middleware.ClaimsFromContext(r.Context())
 	team, err := h.service.SaveTeam(r.Context(), &model.Team{
 		Name:        req.Name,
 		Description: req.Description,
-		Status:      constant.StatusActive,
-	})
+	}, claims.UserID)
 	if errors.Is(err, service.ErrConflict) {
 		response.Conflict(w, "team already exists")
 		return
@@ -49,6 +49,39 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response.Team{
+		ID:          team.ID,
+		Name:        team.Name,
+		Description: team.Description,
+	})
+}
+
+func (h *TeamHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid id")
+		return
+	}
+
+	var req request.UpdateTeam
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "invalid request body")
+		return
+	}
+	defer r.Body.Close()
+
+	team, err := h.service.UpdateTeam(r.Context(), uint(id), req.Name, req.Description)
+	if errors.Is(err, service.ErrNotFound) {
+		response.NotFound(w, "team not found")
+		return
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("failed to update team")
+		response.InternalError(w)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response.Team{
 		ID:          team.ID,
 		Name:        team.Name,
@@ -188,6 +221,27 @@ func (h *TeamHandler) GetTeamMembers(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+func (h *TeamHandler) RemoveTeamMember(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid team id")
+		return
+	}
+	memberID, err := strconv.ParseUint(chi.URLParam(r, "memberID"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid member id")
+		return
+	}
+
+	if err := h.service.RemoveTeamMember(r.Context(), uint(id), uint(memberID)); err != nil {
+		log.Error().Err(err).Msg("failed to remove team member")
+		response.InternalError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {

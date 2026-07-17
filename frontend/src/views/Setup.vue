@@ -4,7 +4,7 @@
 
       <!-- Header -->
       <div class="text-center mb-8">
-        <img :src="logo" alt="Abyss" class="h-10 mx-auto mb-4" />
+        <img :src="theme === 'dark' ? logoDark : logoLight" alt="Abyss" class="h-10 mx-auto mb-4" />
         <h1 class="text-2xl font-semibold text-t1">Set up Abyss</h1>
         <p class="text-t3 text-sm mt-1">Configure your instance to get started</p>
       </div>
@@ -169,6 +169,28 @@
             />
           </div>
 
+          <!-- Token permissions reference -->
+          <div class="bg-bg border border-b1 rounded-lg p-4 space-y-3">
+            <p class="text-sm font-medium text-t2">Required token permissions</p>
+            <div class="space-y-2">
+              <div v-for="perm in tokenPermissions" :key="perm.scope" class="flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded bg-ok-s flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckIcon class="w-3 h-3 text-ok" />
+                </div>
+                <div>
+                  <span class="text-xs font-semibold text-t1">{{ perm.scope }}</span>
+                  <span class="text-xs text-t3 ml-1.5">{{ perm.access }}</span>
+                  <p class="text-xs text-t3 mt-0.5">{{ perm.reason }}</p>
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-t3 border-t border-b1 pt-2 mt-1">
+              Generate this token under
+              <span class="text-t2">{{ form.forge_host || 'your forge' }}</span>
+              → User Settings → Applications → Access Tokens.
+            </p>
+          </div>
+
           <div>
             <label class="block text-t3 text-sm mb-2">Organization / owner</label>
             <input
@@ -178,6 +200,17 @@
               class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
             />
             <p class="text-xs text-t3 mt-1">The organization or user that owns repositories created by Abyss.</p>
+          </div>
+
+          <div>
+            <label class="block text-t3 text-sm mb-2">Default branch</label>
+            <input
+              v-model="form.forge_branch"
+              type="text"
+              placeholder="main"
+              class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
+            />
+            <p class="text-xs text-t3 mt-1">Branch used for cloning, pushing, and webhook filtering. Defaults to <code class="text-t2">main</code>.</p>
           </div>
         </template>
 
@@ -347,7 +380,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue';
 import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/solid';
-import logo from '../assets/logo-white.svg';
+import logoDark from '../assets/logo-white.svg';
+import logoLight from '../assets/logo-black.svg';
+import { useTheme } from '../composables/useTheme';
+
+const { theme } = useTheme();
 import { setupApi } from '../api/setup';
 
 const steps = ['Database', 'Forge', 'OAuth app', 'CI'];
@@ -372,6 +409,7 @@ const form = reactive({
   forge_host: '',
   forge_token: '',
   forge_owner: '',
+  forge_branch: 'main',
 
   // OAuth
   client_id: '',
@@ -402,6 +440,22 @@ const ciOptions = [
   { value: 'github-actions', label: 'GitHub Actions' },
   { value: 'gitlab-ci',      label: 'GitLab CI' },
 ];
+
+const tokenPermissions = computed(() => {
+  const isGitea = form.forge_type === 'gitea' || form.forge_type === 'forgejo';
+  if (isGitea) {
+    return [
+      { scope: 'Repository', access: 'Read & Write', reason: 'Create and delete repositories, manage webhooks' },
+      { scope: 'Organization', access: 'Read', reason: 'Verify that users belong to the owner organization' },
+      { scope: 'User', access: 'Read', reason: 'Identify and authenticate the bot account' },
+    ];
+  }
+  return [
+    { scope: 'repo', access: 'Full control', reason: 'Create and delete repositories, manage webhooks' },
+    { scope: 'read:org', access: 'Read', reason: 'Verify organization membership' },
+    { scope: 'read:user', access: 'Read', reason: 'Identify and authenticate the bot account' },
+  ];
+});
 
 const nativeCiType: Record<string, string> = {
   gitea:   'gitea-actions',

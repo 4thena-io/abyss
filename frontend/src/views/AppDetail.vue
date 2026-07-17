@@ -50,13 +50,14 @@
       <AppOverviewTab v-if="activeTab === 'overview'" :app="app" />
       <AppBuildsTab v-else-if="activeTab === 'builds'" :app-id="app.id" />
       <AppDeploymentsTab v-else-if="activeTab === 'deployments'" :app-id="app.id" />
+      <AppSettingsTab v-else-if="activeTab === 'settings'" :app="app" @updated="app = $event" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { CubeIcon, CodeBracketIcon } from '@heroicons/vue/24/outline';
 import type { App } from '../features/apps/types';
 import { useFormatters } from '../composables/useFormatters';
@@ -68,8 +69,10 @@ import AppOverviewTab from '../features/apps/components/AppOverviewTab.vue';
 import AppBuildsTab from '../features/apps/components/AppBuildsTab.vue';
 import AppDeploymentsTab from '../features/apps/components/AppDeploymentsTab.vue';
 import AppDocsTab from '../features/apps/components/AppDocsTab.vue';
+import AppSettingsTab from '../features/apps/components/AppSettingsTab.vue';
 
 const route = useRoute();
+const router = useRouter();
 const { formatUrl } = useFormatters();
 
 const tabs = [
@@ -77,11 +80,15 @@ const tabs = [
   { id: 'builds', label: 'Builds' },
   { id: 'deployments', label: 'Deployments' },
   { id: 'docs', label: 'Docs' },
+  { id: 'settings', label: 'Settings' },
 ];
 
+const validTabs = tabs.map(t => t.id);
 const app = ref<App | null>(null);
 const loading = ref(true);
-const activeTab = ref('overview');
+const activeTab = ref(validTabs.includes(route.query.tab as string) ? route.query.tab as string : 'overview');
+
+watch(activeTab, tab => router.replace({ query: { tab } }));
 
 const fetchApp = async () => {
   try {

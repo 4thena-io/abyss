@@ -1,10 +1,6 @@
 package model
 
-import (
-	"time"
-
-	"github.com/4thena-io/abyss/internal/constant"
-)
+import "time"
 
 type App struct {
 	ID           uint   `gorm:"primaryKey;autoIncrement"`
@@ -20,8 +16,11 @@ type App struct {
 	CISlug       string
 	CIURL        string `gorm:"not null"`
 	ProjectID    uint
+	Project      *Project  `gorm:"foreignKey:ProjectID;constraint:OnDelete:SET NULL"`
 	TemplateID   *uint
-	Status       constant.Status
+	Template     *Template `gorm:"foreignKey:TemplateID;constraint:OnDelete:SET NULL"`
+	CreatorID    uint
+	Creator      User      `gorm:"foreignKey:CreatorID;constraint:OnDelete:RESTRICT"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

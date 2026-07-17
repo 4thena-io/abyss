@@ -22,14 +22,15 @@
       <div class="mt-6">
         <ProjectOverviewTab v-if="activeTab === 'overview'" :project="project" />
         <ProjectAppsTab v-else-if="activeTab === 'apps'" :project-id="project.id" />
+        <ProjectSettingsTab v-else-if="activeTab === 'settings'" :project="project" @updated="project = $event" />
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { FolderIcon } from '@heroicons/vue/24/outline';
 import type { Project } from '../features/projects/types';
 import Spinner from '../components/ui/Spinner.vue';
@@ -38,17 +39,23 @@ import Tabs from '../components/ui/Tabs.vue';
 import DetailHeader from '../components/ui/DetailHeader.vue';
 import ProjectOverviewTab from '../features/projects/components/ProjectOverviewTab.vue';
 import ProjectAppsTab from '../features/projects/components/ProjectAppsTab.vue';
+import ProjectSettingsTab from '../features/projects/components/ProjectSettingsTab.vue';
 
 const route = useRoute();
+const router = useRouter();
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
   { id: 'apps', label: 'Applications' },
+  { id: 'settings', label: 'Settings' },
 ];
 
+const validTabs = tabs.map(t => t.id);
 const project = ref<Project | null>(null);
 const loading = ref(true);
-const activeTab = ref('overview');
+const activeTab = ref(validTabs.includes(route.query.tab as string) ? route.query.tab as string : 'overview');
+
+watch(activeTab, tab => router.replace({ query: { tab } }));
 
 const fetchProject = async () => {
   try {

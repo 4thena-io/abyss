@@ -9,3 +9,9 @@ type CreateApp struct {
 	TemplateID  uint   `json:"templateId,omitempty"`
 	RepoID      int64  `json:"repoId,omitempty"`
 }
+
+type UpdateApp struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ProjectID   *uint  `json:"projectId"`
+}

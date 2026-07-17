@@ -28,7 +28,7 @@ func (r *AppRepository) Save(ctx context.Context, app *model.App) error {
 
 func (r *AppRepository) GetAll(ctx context.Context) ([]model.App, error) {
 	var applications []model.App
-	result := r.db.WithContext(ctx).Find(&applications)
+	result := r.db.WithContext(ctx).Preload("Creator").Find(&applications)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -37,7 +37,7 @@ func (r *AppRepository) GetAll(ctx context.Context) ([]model.App, error) {
 
 func (r *AppRepository) GetByID(ctx context.Context, id uint) (*model.App, error) {
 	var application model.App
-	result := r.db.WithContext(ctx).Where("id = ?", id).First(&application)
+	result := r.db.WithContext(ctx).Preload("Creator").Where("id = ?", id).First(&application)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -75,6 +75,10 @@ func (r *AppRepository) GetByTemplate(ctx context.Context, id uint) ([]model.App
 		return nil, result.Error
 	}
 	return applications, nil
+}
+
+func (r *AppRepository) Update(ctx context.Context, app *model.App) error {
+	return r.db.WithContext(ctx).Save(app).Error
 }
 
 func (r *AppRepository) Delete(ctx context.Context, app *model.App) error {

@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <PageHeader title="Projects" :subtitle="`${projectList.length} projects`">
       <template #actions>
-        <Button @click="showModal = true" variant="secondary">
+        <Button @click="openModal" variant="secondary">
           <PlusIcon class="w-4 h-4" />
           New Project
         </Button>
@@ -49,12 +49,20 @@
           placeholder="my-project" 
         />
 
-        <FormField 
-          v-model="form.description" 
-          label="Description" 
-          type="textarea" 
-          :rows="3" 
-          placeholder="Project description..." 
+        <FormField
+          v-model="form.description"
+          label="Description"
+          type="textarea"
+          :rows="3"
+          placeholder="Project description..."
+        />
+
+        <Dropdown
+          v-model="form.teamId"
+          label="Team"
+          variant="form"
+          placeholder="No team (standalone)"
+          :options="teamOptions"
         />
 
         <ErrorAlert v-if="error" :message="error" />
@@ -78,7 +86,8 @@ import {
   FolderIcon
 } from '@heroicons/vue/24/outline';
 import type { Project } from '../features/projects/types';
-import { projectsApi, type CreateProjectRequest } from '../api';
+import type { Team } from '../features/teams/types';
+import { projectsApi, teamsApi, type CreateProjectRequest } from '../api';
 import Modal from '../components/ui/Modal.vue';
 import Button from '../components/ui/Button.vue';
 import Spinner from '../components/ui/Spinner.vue';
@@ -86,6 +95,7 @@ import SearchInput from '../components/ui/SearchInput.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import ErrorAlert from '../components/ui/ErrorAlert.vue';
 import FormField from '../components/ui/FormField.vue';
+import Dropdown from '../components/ui/Dropdown.vue';
 import PageHeader from '../components/ui/PageHeader.vue';
 import FormActions from '../components/ui/FormActions.vue';
 import EntityCard from '../components/ui/EntityCard.vue';
@@ -99,11 +109,13 @@ const search = ref('');
 const showModal = ref(false);
 const saving = ref(false);
 const error = ref('');
+const teams = ref<Team[]>([]);
 
 // Form state
 const form = reactive<CreateProjectRequest>({
   name: '',
   description: '',
+  teamId: null,
 });
 
 // Computed
@@ -118,10 +130,24 @@ const filteredProjects = computed(() => {
 const canCreate = computed(() => form.name.trim() !== '');
 
 // Methods
+const teamOptions = computed(() =>
+  teams.value.map(t => ({ value: t.id, label: t.name }))
+);
+
 const resetForm = () => {
   form.name = '';
   form.description = '';
+  form.teamId = null;
   error.value = '';
+};
+
+const openModal = async () => {
+  showModal.value = true;
+  try {
+    teams.value = await teamsApi.getAll();
+  } catch (e) {
+    console.error('Failed to fetch teams:', e);
+  }
 };
 
 const closeModal = () => {

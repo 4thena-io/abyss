@@ -100,12 +100,18 @@ func (s *AuthService) Exchange(ctx context.Context, code string) (*oauth2.Token,
 // GetForgeUser uses the user's OAuth access token to fetch their identity from
 // the forge. This is separate from GetAuthenticatedUser which uses the bot token.
 func (s *AuthService) GetForgeUser(ctx context.Context, token *oauth2.Token) (*model.ForgeUser, error) {
+	if s.forge == nil {
+		return nil, fmt.Errorf("forge is unavailable")
+	}
 	return s.forge.GetUserByToken(ctx, token.AccessToken)
 }
 
 // GetOrCreateUser finds an existing user by their forge ID, or creates a new one.
 // The very first user to log in becomes admin — no selection needed.
 func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.ForgeUser) (*model.User, error) {
+	if s.forge == nil {
+		return nil, fmt.Errorf("forge is unavailable")
+	}
 	member, err := s.forge.IsMemberOfOwner(ctx, s.owner, forgeUser.Username)
 	if err != nil {
 		return nil, err

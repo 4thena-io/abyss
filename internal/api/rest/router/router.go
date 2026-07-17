@@ -22,17 +22,19 @@ func New(
 	user *handler.UserHandler,
 	hook *handler.HookHandler,
 	docs *handler.DocsHandler,
+	health *handler.HealthHandler,
 ) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
 	frontend := web.NewFrontendHandler()
 
-	// Public setup endpoints — always accessible, no auth required
+	// Public endpoints — always accessible, no auth required
 	r.Route("/api/setup", func(r chi.Router) {
 		r.Get("/status", setupHandler.Status)
 		r.Post("/configure", setupHandler.Configure)
 	})
+	r.Get("/api/health", health.Check)
 
 	// Auth routes: require OAuth to be configured
 	r.Route("/auth", func(r chi.Router) {
@@ -66,6 +68,7 @@ func New(
 
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", app.GetAppByID)
+					r.Patch("/", app.UpdateApp)
 					r.Delete("/", app.DeleteApp)
 					r.Post("/repair", app.RepairApp)
 					r.Get("/builds", app.GetAppBuilds)
@@ -80,6 +83,7 @@ func New(
 
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", project.GetProjectByID)
+					r.Patch("/", project.UpdateProject)
 					r.Delete("/", project.DeleteProject)
 					r.Get("/apps", project.GetProjectApps)
 				})
@@ -90,8 +94,10 @@ func New(
 				r.Post("/", template.CreateTemplate)
 
 				r.Route("/{id}", func(r chi.Router) {
-					r.Get("/", template.GetTemplateByName)
+					r.Get("/", template.GetTemplateByID)
+					r.Patch("/", template.UpdateTemplate)
 					r.Delete("/", template.DeleteTemplate)
+					r.Get("/apps", template.GetTemplateApps)
 				})
 			})
 
@@ -105,10 +111,12 @@ func New(
 
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", team.GetTeamByID)
+					r.Patch("/", team.UpdateTeam)
 					r.Delete("/", team.DeleteTeam)
 					r.Get("/projects", team.GetTeamProjects)
 					r.Get("/members", team.GetTeamMembers)
 					r.Post("/members", team.AddTeamMember)
+					r.Delete("/members/{memberID}", team.RemoveTeamMember)
 				})
 			})
 		})

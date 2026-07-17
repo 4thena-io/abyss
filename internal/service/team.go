@@ -8,12 +8,14 @@ import (
 
 type TeamRepository interface {
 	Save(ctx context.Context, team *model.Team) error
+	Update(ctx context.Context, team *model.Team) error
 	GetAll(ctx context.Context) ([]model.Team, error)
 	GetByID(ctx context.Context, id uint) (*model.Team, error)
 	GetByName(ctx context.Context, name string) (*model.Team, error)
 	GetMembers(ctx context.Context, teamID uint) ([]model.TeamMember, error)
 	GetByUserID(ctx context.Context, userID uint) ([]model.TeamMember, error)
 	SaveMember(ctx context.Context, member *model.TeamMember) error
+	DeleteMember(ctx context.Context, teamID, memberID uint) error
 	CountMembers(ctx context.Context, teamID uint) (int64, error)
 	Delete(ctx context.Context, team *model.Team) error
 }
@@ -98,7 +100,7 @@ func (s *TeamService) GetTeamByID(ctx context.Context, id uint) (*TeamStats, err
 	}, nil
 }
 
-func (s *TeamService) SaveTeam(ctx context.Context, team *model.Team) (*model.Team, error) {
+func (s *TeamService) SaveTeam(ctx context.Context, team *model.Team, creatorID uint) (*model.Team, error) {
 	existing, err := s.teamRepo.GetByName(ctx, team.Name)
 	if err != nil {
 		return nil, err
@@ -108,6 +110,33 @@ func (s *TeamService) SaveTeam(ctx context.Context, team *model.Team) (*model.Te
 	}
 
 	if err := s.teamRepo.Save(ctx, team); err != nil {
+		return nil, err
+	}
+
+	if err := s.teamRepo.SaveMember(ctx, &model.TeamMember{
+		TeamID: team.ID,
+		UserID: creatorID,
+		Role:   "owner",
+	}); err != nil {
+		return nil, err
+	}
+
+	return team, nil
+}
+
+func (s *TeamService) UpdateTeam(ctx context.Context, id uint, name, description string) (*model.Team, error) {
+	team, err := s.teamRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if team == nil {
+		return nil, ErrNotFound
+	}
+
+	team.Name = name
+	team.Description = description
+
+	if err := s.teamRepo.Update(ctx, team); err != nil {
 		return nil, err
 	}
 	return team, nil
@@ -151,6 +180,10 @@ func (s *TeamService) AddTeamMember(ctx context.Context, teamID uint, username, 
 	}
 	member.User = *user
 	return member, nil
+}
+
+func (s *TeamService) RemoveTeamMember(ctx context.Context, teamID, memberID uint) error {
+	return s.teamRepo.DeleteMember(ctx, teamID, memberID)
 }
 
 func (s *TeamService) GetUserStats(ctx context.Context, userID uint) (*UserStats, error) {

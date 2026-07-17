@@ -6,8 +6,10 @@ export interface App {
   language: string;
   repoUrl: string;
   ciUrl: string;
-  projectId: string;
-  templateId: string;
+  projectId: number;
+  templateId?: number;
+  creatorId: number;
+  creatorUsername: string;
 }
 
 export interface Build {

@@ -19,6 +19,12 @@ type AuthProvider interface {
 	GetUserByToken(ctx context.Context, token string) (*model.User, error)
 }
 
+// ClaimsFromContext extracts the authenticated user's claims from the request context.
+func ClaimsFromContext(ctx context.Context) *auth.Claims {
+	claims, _ := ctx.Value(ContextKeyUser).(*auth.Claims)
+	return claims
+}
+
 // RequireSetup redirects to /setup if OAuth credentials are not configured.
 func RequireSetup(clientID string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

@@ -36,6 +36,19 @@ func (p pushPayload) isOnBranch(branch string) bool {
 }
 
 func (p pushPayload) touchesDocs() bool {
+	// If the forge sends no file lists at all (empty commits or missing diff info),
+	// we can't tell what changed — assume docs might be affected.
+	hasAnyFiles := false
+	for _, c := range p.Commits {
+		if len(c.Added)+len(c.Modified)+len(c.Removed) > 0 {
+			hasAnyFiles = true
+			break
+		}
+	}
+	if !hasAnyFiles {
+		return true
+	}
+
 	for _, c := range p.Commits {
 		for _, f := range append(append(c.Added, c.Modified...), c.Removed...) {
 			if strings.HasPrefix(f, "docs/") || f == ".abyss.yml" {
@@ -70,13 +83,13 @@ func (h *HookHandler) Forge(w http.ResponseWriter, r *http.Request) {
 	logger.Debug().Msg("forge webhook received")
 
 	if !payload.isOnBranch(h.branch) {
-		logger.Debug().Str("want_branch", h.branch).Msg("webhook skipped: wrong branch")
+		logger.Info().Str("want_branch", h.branch).Msg("webhook skipped: wrong branch")
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	if !payload.touchesDocs() {
-		logger.Debug().Msg("webhook skipped: no docs changes")
+		logger.Info().Msg("webhook skipped: no docs changes")
 		w.WriteHeader(http.StatusOK)
 		return
 	}

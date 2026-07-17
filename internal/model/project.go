@@ -1,17 +1,15 @@
 package model
 
-import (
-	"time"
-
-	"github.com/4thena-io/abyss/internal/constant"
-)
+import "time"
 
 type Project struct {
-	ID          uint            `gorm:"primaryKey;autoIncrement"`
-	Name        string          `gorm:"uniqueIndex"`
-	Description string          `gorm:"not null"`
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Name        string `gorm:"uniqueIndex"`
+	Description string `gorm:"not null"`
 	TeamID      *uint
-	Status      constant.Status
+	Team        *Team `gorm:"foreignKey:TeamID;constraint:OnDelete:SET NULL"`
+	CreatorID   uint
+	Creator     User  `gorm:"foreignKey:CreatorID;constraint:OnDelete:RESTRICT"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

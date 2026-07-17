@@ -39,10 +39,11 @@ type setupRequest struct {
 	DBName     string `json:"db_name"`
 
 	// Forge
-	ForgeType  string `json:"forge_type"`
-	ForgeHost  string `json:"forge_host"`
-	ForgeToken string `json:"forge_token"`
-	ForgeOwner string `json:"forge_owner"`
+	ForgeType   string `json:"forge_type"`
+	ForgeHost   string `json:"forge_host"`
+	ForgeToken  string `json:"forge_token"`
+	ForgeOwner  string `json:"forge_owner"`
+	ForgeBranch string `json:"forge_branch"`
 
 	// OAuth
 	ClientID     string `json:"client_id"`
@@ -123,6 +124,7 @@ forge:
   host: %s
   token: %s
   owner: %s
+  branch: %s
 
 ci:
   type: %s
@@ -140,7 +142,7 @@ logging:
   file: ""
 `,
 		buildDatabaseYAML(r),
-		ys(r.ForgeType), ys(r.ForgeHost), ys(r.ForgeToken), ys(r.ForgeOwner),
+		ys(r.ForgeType), ys(r.ForgeHost), ys(r.ForgeToken), ys(r.ForgeOwner), ys(forgeBranch(r)),
 		ys(r.CIType), ys(r.CIHost), ys(r.CIToken),
 		ys(r.ClientID), ys(r.ClientSecret), ys(r.CallbackURL),
 	)
@@ -175,4 +177,11 @@ func buildDatabaseYAML(r setupRequest) string {
 // ys wraps a value in a double-quoted YAML string, escaping internal quotes.
 func ys(s string) string {
 	return `"` + strings.ReplaceAll(s, `"`, `\"`) + `"`
+}
+
+func forgeBranch(r setupRequest) string {
+	if r.ForgeBranch == "" {
+		return "main"
+	}
+	return r.ForgeBranch
 }

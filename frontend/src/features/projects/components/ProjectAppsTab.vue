@@ -45,7 +45,7 @@ import RefreshButton from '../../../components/ui/RefreshButton.vue';
 import EntityCard from '../../../components/ui/EntityCard.vue';
 import TagGroup from '../../../components/ui/TagGroup.vue';
 
-const props = defineProps<{ projectId: string }>();
+const props = defineProps<{ projectId: number }>();
 
 const apps = ref<App[]>([]);
 const loading = ref(false);

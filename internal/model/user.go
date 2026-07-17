@@ -1,11 +1,13 @@
 package model
 
-import "gorm.io/gorm"
+import "time"
 
 type User struct {
-	gorm.Model
-	ForgeID   int64  `gorm:"uniqueIndex"`
-	Username  string `gorm:"uniqueIndex"`
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	ForgeID   int64   `gorm:"uniqueIndex"`
+	Username  string  `gorm:"uniqueIndex"`
 	Email     string
 	IsAdmin   bool
 	AvatarURL string

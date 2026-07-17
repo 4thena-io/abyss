@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-bg flex items-center justify-center p-4">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
-        <img :src="logo" alt="Abyss" class="h-10 mx-auto mb-4" />
+        <img :src="theme === 'dark' ? logoDark : logoLight" alt="Abyss" class="h-10 mx-auto mb-4" />
         <h1 class="text-2xl font-semibold text-t1">Welcome to Abyss</h1>
         <p class="text-t3 mt-2 text-sm">Sign in with your forge account to continue</p>
       </div>
@@ -33,7 +33,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { ServerIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
-import logo from '../assets/logo-white.svg';
+import logoDark from '../assets/logo-white.svg';
+import logoLight from '../assets/logo-black.svg';
+import { useTheme } from '../composables/useTheme';
+
+const { theme } = useTheme();
 
 const forgeLabel = computed(() => {
   const host = window.location.hostname;

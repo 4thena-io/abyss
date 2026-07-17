@@ -23,14 +23,15 @@
         <TeamOverviewTab v-if="activeTab === 'overview'" :team="team" />
         <TeamProjectsTab v-else-if="activeTab === 'projects'" :team-id="team.id" />
         <TeamMembersTab v-else-if="activeTab === 'members'" :team-id="team.id" />
+        <TeamSettingsTab v-else-if="activeTab === 'settings'" :team="team" @updated="team = $event" />
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { UsersIcon } from '@heroicons/vue/24/outline';
 import type { Team } from '../features/teams/types';
 import Spinner from '../components/ui/Spinner.vue';
@@ -40,18 +41,24 @@ import DetailHeader from '../components/ui/DetailHeader.vue';
 import TeamOverviewTab from '../features/teams/components/TeamOverviewTab.vue';
 import TeamProjectsTab from '../features/teams/components/TeamProjectsTab.vue';
 import TeamMembersTab from '../features/teams/components/TeamMembersTab.vue';
+import TeamSettingsTab from '../features/teams/components/TeamSettingsTab.vue';
 
 const route = useRoute();
+const router = useRouter();
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
   { id: 'projects', label: 'Projects' },
   { id: 'members', label: 'Members' },
+  { id: 'settings', label: 'Settings' },
 ];
 
+const validTabs = tabs.map(t => t.id);
 const team = ref<Team | null>(null);
 const loading = ref(true);
-const activeTab = ref('overview');
+const activeTab = ref(validTabs.includes(route.query.tab as string) ? route.query.tab as string : 'overview');
+
+watch(activeTab, tab => router.replace({ query: { tab } }));
 
 const fetchTeam = async () => {
   try {

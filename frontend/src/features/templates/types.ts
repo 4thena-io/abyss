@@ -5,4 +5,7 @@ export interface Template {
   kind: string;
   language: string;
   repoUrl: string;
+  createdAt: string;
+  creatorId: number;
+  creatorUsername: string;
 }
