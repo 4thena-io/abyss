@@ -41,6 +41,9 @@ go.work
 # Build
 build/
 
+# Graphify
+graphify*
+
 # Abyss local config (copy custom/conf/config.example.yaml to get started)
 custom/*
 !custom/conf/config.example.yaml
