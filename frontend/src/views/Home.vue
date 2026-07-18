@@ -7,9 +7,9 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatsCard 
-        v-for="stat in stats" 
-        :key="stat.label" 
+      <StatsCard
+        v-for="stat in stats"
+        :key="stat.label"
         :label="stat.label"
         :value="stat.value"
         :icon="stat.icon"
@@ -20,7 +20,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Recent Activity -->
-      <ActivityList 
+      <ActivityList
         class="lg:col-span-2"
         title="Recent Activity"
         :items="activityItems"
@@ -37,8 +37,7 @@
             v-for="action in quickActions"
             :key="action.label"
             @click="action.onClick"
-            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left
-                   bg-surface hover:bg-hover transition-colors group"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-surface hover:bg-hover transition-colors group"
           >
             <component :is="action.icon" class="w-5 h-5 text-t3 group-hover:text-t1" />
             <span class="text-t2 group-hover:text-t1 text-sm">{{ action.label }}</span>
@@ -110,21 +109,16 @@
     <!-- Create Project Modal -->
     <Modal :open="showProjectModal" title="New Project" @close="showProjectModal = false">
       <form @submit.prevent="createProject" class="space-y-4">
-        <FormField 
-          v-model="projectForm.name" 
-          label="Name" 
-          required 
-          placeholder="my-project" 
-        />
-        <FormField 
-          v-model="projectForm.description" 
-          label="Description" 
-          type="textarea" 
-          :rows="3" 
-          placeholder="Project description..." 
+        <FormField v-model="projectForm.name" label="Name" required placeholder="my-project" />
+        <FormField
+          v-model="projectForm.description"
+          label="Description"
+          type="textarea"
+          :rows="3"
+          placeholder="Project description..."
         />
         <ErrorAlert v-if="projectError" :message="projectError" />
-        <FormActions 
+        <FormActions
           submit-label="Create Project"
           submitting-label="Creating..."
           :disabled="!projectForm.name"
@@ -137,49 +131,36 @@
     <!-- Create App Modal -->
     <Modal :open="showAppModal" title="New Application" size="lg" @close="showAppModal = false">
       <form @submit.prevent="createApp" class="space-y-4">
-        <FormField 
-          v-model="appForm.name" 
-          label="Name" 
-          required 
-          placeholder="my-awesome-api" 
-        />
-        <Dropdown 
-          v-model="appForm.projectId" 
-          label="Project" 
+        <FormField v-model="appForm.name" label="Name" required placeholder="my-awesome-api" />
+        <Dropdown
+          v-model="appForm.projectId"
+          label="Project"
           variant="form"
           required
           placeholder="Select project"
           :options="projectOptions"
         />
-        <Dropdown 
-          v-model="appForm.templateId" 
-          label="Template" 
+        <Dropdown
+          v-model="appForm.templateId"
+          label="Template"
           variant="form"
           required
           placeholder="Select template"
           :options="templateOptions"
         />
         <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
-          <FormField 
-            :model-value="selectedTemplate.kind" 
-            label="Kind" 
-            disabled
-          />
-          <FormField 
-            :model-value="selectedTemplate.language" 
-            label="Language" 
-            disabled
-          />
+          <FormField :model-value="selectedTemplate.kind" label="Kind" disabled />
+          <FormField :model-value="selectedTemplate.language" label="Language" disabled />
         </div>
-        <FormField 
-          v-model="appForm.description" 
-          label="Description" 
-          type="textarea" 
-          :rows="2" 
-          placeholder="Application description..." 
+        <FormField
+          v-model="appForm.description"
+          label="Description"
+          type="textarea"
+          :rows="2"
+          placeholder="Application description..."
         />
         <ErrorAlert v-if="appError" :message="appError" />
-        <FormActions 
+        <FormActions
           submit-label="Create Application"
           submitting-label="Creating..."
           :disabled="!canCreateApp"
@@ -190,48 +171,53 @@
     </Modal>
 
     <!-- Create Template Modal -->
-    <Modal :open="showTemplateModal" title="Add Template" size="lg" @close="showTemplateModal = false">
+    <Modal
+      :open="showTemplateModal"
+      title="Add Template"
+      size="lg"
+      @close="showTemplateModal = false"
+    >
       <form @submit.prevent="createTemplate" class="space-y-4">
-        <RepositoryPicker 
+        <RepositoryPicker
           v-model="selectedRepo"
           :repos="repoOptions"
           label="Repository"
           required
           @select="onRepoSelect"
         />
-        <FormField 
-          v-model="templateForm.name" 
-          label="Template Name" 
-          required 
-          placeholder="Go API Template" 
+        <FormField
+          v-model="templateForm.name"
+          label="Template Name"
+          required
+          placeholder="Go API Template"
         />
         <div class="grid grid-cols-2 gap-4">
-          <Dropdown 
-            v-model="templateForm.kind" 
-            label="Kind" 
+          <Dropdown
+            v-model="templateForm.kind"
+            label="Kind"
             variant="form"
             required
             placeholder="Select kind"
             :options="kindOptions"
           />
-          <Dropdown 
-            v-model="templateForm.language" 
-            label="Language" 
+          <Dropdown
+            v-model="templateForm.language"
+            label="Language"
             variant="form"
             required
             placeholder="Select language"
             :options="homeLanguageOptions"
           />
         </div>
-        <FormField 
-          v-model="templateForm.description" 
-          label="Description" 
-          type="textarea" 
-          :rows="2" 
-          placeholder="Template description..." 
+        <FormField
+          v-model="templateForm.description"
+          label="Description"
+          type="textarea"
+          :rows="2"
+          placeholder="Template description..."
         />
         <ErrorAlert v-if="templateError" :message="templateError" />
-        <FormActions 
+        <FormActions
           submit-label="Add Template"
           submitting-label="Adding..."
           :disabled="!canCreateTemplate"
@@ -255,7 +241,15 @@ import {
   RocketLaunchIcon,
   Cog6ToothIcon,
 } from '@heroicons/vue/24/outline';
-import { appsApi, projectsApi, templatesApi, repoApi, type CreateAppRequest, type CreateProjectRequest, type CreateTemplateRequest } from '../api';
+import {
+  appsApi,
+  projectsApi,
+  templatesApi,
+  repoApi,
+  type CreateAppRequest,
+  type CreateProjectRequest,
+  type CreateTemplateRequest,
+} from '../api';
 import type { App } from '../features/apps/types';
 import type { Build } from '../features/apps/types';
 import type { Project } from '../features/projects/types';
@@ -291,7 +285,12 @@ const repos = ref<Repo[]>([]);
 const stats = computed(() => [
   { label: 'Projects', value: projects.value.length, icon: FolderIcon, to: '/projects' },
   { label: 'Applications', value: apps.value.length, icon: CubeIcon, to: '/apps' },
-  { label: 'Templates', value: templates.value.length, icon: DocumentDuplicateIcon, to: '/templates' },
+  {
+    label: 'Templates',
+    value: templates.value.length,
+    icon: DocumentDuplicateIcon,
+    to: '/templates',
+  },
   { label: 'Total Builds', value: totalBuilds.value, icon: WrenchScrewdriverIcon, to: '/apps' },
 ]);
 
@@ -299,30 +298,30 @@ const stats = computed(() => [
 const allBuilds = ref<(Build & { appId: number; appName: string })[]>([]);
 const totalBuilds = computed(() => allBuilds.value.length);
 
-const recentBuilds = computed(() => 
-  allBuilds.value
+const recentBuilds = computed(() =>
+  [...allBuilds.value]
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
-    .slice(0, 5)
+    .slice(0, 5),
 );
 
 // Activity (derived from builds) - formatted for ActivityList component
-const activityItems = computed(() => 
-  allBuilds.value
+const activityItems = computed(() =>
+  [...allBuilds.value]
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
     .slice(0, 5)
-    .map(build => ({
+    .map((build) => ({
       id: `${build.appId}-${build.id}`,
       title: build.appName,
       message: `build #${build.number} ${build.status}`,
       time: formatTime(build.startedAt),
       status: build.status,
       to: `/apps/${build.appId}`,
-    }))
+    })),
 );
 
 // Quick actions
 const quickActions = computed(() => [
-  { label: 'Create new project', icon: PlusIcon, onClick: () => showProjectModal.value = true },
+  { label: 'Create new project', icon: PlusIcon, onClick: () => (showProjectModal.value = true) },
   { label: 'Create new application', icon: RocketLaunchIcon, onClick: openAppModal },
   { label: 'Add template', icon: DocumentDuplicateIcon, onClick: openTemplateModal },
   { label: 'Settings', icon: Cog6ToothIcon, onClick: () => router.push('/settings') },
@@ -348,13 +347,9 @@ const appForm = reactive({
   templateId: '' as number | '',
 });
 
-const selectedTemplate = computed(() => 
-  templates.value.find(t => t.id === appForm.templateId)
-);
+const selectedTemplate = computed(() => templates.value.find((t) => t.id === appForm.templateId));
 
-const canCreateApp = computed(() => 
-  appForm.name && appForm.projectId && appForm.templateId
-);
+const canCreateApp = computed(() => appForm.name && appForm.projectId && appForm.templateId);
 
 // Template modal
 const showTemplateModal = ref(false);
@@ -369,21 +364,19 @@ const templateForm = reactive({
 });
 
 // Repos formatted for RepositoryPicker
-const repoOptions = computed(() => 
-  repos.value.map(r => ({ id: r.id, fullName: r.fullName, url: r.url }))
+const repoOptions = computed(() =>
+  repos.value.map((r) => ({ id: r.id, fullName: r.fullName, url: r.url })),
 );
 
-const canCreateTemplate = computed(() => 
-  templateForm.name && templateForm.kind && templateForm.language && selectedRepo.value
+const canCreateTemplate = computed(
+  () => templateForm.name && templateForm.kind && templateForm.language && selectedRepo.value,
 );
 
 // Options for form selects
-const projectOptions = computed(() =>
-  projects.value.map(p => ({ value: p.id, label: p.name }))
-);
+const projectOptions = computed(() => projects.value.map((p) => ({ value: p.id, label: p.name })));
 
 const templateOptions = computed(() =>
-  templates.value.map(t => ({ value: t.id, label: `${t.name} (${t.language})` }))
+  templates.value.map((t) => ({ value: t.id, label: `${t.name} (${t.language})` })),
 );
 
 const kindOptions = [
@@ -424,12 +417,12 @@ const fetchData = async () => {
 const fetchBuilds = async () => {
   loadingActivity.value = true;
   loadingBuilds.value = true;
-  
+
   try {
     const buildsPromises = apps.value.map(async (app) => {
       try {
         const builds = await appsApi.getBuilds(app.id);
-        return builds.map(build => ({
+        return builds.map((build) => ({
           ...build,
           appId: app.id,
           appName: app.name,
@@ -482,8 +475,8 @@ const createProject = async () => {
     projectForm.name = '';
     projectForm.description = '';
     router.push(`/projects/${project.id}`);
-  } catch (e: any) {
-    projectError.value = e.message;
+  } catch (e) {
+    projectError.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     savingProject.value = false;
   }
@@ -513,8 +506,8 @@ const createApp = async () => {
     appForm.projectId = '';
     appForm.templateId = '';
     router.push(`/apps/${app.id}`);
-  } catch (e: any) {
-    appError.value = e.message;
+  } catch (e) {
+    appError.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     savingApp.value = false;
   }
@@ -544,8 +537,8 @@ const createTemplate = async () => {
     templateForm.kind = '';
     templateForm.language = '';
     selectedRepo.value = null;
-  } catch (e: any) {
-    templateError.value = e.message;
+  } catch (e) {
+    templateError.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     savingTemplate.value = false;
   }

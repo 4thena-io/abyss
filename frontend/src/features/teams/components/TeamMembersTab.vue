@@ -29,9 +29,21 @@
       <table class="w-full border-collapse">
         <thead>
           <tr>
-            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Member</th>
-            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Role</th>
-            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Joined</th>
+            <th
+              class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1"
+            >
+              Member
+            </th>
+            <th
+              class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1"
+            >
+              Role
+            </th>
+            <th
+              class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1"
+            >
+              Joined
+            </th>
             <th class="w-24 px-4 py-2.5 border-b border-b1" />
           </tr>
         </thead>
@@ -41,13 +53,24 @@
             :key="member.id"
             class="group hover:bg-surface transition-colors"
           >
-            <td class="px-4 py-3 border-b border-b0 cursor-pointer" @click="router.push(`/users/${member.userId}`)">
+            <td
+              class="px-4 py-3 border-b border-b0 cursor-pointer"
+              @click="router.push(`/users/${member.userId}`)"
+            >
               <div class="flex items-center gap-3">
-                <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="member.username"
-                  class="w-8 h-8 rounded-full object-cover shrink-0" />
-                <div v-else
-                  class="w-8 h-8 rounded-full bg-acc-s border border-acc-b flex items-center justify-center shrink-0">
-                  <span class="text-xs font-semibold text-acc font-mono">{{ member.username.slice(0, 2) }}</span>
+                <img
+                  v-if="member.avatarUrl"
+                  :src="member.avatarUrl"
+                  :alt="member.username"
+                  class="w-8 h-8 rounded-full object-cover shrink-0"
+                />
+                <div
+                  v-else
+                  class="w-8 h-8 rounded-full bg-acc-s border border-acc-b flex items-center justify-center shrink-0"
+                >
+                  <span class="text-xs font-semibold text-acc font-mono">{{
+                    member.username.slice(0, 2)
+                  }}</span>
                 </div>
                 <div>
                   <p class="text-sm font-medium text-t1">{{ member.username }}</p>
@@ -56,8 +79,14 @@
               </div>
             </td>
             <td class="px-4 py-3 border-b border-b0">
-              <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-                :class="member.role === 'owner' ? 'bg-ok-s text-ok' : 'bg-surface border border-b1 text-t2'">
+              <span
+                class="px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="
+                  member.role === 'owner'
+                    ? 'bg-ok-s text-ok'
+                    : 'bg-surface border border-b1 text-t2'
+                "
+              >
                 {{ member.role }}
               </span>
             </td>
@@ -115,16 +144,21 @@
               type="button"
               @click="addForm.role = opt.value"
               class="flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors"
-              :class="addForm.role === opt.value
-                ? 'border-acc bg-acc-s text-t1'
-                : 'border-b1 bg-bg text-t2 hover:border-b2'"
+              :class="
+                addForm.role === opt.value
+                  ? 'border-acc bg-acc-s text-t1'
+                  : 'border-b1 bg-bg text-t2 hover:border-b2'
+              "
             >
               {{ opt.label }}
             </button>
           </div>
         </div>
 
-        <div v-if="addError" class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5">
+        <div
+          v-if="addError"
+          class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5"
+        >
           <ExclamationTriangleIcon class="w-4 h-4 text-fail shrink-0 mt-0.5" />
           <p class="text-fail text-xs">{{ addError }}</p>
         </div>
@@ -203,8 +237,8 @@ const addMember = async () => {
     const member = await teamsApi.addMember(props.teamId, addForm);
     members.value.push(member);
     closeAddModal();
-  } catch (e: any) {
-    addError.value = e.message ?? 'Failed to add member';
+  } catch (e) {
+    addError.value = e instanceof Error ? e.message : 'Failed to add member';
   } finally {
     adding.value = false;
   }
@@ -214,7 +248,7 @@ const removeMember = async (memberId: number) => {
   removing.value = memberId;
   try {
     await teamsApi.removeMember(props.teamId, memberId);
-    members.value = members.value.filter(m => m.id !== memberId);
+    members.value = members.value.filter((m) => m.id !== memberId);
     confirmRemoveId.value = null;
   } catch (e) {
     console.error('Failed to remove member:', e);

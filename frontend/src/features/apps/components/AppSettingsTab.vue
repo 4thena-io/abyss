@@ -15,10 +15,15 @@
           placeholder="No project (standalone)"
           :options="projectOptions"
         />
-        <p class="text-xs text-t3">Reassign this app to a different project, or remove it from any project.</p>
+        <p class="text-xs text-t3">
+          Reassign this app to a different project, or remove it from any project.
+        </p>
       </div>
 
-      <div v-if="saveError" class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5">
+      <div
+        v-if="saveError"
+        class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5"
+      >
         <ExclamationTriangleIcon class="w-4 h-4 text-fail shrink-0 mt-0.5" />
         <p class="text-fail text-xs">{{ saveError }}</p>
       </div>
@@ -29,7 +34,10 @@
           :disabled="saving || !dirty"
           class="px-4 py-2 text-sm font-medium text-white bg-acc hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-opacity flex items-center gap-2"
         >
-          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span
+            v-if="saving"
+            class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+          />
           {{ saved ? 'Saved!' : 'Save changes' }}
         </button>
         <button
@@ -48,7 +56,9 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-t1">Delete this application</p>
-          <p class="text-xs text-t3 mt-0.5">Permanently removes the app, its CI pipeline, and its repository. This cannot be undone.</p>
+          <p class="text-xs text-t3 mt-0.5">
+            Permanently removes the app, its CI pipeline, and its repository. This cannot be undone.
+          </p>
         </div>
         <button
           @click="showDelete = true"
@@ -100,21 +110,24 @@ const saved = ref(false);
 const saveError = ref('');
 const showDelete = ref(false);
 
-const projectOptions = computed(() =>
-  projects.value.map(p => ({ value: p.id, label: p.name }))
+const projectOptions = computed(() => projects.value.map((p) => ({ value: p.id, label: p.name })));
+
+const dirty = computed(
+  () =>
+    form.name !== props.app.name ||
+    form.description !== (props.app.description ?? '') ||
+    form.projectId !== (props.app.projectId || ''),
 );
 
-const dirty = computed(() =>
-  form.name !== props.app.name ||
-  form.description !== (props.app.description ?? '') ||
-  form.projectId !== (props.app.projectId || '')
+watch(
+  () => props.app,
+  (a) => {
+    form.name = a.name;
+    form.description = a.description ?? '';
+    form.projectId = a.projectId || '';
+  },
+  { deep: true },
 );
-
-watch(() => props.app, (a) => {
-  form.name = a.name;
-  form.description = a.description ?? '';
-  form.projectId = a.projectId || '';
-}, { deep: true });
 
 function reset() {
   form.name = props.app.name;
@@ -131,13 +144,13 @@ async function save() {
     const updated = await appsApi.update(props.app.id, {
       name: form.name,
       description: form.description,
-      projectId: form.projectId as number || null,
+      projectId: (form.projectId as number) || null,
     });
     emit('updated', updated);
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
-  } catch (e: any) {
-    saveError.value = e.message ?? 'Failed to save';
+  } catch (e) {
+    saveError.value = e instanceof Error ? e.message : 'Failed to save';
   } finally {
     saving.value = false;
   }

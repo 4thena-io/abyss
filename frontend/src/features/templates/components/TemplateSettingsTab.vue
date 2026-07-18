@@ -8,11 +8,28 @@
       <FormField v-model="form.description" label="Description" type="textarea" :rows="2" />
 
       <div class="grid grid-cols-2 gap-4">
-        <Dropdown v-model="form.kind" label="Kind" variant="form" required placeholder="Select kind" :options="kindOptions" />
-        <Dropdown v-model="form.language" label="Language" variant="form" required placeholder="Select language" :options="languageOptions" />
+        <Dropdown
+          v-model="form.kind"
+          label="Kind"
+          variant="form"
+          required
+          placeholder="Select kind"
+          :options="kindOptions"
+        />
+        <Dropdown
+          v-model="form.language"
+          label="Language"
+          variant="form"
+          required
+          placeholder="Select language"
+          :options="languageOptions"
+        />
       </div>
 
-      <div v-if="saveError" class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5">
+      <div
+        v-if="saveError"
+        class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5"
+      >
         <ExclamationTriangleIcon class="w-4 h-4 text-fail shrink-0 mt-0.5" />
         <p class="text-fail text-xs">{{ saveError }}</p>
       </div>
@@ -23,7 +40,10 @@
           :disabled="saving || !dirty"
           class="px-4 py-2 text-sm font-medium text-white bg-acc hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-opacity flex items-center gap-2"
         >
-          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span
+            v-if="saving"
+            class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+          />
           {{ saved ? 'Saved!' : 'Save changes' }}
         </button>
         <button
@@ -42,7 +62,9 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-t1">Delete this template</p>
-          <p class="text-xs text-t3 mt-0.5">Permanently removes the template. Apps created from it are not affected.</p>
+          <p class="text-xs text-t3 mt-0.5">
+            Permanently removes the template. Apps created from it are not affected.
+          </p>
         </div>
         <button
           @click="showDelete = true"
@@ -111,19 +133,24 @@ const languageOptions = [
   { value: 'csharp', label: 'C#' },
 ];
 
-const dirty = computed(() =>
-  form.name !== props.template.name ||
-  form.description !== (props.template.description ?? '') ||
-  form.kind !== props.template.kind ||
-  form.language !== props.template.language
+const dirty = computed(
+  () =>
+    form.name !== props.template.name ||
+    form.description !== (props.template.description ?? '') ||
+    form.kind !== props.template.kind ||
+    form.language !== props.template.language,
 );
 
-watch(() => props.template, t => {
-  form.name = t.name;
-  form.description = t.description ?? '';
-  form.kind = t.kind;
-  form.language = t.language;
-}, { deep: true });
+watch(
+  () => props.template,
+  (t) => {
+    form.name = t.name;
+    form.description = t.description ?? '';
+    form.kind = t.kind;
+    form.language = t.language;
+  },
+  { deep: true },
+);
 
 function reset() {
   form.name = props.template.name;
@@ -147,8 +174,8 @@ async function save() {
     emit('updated', updated);
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
-  } catch (e: any) {
-    saveError.value = e.message ?? 'Failed to save';
+  } catch (e) {
+    saveError.value = e instanceof Error ? e.message : 'Failed to save';
   } finally {
     saving.value = false;
   }

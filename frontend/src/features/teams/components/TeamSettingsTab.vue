@@ -7,7 +7,10 @@
       <FormField v-model="form.name" label="Name" required />
       <FormField v-model="form.description" label="Description" type="textarea" :rows="2" />
 
-      <div v-if="saveError" class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5">
+      <div
+        v-if="saveError"
+        class="flex items-start gap-2 bg-fail-s border border-fail/30 rounded-lg px-3 py-2.5"
+      >
         <ExclamationTriangleIcon class="w-4 h-4 text-fail shrink-0 mt-0.5" />
         <p class="text-fail text-xs">{{ saveError }}</p>
       </div>
@@ -18,7 +21,10 @@
           :disabled="saving || !dirty"
           class="px-4 py-2 text-sm font-medium text-white bg-acc hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-opacity flex items-center gap-2"
         >
-          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span
+            v-if="saving"
+            class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+          />
           {{ saved ? 'Saved!' : 'Save changes' }}
         </button>
         <button
@@ -37,7 +43,10 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-t1">Delete this team</p>
-          <p class="text-xs text-t3 mt-0.5">Permanently removes the team and all memberships. Projects remain but lose their team association.</p>
+          <p class="text-xs text-t3 mt-0.5">
+            Permanently removes the team and all memberships. Projects remain but lose their team
+            association.
+          </p>
         </div>
         <button
           @click="showDelete = true"
@@ -84,15 +93,18 @@ const saved = ref(false);
 const saveError = ref('');
 const showDelete = ref(false);
 
-const dirty = computed(() =>
-  form.name !== props.team.name ||
-  form.description !== (props.team.description ?? '')
+const dirty = computed(
+  () => form.name !== props.team.name || form.description !== (props.team.description ?? ''),
 );
 
-watch(() => props.team, (t) => {
-  form.name = t.name;
-  form.description = t.description ?? '';
-}, { deep: true });
+watch(
+  () => props.team,
+  (t) => {
+    form.name = t.name;
+    form.description = t.description ?? '';
+  },
+  { deep: true },
+);
 
 function reset() {
   form.name = props.team.name;
@@ -112,8 +124,8 @@ async function save() {
     emit('updated', updated);
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
-  } catch (e: any) {
-    saveError.value = e.message ?? 'Failed to save';
+  } catch (e) {
+    saveError.value = e instanceof Error ? e.message : 'Failed to save';
   } finally {
     saving.value = false;
   }

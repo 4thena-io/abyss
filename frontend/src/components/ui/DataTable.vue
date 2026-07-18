@@ -47,6 +47,7 @@ export interface TableColumn {
 
 defineProps<{
   columns: TableColumn[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic table accepts heterogeneous row shapes; follow-up: type per call site or make DataTable generic over T
   rows: Record<string, any>[];
   rowKey?: string;
 }>();

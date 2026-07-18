@@ -47,12 +47,7 @@
     <!-- Create Team Modal -->
     <Modal :open="showModal" title="New Team" @close="closeModal">
       <form @submit.prevent="createTeam" class="space-y-4">
-        <FormField
-          v-model="form.name"
-          label="Name"
-          required
-          placeholder="my-team"
-        />
+        <FormField v-model="form.name" label="Name" required placeholder="my-team" />
 
         <FormField
           v-model="form.description"
@@ -107,10 +102,12 @@ const form = reactive<CreateTeamRequest>({
 });
 
 const filteredTeams = computed(() => {
-  return teamList.value.filter(team => {
-    return !search.value ||
+  return teamList.value.filter((team) => {
+    return (
+      !search.value ||
       team.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      team.description?.toLowerCase().includes(search.value.toLowerCase());
+      team.description?.toLowerCase().includes(search.value.toLowerCase())
+    );
   });
 });
 
@@ -146,8 +143,8 @@ const createTeam = async () => {
     const team = await teamsApi.create(form);
     teamList.value.push(team);
     closeModal();
-  } catch (e: any) {
-    error.value = e.message;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     saving.value = false;
   }

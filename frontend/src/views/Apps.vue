@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="Applications" :subtitle="`${appList.length} applications across all projects`">
+    <PageHeader
+      title="Applications"
+      :subtitle="`${appList.length} applications across all projects`"
+    >
       <template #actions>
         <Button @click="openModal" variant="secondary">
           <PlusIcon class="w-4 h-4" />
@@ -12,11 +15,7 @@
     <!-- Filters -->
     <div class="flex items-center gap-4">
       <SearchInput v-model="search" placeholder="Filter applications..." />
-      <Dropdown
-        v-model="kindFilter"
-        :options="kindFilterOptions"
-        all-label="All kinds"
-      />
+      <Dropdown v-model="kindFilter" :options="kindFilterOptions" all-label="All kinds" />
       <Dropdown
         v-model="languageFilter"
         :options="languageFilterOptions"
@@ -34,7 +33,11 @@
       v-else-if="filteredApps.length === 0"
       :icon="CubeIcon"
       title="No applications found"
-      :message="search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Create your first application to get started'"
+      :message="
+        search || kindFilter || languageFilter
+          ? 'Try adjusting your filters'
+          : 'Create your first application to get started'
+      "
     />
 
     <!-- App Grid -->
@@ -66,9 +69,11 @@
               type="button"
               @click="source = 'template'"
               class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors"
-              :class="source === 'template'
-                ? 'border-acc bg-acc-s text-t1'
-                : 'border-b1 bg-bg text-t2 hover:border-b2'"
+              :class="
+                source === 'template'
+                  ? 'border-acc bg-acc-s text-t1'
+                  : 'border-b1 bg-bg text-t2 hover:border-b2'
+              "
             >
               <DocumentDuplicateIcon class="w-4 h-4 shrink-0" />
               <div class="text-left">
@@ -80,9 +85,11 @@
               type="button"
               @click="source = 'repo'"
               class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors"
-              :class="source === 'repo'
-                ? 'border-acc bg-acc-s text-t1'
-                : 'border-b1 bg-bg text-t2 hover:border-b2'"
+              :class="
+                source === 'repo'
+                  ? 'border-acc bg-acc-s text-t1'
+                  : 'border-b1 bg-bg text-t2 hover:border-b2'
+              "
             >
               <CodeBracketIcon class="w-4 h-4 shrink-0" />
               <div class="text-left">
@@ -131,16 +138,8 @@
           />
 
           <div v-if="selectedTemplate" class="grid grid-cols-2 gap-4">
-            <FormField
-              :model-value="selectedTemplate.kind"
-              label="Kind"
-              disabled
-            />
-            <FormField
-              :model-value="selectedTemplate.language"
-              label="Language"
-              disabled
-            />
+            <FormField :model-value="selectedTemplate.kind" label="Kind" disabled />
+            <FormField :model-value="selectedTemplate.language" label="Language" disabled />
           </div>
         </template>
 
@@ -169,22 +168,32 @@
         />
 
         <!-- Summary info box -->
-        <div v-if="source === 'template' && selectedTemplate" class="bg-acc-s border border-acc-b rounded-lg p-3">
+        <div
+          v-if="source === 'template' && selectedTemplate"
+          class="bg-acc-s border border-acc-b rounded-lg p-3"
+        >
           <p class="text-sm text-acc">
             Creates a new repository from <strong>{{ selectedTemplate.name }}</strong>
             <template v-if="selectedProject">
               and adds it to <strong>{{ selectedProject.name }}</strong>
-              <template v-if="selectedTeam"> under <strong>{{ selectedTeam.name }}</strong></template>
-            </template>.
+              <template v-if="selectedTeam">
+                under <strong>{{ selectedTeam.name }}</strong></template
+              > </template
+            >.
           </p>
         </div>
-        <div v-else-if="source === 'repo' && selectedRepo" class="bg-acc-s border border-acc-b rounded-lg p-3">
+        <div
+          v-else-if="source === 'repo' && selectedRepo"
+          class="bg-acc-s border border-acc-b rounded-lg p-3"
+        >
           <p class="text-sm text-acc">
             Links <strong>{{ selectedRepo.fullName }}</strong>
             <template v-if="selectedProject">
               to <strong>{{ selectedProject.name }}</strong>
-              <template v-if="selectedTeam"> under <strong>{{ selectedTeam.name }}</strong></template>
-            </template>.
+              <template v-if="selectedTeam">
+                under <strong>{{ selectedTeam.name }}</strong></template
+              > </template
+            >.
           </p>
         </div>
 
@@ -254,7 +263,7 @@ const repos = ref<Repo[]>([]);
 // Form state
 const teamFilter = ref<number | ''>('');
 watch(teamFilter, () => {
-  const project = projects.value.find(p => p.id === form.projectId);
+  const project = projects.value.find((p) => p.id === form.projectId);
   if (project && teamFilter.value && project.teamId !== teamFilter.value) {
     form.projectId = '';
   }
@@ -271,8 +280,9 @@ const form = reactive({
 
 // Computed
 const filteredApps = computed(() => {
-  return appList.value.filter(app => {
-    const matchesSearch = !search.value ||
+  return appList.value.filter((app) => {
+    const matchesSearch =
+      !search.value ||
       app.name.toLowerCase().includes(search.value.toLowerCase()) ||
       app.description?.toLowerCase().includes(search.value.toLowerCase());
     const matchesKind = !kindFilter.value || app.kind === kindFilter.value;
@@ -282,36 +292,26 @@ const filteredApps = computed(() => {
 });
 
 const uniqueKinds = computed(() => {
-  return [...new Set(appList.value.map(a => a.kind).filter(Boolean))].sort();
+  return [...new Set(appList.value.map((a) => a.kind).filter(Boolean))].sort();
 });
 
 const uniqueLanguages = computed(() => {
-  return [...new Set(appList.value.map(a => a.language).filter(Boolean))].sort();
+  return [...new Set(appList.value.map((a) => a.language).filter(Boolean))].sort();
 });
 
-const kindFilterOptions = computed(() =>
-  uniqueKinds.value.map(k => ({ value: k, label: k }))
-);
+const kindFilterOptions = computed(() => uniqueKinds.value.map((k) => ({ value: k, label: k })));
 
 const languageFilterOptions = computed(() =>
-  uniqueLanguages.value.map(l => ({ value: l, label: l }))
+  uniqueLanguages.value.map((l) => ({ value: l, label: l })),
 );
 
-const selectedTeam = computed(() =>
-  teams.value.find(t => t.id === teamFilter.value)
-);
+const selectedTeam = computed(() => teams.value.find((t) => t.id === teamFilter.value));
 
-const selectedProject = computed(() =>
-  projects.value.find(p => p.id === form.projectId)
-);
+const selectedProject = computed(() => projects.value.find((p) => p.id === form.projectId));
 
-const selectedTemplate = computed(() =>
-  templates.value.find(t => t.id === form.templateId)
-);
+const selectedTemplate = computed(() => templates.value.find((t) => t.id === form.templateId));
 
-const selectedRepo = computed(() =>
-  repos.value.find(r => r.id === form.repoId)
-);
+const selectedRepo = computed(() => repos.value.find((r) => r.id === form.repoId));
 
 const canCreate = computed(() => {
   if (!form.name.trim()) return false;
@@ -319,24 +319,20 @@ const canCreate = computed(() => {
   return form.repoId !== '';
 });
 
-const teamOptions = computed(() =>
-  teams.value.map(t => ({ value: t.id, label: t.name }))
-);
+const teamOptions = computed(() => teams.value.map((t) => ({ value: t.id, label: t.name })));
 
 const projectOptions = computed(() => {
   const filtered = teamFilter.value
-    ? projects.value.filter(p => p.teamId === teamFilter.value)
+    ? projects.value.filter((p) => p.teamId === teamFilter.value)
     : projects.value;
-  return filtered.map(p => ({ value: p.id, label: p.name }));
+  return filtered.map((p) => ({ value: p.id, label: p.name }));
 });
 
 const templateOptions = computed(() =>
-  templates.value.map(t => ({ value: t.id, label: `${t.name} (${t.language})` }))
+  templates.value.map((t) => ({ value: t.id, label: `${t.name} (${t.language})` })),
 );
 
-const repoOptions = computed(() =>
-  repos.value.map(r => ({ value: r.id, label: r.fullName }))
-);
+const repoOptions = computed(() => repos.value.map((r) => ({ value: r.id, label: r.fullName })));
 
 // Methods
 const resetForm = () => {
@@ -398,7 +394,7 @@ const createApp = async () => {
       request = {
         name: form.name,
         description: form.description,
-        projectId: form.projectId as number || undefined,
+        projectId: (form.projectId as number) || undefined,
         templateId: form.templateId as number,
         kind: selectedTemplate.value.kind,
         language: selectedTemplate.value.language,
@@ -407,7 +403,7 @@ const createApp = async () => {
       request = {
         name: form.name,
         description: form.description,
-        projectId: form.projectId as number || undefined,
+        projectId: (form.projectId as number) || undefined,
         repoId: form.repoId as number,
         kind: form.kind,
         language: form.language,
@@ -417,8 +413,8 @@ const createApp = async () => {
     const app = await appsApi.create(request);
     appList.value.push(app);
     closeModal();
-  } catch (e: any) {
-    error.value = e.message;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     saving.value = false;
   }

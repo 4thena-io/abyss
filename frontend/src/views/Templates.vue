@@ -13,7 +13,11 @@
     <div class="flex items-center gap-4">
       <SearchInput v-model="search" placeholder="Filter templates..." />
       <Dropdown v-model="kindFilter" :options="kindFilterOptions" all-label="All kinds" />
-      <Dropdown v-model="languageFilter" :options="languageFilterOptions" all-label="All languages" />
+      <Dropdown
+        v-model="languageFilter"
+        :options="languageFilterOptions"
+        all-label="All languages"
+      />
     </div>
 
     <!-- Loading -->
@@ -26,7 +30,11 @@
       v-else-if="filteredTemplates.length === 0"
       :icon="DocumentDuplicateIcon"
       title="No templates found"
-      :message="search || kindFilter || languageFilter ? 'Try adjusting your filters' : 'Add your first template to get started'"
+      :message="
+        search || kindFilter || languageFilter
+          ? 'Try adjusting your filters'
+          : 'Add your first template to get started'
+      "
     />
 
     <!-- Template Grid -->
@@ -57,7 +65,11 @@
               type="button"
               @click="source = 'repo'"
               class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors"
-              :class="source === 'repo' ? 'border-acc bg-acc-s text-t1' : 'border-b1 bg-bg text-t2 hover:border-b2'"
+              :class="
+                source === 'repo'
+                  ? 'border-acc bg-acc-s text-t1'
+                  : 'border-b1 bg-bg text-t2 hover:border-b2'
+              "
             >
               <CodeBracketIcon class="w-4 h-4 shrink-0" />
               <div class="text-left">
@@ -69,7 +81,11 @@
               type="button"
               @click="source = 'blank'"
               class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors"
-              :class="source === 'blank' ? 'border-acc bg-acc-s text-t1' : 'border-b1 bg-bg text-t2 hover:border-b2'"
+              :class="
+                source === 'blank'
+                  ? 'border-acc bg-acc-s text-t1'
+                  : 'border-b1 bg-bg text-t2 hover:border-b2'
+              "
             >
               <DocumentPlusIcon class="w-4 h-4 shrink-0" />
               <div class="text-left">
@@ -81,11 +97,31 @@
         </div>
 
         <FormField v-model="form.name" label="Name" required placeholder="go-api-template" />
-        <FormField v-model="form.description" label="Description" type="textarea" :rows="2" placeholder="Standard Go REST API..." />
+        <FormField
+          v-model="form.description"
+          label="Description"
+          type="textarea"
+          :rows="2"
+          placeholder="Standard Go REST API..."
+        />
 
         <div class="grid grid-cols-2 gap-4">
-          <Dropdown v-model="form.kind" label="Kind" variant="form" required placeholder="Select kind" :options="kindOptions" />
-          <Dropdown v-model="form.language" label="Language" variant="form" required placeholder="Select language" :options="languageOptions" />
+          <Dropdown
+            v-model="form.kind"
+            label="Kind"
+            variant="form"
+            required
+            placeholder="Select kind"
+            :options="kindOptions"
+          />
+          <Dropdown
+            v-model="form.language"
+            label="Language"
+            variant="form"
+            required
+            placeholder="Select language"
+            :options="languageOptions"
+          />
         </div>
 
         <!-- Repo picker — only for "repo" source -->
@@ -100,25 +136,43 @@
                 @focus="showRepoDropdown = true"
                 class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
               />
-              <div v-if="showRepoDropdown && filteredRepos.length > 0"
-                class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg max-h-48 overflow-y-auto shadow-lg">
-                <button v-for="repo in filteredRepos" :key="repo.id" type="button" @click="selectRepo(repo)"
-                  class="w-full px-4 py-2.5 text-left hover:bg-panel transition-colors text-t1 text-sm">
+              <div
+                v-if="showRepoDropdown && filteredRepos.length > 0"
+                class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg max-h-48 overflow-y-auto shadow-lg"
+              >
+                <button
+                  v-for="repo in filteredRepos"
+                  :key="repo.id"
+                  type="button"
+                  @click="selectRepo(repo)"
+                  class="w-full px-4 py-2.5 text-left hover:bg-panel transition-colors text-t1 text-sm"
+                >
                   {{ repo.fullName }}
                 </button>
               </div>
-              <div v-if="showRepoDropdown && repoSearch && filteredRepos.length === 0 && !loadingRepos"
-                class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg p-4 text-center">
+              <div
+                v-if="showRepoDropdown && repoSearch && filteredRepos.length === 0 && !loadingRepos"
+                class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg p-4 text-center"
+              >
                 <p class="text-t3 text-sm">No repositories found</p>
               </div>
-              <div v-if="loadingRepos"
-                class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg p-4 text-center">
+              <div
+                v-if="loadingRepos"
+                class="absolute z-10 w-full mt-1 bg-bg border border-b1 rounded-lg p-4 text-center"
+              >
                 <Spinner size="sm" class="mx-auto" />
               </div>
             </div>
-            <div v-if="selectedRepo" class="mt-2 p-3 bg-bg border border-b1 rounded-lg flex items-center justify-between">
+            <div
+              v-if="selectedRepo"
+              class="mt-2 p-3 bg-bg border border-b1 rounded-lg flex items-center justify-between"
+            >
               <p class="text-t1 text-sm font-mono">{{ selectedRepo.fullName }}</p>
-              <button type="button" @click="clearRepo" class="text-t3 hover:text-t1 transition-colors">
+              <button
+                type="button"
+                @click="clearRepo"
+                class="text-t3 hover:text-t1 transition-colors"
+              >
                 <XMarkIcon class="w-4 h-4" />
               </button>
             </div>
@@ -126,10 +180,14 @@
         </template>
 
         <!-- Blank info -->
-        <div v-else class="flex items-start gap-2 bg-acc-s border border-acc-b rounded-lg px-3 py-2.5">
+        <div
+          v-else
+          class="flex items-start gap-2 bg-acc-s border border-acc-b rounded-lg px-3 py-2.5"
+        >
           <InformationCircleIcon class="w-4 h-4 text-acc shrink-0 mt-0.5" />
           <p class="text-acc text-xs">
-            A new empty repository named <strong>{{ form.name || '…' }}</strong> will be created in the forge and registered as a template.
+            A new empty repository named <strong>{{ form.name || '…' }}</strong> will be created in
+            the forge and registered as a template.
           </p>
         </div>
 
@@ -194,20 +252,29 @@ const selectedRepo = ref<Repo | null>(null);
 const form = reactive({ name: '', description: '', kind: '', language: '' });
 
 const filteredTemplates = computed(() =>
-  templateList.value.filter(t => {
-    const matchesSearch = !search.value ||
+  templateList.value.filter((t) => {
+    const matchesSearch =
+      !search.value ||
       t.name.toLowerCase().includes(search.value.toLowerCase()) ||
       t.description?.toLowerCase().includes(search.value.toLowerCase());
-    return matchesSearch &&
+    return (
+      matchesSearch &&
       (!kindFilter.value || t.kind === kindFilter.value) &&
-      (!languageFilter.value || t.language === languageFilter.value);
-  })
+      (!languageFilter.value || t.language === languageFilter.value)
+    );
+  }),
 );
 
-const uniqueKinds = computed(() => [...new Set(templateList.value.map(t => t.kind).filter(Boolean))].sort());
-const uniqueLanguages = computed(() => [...new Set(templateList.value.map(t => t.language).filter(Boolean))].sort());
-const kindFilterOptions = computed(() => uniqueKinds.value.map(k => ({ value: k, label: k })));
-const languageFilterOptions = computed(() => uniqueLanguages.value.map(l => ({ value: l, label: l })));
+const uniqueKinds = computed(() =>
+  [...new Set(templateList.value.map((t) => t.kind).filter(Boolean))].sort(),
+);
+const uniqueLanguages = computed(() =>
+  [...new Set(templateList.value.map((t) => t.language).filter(Boolean))].sort(),
+);
+const kindFilterOptions = computed(() => uniqueKinds.value.map((k) => ({ value: k, label: k })));
+const languageFilterOptions = computed(() =>
+  uniqueLanguages.value.map((l) => ({ value: l, label: l })),
+);
 
 const canCreate = computed(() => {
   if (!form.name || !form.kind || !form.language) return false;
@@ -236,9 +303,9 @@ const languageOptions = [
 
 const filteredRepos = computed(() => {
   if (!repoSearch.value) return repos.value.slice(0, 10);
-  return repos.value.filter(r =>
-    r.fullName.toLowerCase().includes(repoSearch.value.toLowerCase())
-  ).slice(0, 10);
+  return repos.value
+    .filter((r) => r.fullName.toLowerCase().includes(repoSearch.value.toLowerCase()))
+    .slice(0, 10);
 });
 
 function resetForm() {
@@ -307,8 +374,8 @@ async function createTemplate() {
     const template = await templatesApi.create(req);
     templateList.value.push(template);
     closeModal();
-  } catch (e: any) {
-    error.value = e.message;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     saving.value = false;
   }

@@ -20,7 +20,7 @@
     </div>
 
     <!-- Empty State -->
-    <EmptyState 
+    <EmptyState
       v-else-if="filteredProjects.length === 0"
       :icon="FolderIcon"
       title="No projects found"
@@ -29,8 +29,8 @@
 
     <!-- Project Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <EntityCard 
-        v-for="project in filteredProjects" 
+      <EntityCard
+        v-for="project in filteredProjects"
         :key="project.id"
         :icon="FolderIcon"
         :title="project.name"
@@ -42,12 +42,7 @@
     <!-- Create Project Modal -->
     <Modal :open="showModal" title="New Project" @close="closeModal">
       <form @submit.prevent="createProject" class="space-y-4">
-        <FormField 
-          v-model="form.name" 
-          label="Name" 
-          required 
-          placeholder="my-project" 
-        />
+        <FormField v-model="form.name" label="Name" required placeholder="my-project" />
 
         <FormField
           v-model="form.description"
@@ -67,7 +62,7 @@
 
         <ErrorAlert v-if="error" :message="error" />
 
-        <FormActions 
+        <FormActions
           submit-label="Create Project"
           submitting-label="Creating..."
           :disabled="!canCreate"
@@ -81,10 +76,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
-import {
-  PlusIcon,
-  FolderIcon
-} from '@heroicons/vue/24/outline';
+import { PlusIcon, FolderIcon } from '@heroicons/vue/24/outline';
 import type { Project } from '../features/projects/types';
 import type { Team } from '../features/teams/types';
 import { projectsApi, teamsApi, type CreateProjectRequest } from '../api';
@@ -120,19 +112,19 @@ const form = reactive<CreateProjectRequest>({
 
 // Computed
 const filteredProjects = computed(() => {
-  return projectList.value.filter(project => {
-    return !search.value ||
+  return projectList.value.filter((project) => {
+    return (
+      !search.value ||
       project.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      project.description?.toLowerCase().includes(search.value.toLowerCase());
+      project.description?.toLowerCase().includes(search.value.toLowerCase())
+    );
   });
 });
 
 const canCreate = computed(() => form.name.trim() !== '');
 
 // Methods
-const teamOptions = computed(() =>
-  teams.value.map(t => ({ value: t.id, label: t.name }))
-);
+const teamOptions = computed(() => teams.value.map((t) => ({ value: t.id, label: t.name })));
 
 const resetForm = () => {
   form.name = '';
@@ -174,8 +166,8 @@ const createProject = async () => {
     const project = await projectsApi.create(form);
     projectList.value.push(project);
     closeModal();
-  } catch (e: any) {
-    error.value = e.message;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'An error occurred';
   } finally {
     saving.value = false;
   }
