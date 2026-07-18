@@ -16,16 +16,38 @@ import (
 type SetupHandler struct {
 	configPath string
 	configured bool
+	defaults   *config.Config
 	restartCh  chan<- struct{}
 }
 
-func NewSetupHandler(configPath string, configured bool, restartCh chan<- struct{}) *SetupHandler {
-	return &SetupHandler{configPath: configPath, configured: configured, restartCh: restartCh}
+func NewSetupHandler(configPath string, configured bool, defaults *config.Config, restartCh chan<- struct{}) *SetupHandler {
+	return &SetupHandler{configPath: configPath, configured: configured, defaults: defaults, restartCh: restartCh}
 }
 
+// Status reports whether the instance is configured and, while it isn't,
+// echoes back the non-secret values already set via env vars/config file so
+// the setup wizard can pre-fill them instead of showing blank fields.
 func (h *SetupHandler) Status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"configured": h.configured})
+
+	res := map[string]any{"configured": h.configured}
+	if !h.configured && h.defaults != nil {
+		res["defaults"] = map[string]string{
+			"db_type":     h.defaults.Database.Type,
+			"db_path":     h.defaults.Database.Path,
+			"db_host":     h.defaults.Database.Host,
+			"db_port":     h.defaults.Database.Port,
+			"db_user":     h.defaults.Database.User,
+			"db_name":     h.defaults.Database.Name,
+			"forge_type":  h.defaults.Forge.Type,
+			"forge_host":  h.defaults.Forge.Host,
+			"forge_owner": h.defaults.Forge.Owner,
+			"ci_type":     h.defaults.CI.Type,
+			"ci_host":     h.defaults.CI.Host,
+			"client_id":   h.defaults.Auth.ClientID,
+		}
+	}
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 type setupRequest struct {
@@ -103,7 +125,7 @@ func (h *SetupHandler) Configure(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "restarting"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"message": "restarting"})
 
 	// Trigger restart after the response has been flushed.
 	go func() {

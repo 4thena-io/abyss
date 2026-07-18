@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-bg flex items-center justify-center p-4">
     <div class="w-full max-w-lg">
-
       <!-- Header -->
       <div class="text-center mb-8">
         <img :src="theme === 'dark' ? logoDark : logoLight" alt="Abyss" class="h-10 mx-auto mb-4" />
@@ -24,13 +23,16 @@
               {{ label }}
             </span>
           </div>
-          <div v-if="i < steps.length - 1" class="flex-1 h-px max-w-12" :class="i < step ? 'bg-acc' : 'bg-b1'" />
+          <div
+            v-if="i < steps.length - 1"
+            class="flex-1 h-px max-w-12"
+            :class="i < step ? 'bg-acc' : 'bg-b1'"
+          />
         </template>
       </div>
 
       <!-- Card -->
       <div class="bg-panel border border-b1 rounded-lg p-6 space-y-5">
-
         <!-- Step 0: Database -->
         <template v-if="step === 0">
           <div>
@@ -47,9 +49,11 @@
                 type="button"
                 @click="form.db_type = opt.value"
                 class="flex items-center justify-center px-4 py-3 rounded-lg border text-sm font-medium transition-colors"
-                :class="form.db_type === opt.value
-                  ? 'border-acc bg-acc-s text-t1'
-                  : 'border-b1 bg-bg text-t2 hover:border-b2'"
+                :class="
+                  form.db_type === opt.value
+                    ? 'border-acc bg-acc-s text-t1'
+                    : 'border-b1 bg-bg text-t2 hover:border-b2'
+                "
               >
                 {{ opt.label }}
               </button>
@@ -66,7 +70,9 @@
                 placeholder="./abyss.db"
                 class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
               />
-              <p class="text-xs text-t3 mt-1">Relative to the working directory where Abyss runs.</p>
+              <p class="text-xs text-t3 mt-1">
+                Relative to the working directory where Abyss runs.
+              </p>
             </div>
           </template>
 
@@ -140,9 +146,11 @@
                 type="button"
                 @click="form.forge_type = opt.value"
                 class="flex items-center justify-center px-4 py-3 rounded-lg border text-sm font-medium transition-colors"
-                :class="form.forge_type === opt.value
-                  ? 'border-acc bg-acc-s text-t1'
-                  : 'border-b1 bg-bg text-t2 hover:border-b2'"
+                :class="
+                  form.forge_type === opt.value
+                    ? 'border-acc bg-acc-s text-t1'
+                    : 'border-b1 bg-bg text-t2 hover:border-b2'
+                "
               >
                 {{ opt.label }}
               </button>
@@ -173,8 +181,14 @@
           <div class="bg-bg border border-b1 rounded-lg p-4 space-y-3">
             <p class="text-sm font-medium text-t2">Required token permissions</p>
             <div class="space-y-2">
-              <div v-for="perm in tokenPermissions" :key="perm.scope" class="flex items-start gap-2.5">
-                <div class="w-5 h-5 rounded bg-ok-s flex items-center justify-center shrink-0 mt-0.5">
+              <div
+                v-for="perm in tokenPermissions"
+                :key="perm.scope"
+                class="flex items-start gap-2.5"
+              >
+                <div
+                  class="w-5 h-5 rounded bg-ok-s flex items-center justify-center shrink-0 mt-0.5"
+                >
                   <CheckIcon class="w-3 h-3 text-ok" />
                 </div>
                 <div>
@@ -199,7 +213,9 @@
               placeholder="my-org"
               class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
             />
-            <p class="text-xs text-t3 mt-1">The organization or user that owns repositories created by Abyss.</p>
+            <p class="text-xs text-t3 mt-1">
+              The organization or user that owns repositories created by Abyss.
+            </p>
           </div>
 
           <div>
@@ -210,7 +226,10 @@
               placeholder="main"
               class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
             />
-            <p class="text-xs text-t3 mt-1">Branch used for cloning, pushing, and webhook filtering. Defaults to <code class="text-t2">main</code>.</p>
+            <p class="text-xs text-t3 mt-1">
+              Branch used for cloning, pushing, and webhook filtering. Defaults to
+              <code class="text-t2">main</code>.
+            </p>
           </div>
         </template>
 
@@ -218,13 +237,18 @@
         <template v-if="step === 2">
           <div>
             <h2 class="text-lg font-medium text-t1">OAuth application</h2>
-            <p class="text-t3 text-sm mt-1">Create an OAuth app in your forge and paste the credentials here.</p>
+            <p class="text-t3 text-sm mt-1">
+              Create an OAuth app in your forge and paste the credentials here.
+            </p>
           </div>
 
           <div class="bg-bg border border-b1 rounded-lg p-4 text-sm space-y-2">
             <p class="text-t2 font-medium">How to create the OAuth app:</p>
             <ol class="list-decimal list-inside text-t3 space-y-1">
-              <li>Go to <span class="text-t2">{{ form.forge_host || 'your forge' }}</span> → Settings → Applications</li>
+              <li>
+                Go to <span class="text-t2">{{ form.forge_host || 'your forge' }}</span> → Settings
+                → Applications
+              </li>
               <li>Click <span class="text-t2">"Manage OAuth2 Applications"</span></li>
               <li>Create a new app and set the callback URL below</li>
             </ol>
@@ -288,9 +312,11 @@
                 type="button"
                 @click="form.ci_type = opt.value"
                 class="flex items-center justify-center px-4 py-3 rounded-lg border text-sm font-medium transition-colors"
-                :class="form.ci_type === opt.value
-                  ? 'border-acc bg-acc-s text-t1'
-                  : 'border-b1 bg-bg text-t2 hover:border-b2'"
+                :class="
+                  form.ci_type === opt.value
+                    ? 'border-acc bg-acc-s text-t1'
+                    : 'border-b1 bg-bg text-t2 hover:border-b2'
+                "
               >
                 {{ opt.label }}
               </button>
@@ -328,12 +354,16 @@
         <template v-if="step === 4">
           <div class="text-center py-6">
             <template v-if="!restartReady">
-              <div class="w-12 h-12 border-2 border-acc/30 border-t-acc rounded-full animate-spin mx-auto mb-4" />
+              <div
+                class="w-12 h-12 border-2 border-acc/30 border-t-acc rounded-full animate-spin mx-auto mb-4"
+              />
               <h2 class="text-lg font-medium text-t1">Restarting server</h2>
               <p class="text-t3 text-sm mt-2">Applying the new configuration…</p>
             </template>
             <template v-else>
-              <div class="w-14 h-14 rounded-full bg-ok-s border border-ok/30 flex items-center justify-center mx-auto mb-4">
+              <div
+                class="w-14 h-14 rounded-full bg-ok-s border border-ok/30 flex items-center justify-center mx-auto mb-4"
+              >
                 <CheckIcon class="w-7 h-7 text-ok" />
               </div>
               <h2 class="text-lg font-medium text-t1">All set!</h2>
@@ -343,7 +373,10 @@
         </template>
 
         <!-- Error -->
-        <div v-if="error" class="flex items-start gap-3 bg-fail-s border border-fail/30 rounded-lg px-4 py-3">
+        <div
+          v-if="error"
+          class="flex items-start gap-3 bg-fail-s border border-fail/30 rounded-lg px-4 py-3"
+        >
           <ExclamationTriangleIcon class="w-5 h-5 text-fail shrink-0 mt-0.5" />
           <p class="text-fail text-sm">{{ error }}</p>
         </div>
@@ -364,21 +397,22 @@
             type="button"
             @click="advance"
             :disabled="!canAdvance || saving"
-            class="px-5 py-2.5 bg-acc hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed
-                   text-white text-sm font-medium rounded-lg transition-opacity flex items-center gap-2"
+            class="px-5 py-2.5 bg-acc hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-opacity flex items-center gap-2"
           >
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span
+              v-if="saving"
+              class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+            />
             {{ step === 3 ? 'Save configuration' : 'Next' }}
           </button>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/solid';
 import logoDark from '../assets/logo-white.svg';
 import logoLight from '../assets/logo-black.svg';
@@ -422,59 +456,96 @@ const form = reactive({
   ci_token: '',
 });
 
+onMounted(async () => {
+  try {
+    const status = await setupApi.status();
+    const d = status.defaults;
+    if (!d) return;
+    if (d.db_type) form.db_type = d.db_type;
+    if (d.db_path) form.db_path = d.db_path;
+    if (d.db_host) form.db_host = d.db_host;
+    if (d.db_port) form.db_port = d.db_port;
+    if (d.db_user) form.db_user = d.db_user;
+    if (d.db_name) form.db_name = d.db_name;
+    if (d.forge_type) form.forge_type = d.forge_type;
+    if (d.forge_host) form.forge_host = d.forge_host;
+    if (d.forge_owner) form.forge_owner = d.forge_owner;
+    if (d.ci_type) form.ci_type = d.ci_type;
+    if (d.ci_host) form.ci_host = d.ci_host;
+    if (d.client_id) form.client_id = d.client_id;
+  } catch {
+    // Setup page still works with blank fields if this fails.
+  }
+});
+
 const dbOptions = [
-  { value: 'sqlite',   label: 'SQLite' },
+  { value: 'sqlite', label: 'SQLite' },
   { value: 'postgres', label: 'PostgreSQL' },
-  { value: 'mysql',    label: 'MySQL' },
+  { value: 'mysql', label: 'MySQL' },
 ];
 
 const forgeOptions = [
-  { value: 'gitea',   label: 'Gitea' },
+  { value: 'gitea', label: 'Gitea' },
   { value: 'forgejo', label: 'Forgejo' },
 ];
 
 const ciOptions = [
-  { value: 'gitea-actions',  label: 'Gitea Actions' },
-  { value: 'woodpecker',     label: 'Woodpecker CI' },
-  { value: 'drone',          label: 'Drone CI' },
+  { value: 'gitea-actions', label: 'Gitea Actions' },
+  { value: 'woodpecker', label: 'Woodpecker CI' },
+  { value: 'drone', label: 'Drone CI' },
   { value: 'github-actions', label: 'GitHub Actions' },
-  { value: 'gitlab-ci',      label: 'GitLab CI' },
+  { value: 'gitlab-ci', label: 'GitLab CI' },
 ];
 
 const tokenPermissions = computed(() => {
   const isGitea = form.forge_type === 'gitea' || form.forge_type === 'forgejo';
   if (isGitea) {
     return [
-      { scope: 'Repository', access: 'Read & Write', reason: 'Create and delete repositories, manage webhooks' },
-      { scope: 'Organization', access: 'Read', reason: 'Verify that users belong to the owner organization' },
+      {
+        scope: 'Repository',
+        access: 'Read & Write',
+        reason: 'Create and delete repositories, manage webhooks',
+      },
+      {
+        scope: 'Organization',
+        access: 'Read',
+        reason: 'Verify that users belong to the owner organization',
+      },
       { scope: 'User', access: 'Read', reason: 'Identify and authenticate the bot account' },
     ];
   }
   return [
-    { scope: 'repo', access: 'Full control', reason: 'Create and delete repositories, manage webhooks' },
+    {
+      scope: 'repo',
+      access: 'Full control',
+      reason: 'Create and delete repositories, manage webhooks',
+    },
     { scope: 'read:org', access: 'Read', reason: 'Verify organization membership' },
     { scope: 'read:user', access: 'Read', reason: 'Identify and authenticate the bot account' },
   ];
 });
 
 const nativeCiType: Record<string, string> = {
-  gitea:   'gitea-actions',
+  gitea: 'gitea-actions',
   forgejo: 'forgejo-actions',
-  github:  'github-actions',
-  gitlab:  'gitlab-ci',
+  github: 'github-actions',
+  gitlab: 'gitlab-ci',
 };
 
-watch(() => form.forge_type, (type) => {
-  const native = nativeCiType[type];
-  if (native) form.ci_type = native;
-});
-
-const ciNeedsCredentials = computed(() =>
-  form.ci_type === 'woodpecker' || form.ci_type === 'drone'
+watch(
+  () => form.forge_type,
+  (type) => {
+    const native = nativeCiType[type];
+    if (native) form.ci_type = native;
+  },
 );
 
-const ciProviderLabel = computed(() =>
-  ciOptions.find(o => o.value === form.ci_type)?.label ?? form.ci_type
+const ciNeedsCredentials = computed(
+  () => form.ci_type === 'woodpecker' || form.ci_type === 'drone',
+);
+
+const ciProviderLabel = computed(
+  () => ciOptions.find((o) => o.value === form.ci_type)?.label ?? form.ci_type,
 );
 
 const canAdvance = computed(() => {
@@ -517,7 +588,7 @@ async function advance() {
     step.value = 4;
     await waitForRestart();
     restartReady.value = true;
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
     window.location.href = '/login';
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Setup failed';
@@ -528,7 +599,7 @@ async function advance() {
 }
 
 async function waitForRestart() {
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await new Promise((resolve) => setTimeout(resolve, 1500));
 
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
@@ -541,7 +612,7 @@ async function waitForRestart() {
     } catch {
       // Server is mid-restart — keep polling.
     }
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   throw new Error('Server did not come back up in time. Please restart it manually.');

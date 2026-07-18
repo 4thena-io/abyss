@@ -22,6 +22,16 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 	return &AuthHandler{service: authService}
 }
 
+// Config exposes the configured forge type/host so the login page can render
+// the correct provider label without guessing from the hostname.
+func (h *AuthHandler) Config(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"forge_type": h.service.ForgeType(),
+		"forge_host": h.service.ForgeHost(),
+	})
+}
+
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
@@ -109,7 +119,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"id":         user.ID,
 		"username":   user.Username,
 		"email":      user.Email,
@@ -132,7 +142,7 @@ func (h *AuthHandler) TokenStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"has_token": user.Token != nil})
+	_ = json.NewEncoder(w).Encode(map[string]bool{"has_token": user.Token != nil})
 }
 
 func (h *AuthHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +163,7 @@ func (h *AuthHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {

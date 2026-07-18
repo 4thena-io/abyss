@@ -1,5 +1,21 @@
+export interface SetupDefaults {
+  db_type: string;
+  db_path: string;
+  db_host: string;
+  db_port: string;
+  db_user: string;
+  db_name: string;
+  forge_type: string;
+  forge_host: string;
+  forge_owner: string;
+  ci_type: string;
+  ci_host: string;
+  client_id: string;
+}
+
 export interface SetupStatus {
   configured: boolean;
+  defaults?: SetupDefaults;
 }
 
 export interface SetupRequest {

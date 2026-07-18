@@ -48,6 +48,10 @@ func New(
 	r.Route("/api", func(r chi.Router) {
 		r.Use(requireSetup)
 
+		// Public config — exposes non-secret, setup-derived values (e.g. the
+		// configured forge type) to pages that render before login, such as /login.
+		r.Get("/config", auth.Config)
+
 		// Webhook callbacks — require setup but no user auth (forge providers can't carry a JWT)
 		r.Post("/hooks/forge/{appID}", hook.Forge)
 

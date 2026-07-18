@@ -30,7 +30,7 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		log.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
-	setupHandler := handler.NewSetupHandler(configPath, cfg.Auth.ClientID != "", restartCh)
+	setupHandler := handler.NewSetupHandler(configPath, cfg.Auth.ClientID != "", cfg, restartCh)
 
 	// When OAuth is not configured yet, skip forge/CI setup — the setup wizard handles it.
 	var (
