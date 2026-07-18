@@ -18,5 +18,5 @@ func NewHealthHandler(svc *service.HealthService) *HealthHandler {
 func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 	status := h.service.Check(r.Context())
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+	_ = json.NewEncoder(w).Encode(status)
 }

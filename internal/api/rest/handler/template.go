@@ -31,7 +31,7 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 
@@ -64,7 +64,7 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toTemplateResponse(template))
+	_ = json.NewEncoder(w).Encode(toTemplateResponse(template))
 }
 
 func (h *TemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +79,7 @@ func (h *TemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request)
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 	t, err := h.service.UpdateTemplate(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Name, req.Description, req.Kind, req.Language)
@@ -98,7 +98,7 @@ func (h *TemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(toTemplateResponse(t))
+	_ = json.NewEncoder(w).Encode(toTemplateResponse(t))
 }
 
 func (h *TemplateHandler) GetAllTemplates(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func (h *TemplateHandler) GetAllTemplates(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *TemplateHandler) GetTemplateByID(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +137,7 @@ func (h *TemplateHandler) GetTemplateByID(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(toTemplateResponse(template))
+	_ = json.NewEncoder(w).Encode(toTemplateResponse(template))
 }
 
 func (h *TemplateHandler) GetTemplateApps(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +160,7 @@ func (h *TemplateHandler) GetTemplateApps(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {

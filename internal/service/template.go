@@ -6,6 +6,7 @@ import (
 
 	"github.com/4thena-io/abyss/internal/integration/forge"
 	"github.com/4thena-io/abyss/internal/model"
+	"github.com/rs/zerolog/log"
 )
 
 type TemplateRepository interface {
@@ -106,7 +107,9 @@ func (s *TemplateService) CreateBlankTemplate(ctx context.Context, creatorID uin
 		CreatorID:   creatorID,
 	}
 	if err := s.repository.Save(ctx, template); err != nil {
-		s.forge.DeleteRepo(ctx, s.owner, name)
+		if delErr := s.forge.DeleteRepo(ctx, s.owner, name); delErr != nil {
+			log.Warn().Err(delErr).Str("repo", name).Msg("failed to roll back forge repo after template save failure")
+		}
 		return nil, err
 	}
 	return template, nil

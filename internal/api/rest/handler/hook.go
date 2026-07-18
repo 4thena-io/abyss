@@ -77,7 +77,7 @@ func (h *HookHandler) Forge(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	logger := log.With().Uint64("app_id", id).Str("ref", payload.Ref).Logger()
 	logger.Debug().Msg("forge webhook received")

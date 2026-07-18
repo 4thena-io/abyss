@@ -30,7 +30,7 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 	team, err := h.service.SaveTeam(r.Context(), &model.Team{
@@ -49,7 +49,7 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response.Team{
+	_ = json.NewEncoder(w).Encode(response.Team{
 		ID:          team.ID,
 		Name:        team.Name,
 		Description: team.Description,
@@ -68,7 +68,7 @@ func (h *TeamHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	team, err := h.service.UpdateTeam(r.Context(), uint(id), req.Name, req.Description)
 	if errors.Is(err, service.ErrNotFound) {
@@ -82,7 +82,7 @@ func (h *TeamHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response.Team{
+	_ = json.NewEncoder(w).Encode(response.Team{
 		ID:          team.ID,
 		Name:        team.Name,
 		Description: team.Description,
@@ -110,7 +110,7 @@ func (h *TeamHandler) GetAllTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *TeamHandler) GetTeamByID(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,7 @@ func (h *TeamHandler) GetTeamByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response.Team{
+	_ = json.NewEncoder(w).Encode(response.Team{
 		ID:           t.Team.ID,
 		Name:         t.Team.Name,
 		Description:  t.Team.Description,
@@ -188,7 +188,7 @@ func (h *TeamHandler) GetTeamProjects(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *TeamHandler) GetTeamMembers(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +220,7 @@ func (h *TeamHandler) GetTeamMembers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *TeamHandler) RemoveTeamMember(w http.ResponseWriter, r *http.Request) {
@@ -256,7 +256,7 @@ func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	role := req.Role
 	if role == "" {
@@ -276,7 +276,7 @@ func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response.TeamMember{
+	_ = json.NewEncoder(w).Encode(response.TeamMember{
 		ID:        member.ID,
 		TeamID:    member.TeamID,
 		UserID:    member.UserID,

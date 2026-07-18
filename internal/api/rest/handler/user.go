@@ -50,7 +50,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response.UserProfile{
+	_ = json.NewEncoder(w).Encode(response.UserProfile{
 		ID:           stats.User.ID,
 		Username:     stats.User.Username,
 		Email:        stats.User.Email,

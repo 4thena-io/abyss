@@ -64,6 +64,6 @@ func (s *HealthService) ping(ctx context.Context, host string) ServiceHealth {
 	if err != nil {
 		return ServiceHealth{OK: false, Error: err.Error()}
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return ServiceHealth{OK: true}
 }

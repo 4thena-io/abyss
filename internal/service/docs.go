@@ -70,7 +70,7 @@ func (s *DocsService) RenderDocs(ctx context.Context, appID uint) error {
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	logger.Debug().Str("tmp_dir", tmpDir).Msg("cloning docs")
 	if err := s.git.CloneSubset(app.CloneURL, tmpDir, []string{"docs"}); err != nil {
@@ -212,7 +212,7 @@ func (s *DocsService) extractTOC(md goldmark.Markdown, source []byte) []TOCItem 
 
 	var toc []TOCItem
 
-	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
 		}
@@ -228,7 +228,7 @@ func (s *DocsService) extractTOC(md goldmark.Markdown, source []byte) []TOCItem 
 		}
 
 		toc = append(toc, TOCItem{
-			Title:  string(h.Text(source)),
+			Title:  string(headingText(h, source)),
 			Anchor: anchor,
 			Level:  h.Level,
 		})
@@ -237,4 +237,18 @@ func (s *DocsService) extractTOC(md goldmark.Markdown, source []byte) []TOCItem 
 	})
 
 	return toc
+}
+
+// headingText concatenates the plain text of a heading's descendants.
+// ast.Node.Text is deprecated; this walks *ast.Text leaves directly instead.
+func headingText(n ast.Node, source []byte) []byte {
+	var buf bytes.Buffer
+	for c := n.FirstChild(); c != nil; c = c.NextSibling() {
+		if t, ok := c.(*ast.Text); ok {
+			buf.Write(t.Segment.Value(source))
+			continue
+		}
+		buf.Write(headingText(c, source))
+	}
+	return buf.Bytes()
 }
