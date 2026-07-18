@@ -4,14 +4,8 @@
       <Spinner size="lg" />
     </div>
 
-    <EmptyState
-      v-else-if="!project"
-      :icon="FolderIcon"
-      title="Project not found"
-    >
-      <router-link to="/projects" class="text-acc hover:opacity-80">
-        Back to projects
-      </router-link>
+    <EmptyState v-else-if="!project" :icon="FolderIcon" title="Project not found">
+      <router-link to="/projects" class="text-acc hover:opacity-80"> Back to projects </router-link>
     </EmptyState>
 
     <template v-else>
@@ -22,7 +16,11 @@
       <div class="mt-6">
         <ProjectOverviewTab v-if="activeTab === 'overview'" :project="project" />
         <ProjectAppsTab v-else-if="activeTab === 'apps'" :project-id="project.id" />
-        <ProjectSettingsTab v-else-if="activeTab === 'settings'" :project="project" @updated="project = $event" />
+        <ProjectSettingsTab
+          v-else-if="activeTab === 'settings'"
+          :project="project"
+          @updated="project = $event"
+        />
       </div>
     </template>
   </div>
@@ -50,12 +48,22 @@ const tabs = [
   { id: 'settings', label: 'Settings' },
 ];
 
-const validTabs = tabs.map(t => t.id);
+const validTabs = tabs.map((t) => t.id);
 const project = ref<Project | null>(null);
 const loading = ref(true);
-const activeTab = ref(validTabs.includes(route.query.tab as string) ? route.query.tab as string : 'overview');
+const activeTab = ref(
+  validTabs.includes(route.query.tab as string) ? (route.query.tab as string) : 'overview',
+);
 
-watch(activeTab, tab => router.replace({ query: { tab } }));
+watch(activeTab, (tab) => router.replace({ query: { tab } }));
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (validTabs.includes(tab as string) && tab !== activeTab.value) {
+      activeTab.value = tab as string;
+    }
+  },
+);
 
 const fetchProject = async () => {
   try {

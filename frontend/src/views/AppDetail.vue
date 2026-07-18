@@ -3,23 +3,20 @@
     <Spinner size="lg" />
   </div>
 
-  <EmptyState
-    v-else-if="!app"
-    :icon="CubeIcon"
-    title="Application not found"
-  >
-    <router-link to="/apps" class="text-acc hover:opacity-80">
-      Back to applications
-    </router-link>
+  <EmptyState v-else-if="!app" :icon="CubeIcon" title="Application not found">
+    <router-link to="/apps" class="text-acc hover:opacity-80"> Back to applications </router-link>
   </EmptyState>
 
   <!-- Docs tab: full-height three-column layout, breaks out of main padding -->
   <div v-else-if="activeTab === 'docs'" class="h-full flex flex-col gap-6">
     <DetailHeader :icon="CubeIcon" :title="app.name" :subtitle="app.description">
       <template #actions>
-        <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer"
-          class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1
-              rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors">
+        <a
+          :href="formatUrl(app.repoUrl)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1 rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors"
+        >
           <CodeBracketIcon class="w-4 h-4" />
           <span>Source Code</span>
         </a>
@@ -35,9 +32,12 @@
   <div v-else class="space-y-6">
     <DetailHeader :icon="CubeIcon" :title="app.name" :subtitle="app.description">
       <template #actions>
-        <a :href="formatUrl(app.repoUrl)" target="_blank" rel="noopener noreferrer"
-          class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1
-              rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors">
+        <a
+          :href="formatUrl(app.repoUrl)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 px-4 py-2 bg-panel border border-b1 rounded-lg text-t2 hover:text-t1 hover:border-b2 transition-colors"
+        >
           <CodeBracketIcon class="w-4 h-4" />
           <span>Source Code</span>
         </a>
@@ -83,12 +83,22 @@ const tabs = [
   { id: 'settings', label: 'Settings' },
 ];
 
-const validTabs = tabs.map(t => t.id);
+const validTabs = tabs.map((t) => t.id);
 const app = ref<App | null>(null);
 const loading = ref(true);
-const activeTab = ref(validTabs.includes(route.query.tab as string) ? route.query.tab as string : 'overview');
+const activeTab = ref(
+  validTabs.includes(route.query.tab as string) ? (route.query.tab as string) : 'overview',
+);
 
-watch(activeTab, tab => router.replace({ query: { tab } }));
+watch(activeTab, (tab) => router.replace({ query: { tab } }));
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (validTabs.includes(tab as string) && tab !== activeTab.value) {
+      activeTab.value = tab as string;
+    }
+  },
+);
 
 const fetchApp = async () => {
   try {
