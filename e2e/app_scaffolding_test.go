@@ -1,4 +1,4 @@
-package service
+package e2e
 
 import (
 	"context"
@@ -17,8 +17,11 @@ import (
 	cimocks "github.com/4thena-io/abyss/internal/integration/ci/mocks"
 	forgemocks "github.com/4thena-io/abyss/internal/integration/forge/mocks"
 	"github.com/4thena-io/abyss/internal/model"
+	"github.com/4thena-io/abyss/internal/service"
 	"github.com/4thena-io/abyss/internal/service/mocks"
 )
+
+func ptr[T any](v T) *T { return &v }
 
 // newBareRepoWithFiles creates a local bare git repo (no network) seeded with
 // an initial commit on "main" containing the given files, and returns its
@@ -127,7 +130,7 @@ func TestAppService_CreateAppFromTemplate_E2E(t *testing.T) {
 	app := &model.App{Name: "my-app", TemplateID: ptr(uint(1))}
 	appRepo.EXPECT().Save(context.Background(), app).Return(nil)
 
-	svc := NewAppService(appRepo, projectRepo, templateRepository, forge, ci, git.New("", "test", "test@test.local", "main"), "owner", "", "secret", "main")
+	svc := service.NewAppService(appRepo, projectRepo, templateRepository, forge, ci, git.New("", "test", "test@test.local", "main"), "owner", "", "secret", "main")
 
 	got, err := svc.CreateAppFromTemplate(context.Background(), app)
 	if err != nil {
@@ -168,7 +171,7 @@ func TestAppService_CreateAppFromRepo_E2E(t *testing.T) {
 		app := &model.App{Name: "existing-app", RepoID: 7}
 		appRepo.EXPECT().Save(context.Background(), app).Return(nil)
 
-		svc := NewAppService(appRepo, projectRepo, templateRepository, forge, ci, git.New("", "test", "test@test.local", "main"), "owner", "", "secret", "main")
+		svc := service.NewAppService(appRepo, projectRepo, templateRepository, forge, ci, git.New("", "test", "test@test.local", "main"), "owner", "", "secret", "main")
 
 		got, err := svc.CreateAppFromRepo(context.Background(), app)
 		if err != nil {
@@ -208,7 +211,7 @@ func TestAppService_CreateAppFromRepo_E2E(t *testing.T) {
 		app := &model.App{Name: "existing-app", RepoID: 7}
 		appRepo.EXPECT().Save(context.Background(), app).Return(nil)
 
-		svc := NewAppService(appRepo, projectRepo, templateRepository, forge, ci, git.New("", "test", "test@test.local", "main"), "owner", "", "secret", "main")
+		svc := service.NewAppService(appRepo, projectRepo, templateRepository, forge, ci, git.New("", "test", "test@test.local", "main"), "owner", "", "secret", "main")
 
 		if _, err := svc.CreateAppFromRepo(context.Background(), app); err != nil {
 			t.Fatalf("unexpected error: %v", err)
