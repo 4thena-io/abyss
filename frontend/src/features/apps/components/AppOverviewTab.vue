@@ -1,9 +1,13 @@
 <template>
   <div class="space-y-4">
     <!-- Hero -->
-    <div class="bg-panel border border-b1 rounded-xl p-6 grid grid-cols-[1fr_auto] gap-5 items-start">
+    <div
+      class="bg-panel border border-b1 rounded-xl p-6 grid grid-cols-[1fr_auto] gap-5 items-start"
+    >
       <div>
-        <p class="text-sm text-t2 leading-relaxed mb-4">{{ app.description || 'No description.' }}</p>
+        <p class="text-sm text-t2 leading-relaxed mb-4">
+          {{ app.description || 'No description.' }}
+        </p>
         <div class="flex flex-wrap gap-2">
           <RouterLink
             v-if="app.projectId"
@@ -11,9 +15,12 @@
             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2 hover:text-acc transition-colors"
           >
             <FolderIcon class="w-3 h-3 text-t3" />
-            Project #{{ app.projectId }}
+            {{ app.projectName || `Project #${app.projectId}` }}
           </RouterLink>
-          <span v-if="app.kind || app.language" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2">
+          <span
+            v-if="app.kind || app.language"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2"
+          >
             <CodeBracketIcon class="w-3 h-3 text-t3" />
             {{ [app.language, app.kind].filter(Boolean).join(' · ') }}
           </span>
@@ -23,22 +30,33 @@
             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2 hover:text-acc transition-colors"
           >
             <DocumentDuplicateIcon class="w-3 h-3 text-t3" />
-            Template #{{ app.templateId }}
+            {{ app.templateName || `Template #${app.templateId}` }}
           </RouterLink>
-          <span v-if="latestBuild" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2">
+          <span
+            v-if="latestBuild"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2"
+          >
             <ClockIcon class="w-3 h-3 text-t3" />
             Build #{{ latestBuild.number }} · {{ formatRelativeTime(latestBuild.startedAt) }}
           </span>
-          <span v-if="app.creatorUsername" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2">
+          <span
+            v-if="app.creatorUsername"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-b1 text-xs text-t2"
+          >
             <UserIcon class="w-3 h-3 text-t3" />
             {{ app.creatorUsername }}
           </span>
         </div>
       </div>
       <!-- Build rate widget -->
-      <div v-if="builds.length" class="bg-ok-s border border-ok/20 rounded-xl px-5 py-4 text-center min-w-[120px]">
+      <div
+        v-if="builds.length"
+        class="bg-ok-s border border-ok/20 rounded-xl px-5 py-4 text-center min-w-[120px]"
+      >
         <div class="text-3xl font-bold text-ok tracking-tight">{{ buildRate }}%</div>
-        <div class="text-[10px] font-semibold uppercase tracking-wider text-ok opacity-70 mt-1">Build rate</div>
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-ok opacity-70 mt-1">
+          Build rate
+        </div>
         <div class="text-[11px] text-ok opacity-60 mt-1.5">{{ builds.length }} total</div>
       </div>
       <div v-else-if="buildsLoading" class="min-w-[120px] flex items-center justify-center py-6">
@@ -48,17 +66,28 @@
 
     <!-- Environment cards -->
     <div v-if="deployments.length || deploymentsLoading" class="grid grid-cols-3 gap-3">
-      <div v-if="deploymentsLoading" v-for="i in 3" :key="i" class="bg-panel border border-b1 rounded-xl p-4 animate-pulse h-24" />
+      <template v-if="deploymentsLoading">
+        <div
+          v-for="i in 3"
+          :key="i"
+          class="bg-panel border border-b1 rounded-xl p-4 animate-pulse h-24"
+        />
+      </template>
       <template v-else>
         <div
           v-for="env in envCards"
           :key="env.name"
           class="bg-panel border border-b1 rounded-xl p-4"
         >
-          <div class="text-[10px] font-semibold uppercase tracking-wider text-t3 mb-2">{{ env.name }}</div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-t3 mb-2">
+            {{ env.name }}
+          </div>
           <div class="flex items-center justify-between mb-2">
             <span class="font-mono text-xs text-t1">{{ env.commit || '—' }}</span>
-            <span :class="statusBadge(env.status).class" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium">
+            <span
+              :class="statusBadge(env.status).class"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+            >
               <span :class="statusBadge(env.status).dot" class="w-1.5 h-1.5 rounded-full" />
               {{ env.status }}
             </span>
@@ -76,7 +105,9 @@
       <div v-if="buildsLoading" class="flex items-center justify-center py-8">
         <Spinner size="sm" />
       </div>
-      <div v-else-if="activity.length === 0" class="px-4 py-6 text-sm text-t3 text-center">No activity yet</div>
+      <div v-else-if="activity.length === 0" class="px-4 py-6 text-sm text-t3 text-center">
+        No activity yet
+      </div>
       <div v-else>
         <div
           v-for="(item, i) in activity"
@@ -98,8 +129,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import {
-  FolderIcon, CodeBracketIcon, DocumentDuplicateIcon,
-  ClockIcon, UserIcon,
+  FolderIcon,
+  CodeBracketIcon,
+  DocumentDuplicateIcon,
+  ClockIcon,
+  UserIcon,
 } from '@heroicons/vue/24/outline';
 import type { App, Build, Deployment } from '../types';
 import { appsApi } from '../../../api/app';
@@ -118,7 +152,7 @@ const latestBuild = computed(() => builds.value[0] ?? null);
 
 const buildRate = computed(() => {
   if (!builds.value.length) return 0;
-  const ok = builds.value.filter(b => b.status === 'success').length;
+  const ok = builds.value.filter((b) => b.status === 'success').length;
   return Math.round((ok / builds.value.length) * 100);
 });
 
@@ -132,9 +166,9 @@ const envCards = computed(() => {
       byEnv.set(key, d);
     }
   }
-  const envs = ENV_ORDER.filter(e => byEnv.has(e));
+  const envs = ENV_ORDER.filter((e) => byEnv.has(e));
   if (!envs.length) return [];
-  return envs.map(name => {
+  return envs.map((name) => {
     const d = byEnv.get(name)!;
     return {
       name,

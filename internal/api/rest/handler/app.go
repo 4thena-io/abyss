@@ -30,12 +30,17 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 
 	var app *model.App
 	var err error
+
+	var projectID *uint
+	if req.ProjectID != 0 {
+		projectID = &req.ProjectID
+	}
 
 	if req.RepoID != 0 {
 		app, err = h.service.CreateAppFromRepo(r.Context(), &model.App{
@@ -43,7 +48,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 			Description: req.Description,
 			Kind:        req.Kind,
 			Language:    req.Language,
-			ProjectID:   req.ProjectID,
+			ProjectID:   projectID,
 			RepoID:      req.RepoID,
 			CreatorID:   claims.UserID,
 		})
@@ -53,7 +58,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 			Description: req.Description,
 			Kind:        req.Kind,
 			Language:    req.Language,
-			ProjectID:   req.ProjectID,
+			ProjectID:   projectID,
 			TemplateID:  &req.TemplateID,
 			CreatorID:   claims.UserID,
 		})
@@ -74,7 +79,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toAppResponse(app))
+	_ = json.NewEncoder(w).Encode(toAppResponse(app))
 }
 
 func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +94,7 @@ func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 	app, err := h.service.UpdateApp(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Name, req.Description, req.ProjectID)
@@ -108,7 +113,7 @@ func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(toAppResponse(app))
+	_ = json.NewEncoder(w).Encode(toAppResponse(app))
 }
 
 func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +130,7 @@ func (h *AppHandler) GetAllApps(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +152,7 @@ func (h *AppHandler) GetAppByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(toAppResponse(app))
+	_ = json.NewEncoder(w).Encode(toAppResponse(app))
 }
 
 func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +187,7 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *AppHandler) RepairApp(w http.ResponseWriter, r *http.Request) {
@@ -258,7 +263,7 @@ func (h *AppHandler) GetAppDeployments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func toAppResponse(app *model.App) response.App {
@@ -277,6 +282,12 @@ func toAppResponse(app *model.App) response.App {
 	}
 	if app.Creator.Username != "" {
 		r.CreatorUsername = app.Creator.Username
+	}
+	if app.Project != nil {
+		r.ProjectName = app.Project.Name
+	}
+	if app.Template != nil {
+		r.TemplateName = app.Template.Name
 	}
 	return r
 }

@@ -28,7 +28,7 @@ func (r *ProjectRepository) Save(ctx context.Context, project *model.Project) er
 
 func (r *ProjectRepository) GetAll(ctx context.Context) ([]model.Project, error) {
 	var projects []model.Project
-	result := r.db.WithContext(ctx).Preload("Creator").Find(&projects)
+	result := r.db.WithContext(ctx).Preload("Creator").Preload("Team").Find(&projects)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -37,7 +37,7 @@ func (r *ProjectRepository) GetAll(ctx context.Context) ([]model.Project, error)
 
 func (r *ProjectRepository) GetByID(ctx context.Context, id uint) (*model.Project, error) {
 	var project model.Project
-	result := r.db.WithContext(ctx).Preload("Creator").Where("id = ?", id).First(&project)
+	result := r.db.WithContext(ctx).Preload("Creator").Preload("Team").Where("id = ?", id).First(&project)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}

@@ -9,8 +9,10 @@ type App struct {
 	RepoFullName string `json:"repoFullName"`
 	RepoURL      string `json:"repoUrl"`
 	CiURL        string `json:"ciUrl"`
-	ProjectID       uint   `json:"projectId"`
+	ProjectID       *uint  `json:"projectId,omitempty"`
+	ProjectName     string `json:"projectName,omitempty"`
 	TemplateID      *uint  `json:"templateId,omitempty"`
+	TemplateName    string `json:"templateName,omitempty"`
 	CreatorID       uint   `json:"creatorId"`
 	CreatorUsername string `json:"creatorUsername"`
 }

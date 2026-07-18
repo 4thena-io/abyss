@@ -3,6 +3,7 @@ export interface Project {
   name: string;
   description: string;
   teamId?: number;
+  teamName?: string;
   creatorId: number;
   creatorUsername: string;
 }

@@ -30,7 +30,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 	project, err := h.projectService.SaveProject(r.Context(), &model.Project{
@@ -51,7 +51,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toProjectResponse(project))
+	_ = json.NewEncoder(w).Encode(toProjectResponse(project))
 }
 
 func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	claims := middleware.ClaimsFromContext(r.Context())
 	project, err := h.projectService.UpdateProject(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Name, req.Description, req.TeamID)
@@ -85,7 +85,7 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(toProjectResponse(project))
+	_ = json.NewEncoder(w).Encode(toProjectResponse(project))
 }
 
 func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +102,7 @@ func (h *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +124,7 @@ func (h *ProjectHandler) GetProjectByID(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(toProjectResponse(project))
+	_ = json.NewEncoder(w).Encode(toProjectResponse(project))
 }
 
 func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +151,7 @@ func (h *ProjectHandler) GetProjectApps(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
@@ -190,6 +190,9 @@ func toProjectResponse(p *model.Project) response.Project {
 	}
 	if p.Creator.Username != "" {
 		r.CreatorUsername = p.Creator.Username
+	}
+	if p.Team != nil {
+		r.TeamName = p.Team.Name
 	}
 	return r
 }

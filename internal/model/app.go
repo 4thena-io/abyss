@@ -15,7 +15,7 @@ type App struct {
 	CIID         int64  `gorm:"not null"`
 	CISlug       string
 	CIURL        string `gorm:"not null"`
-	ProjectID    uint
+	ProjectID    *uint
 	Project      *Project  `gorm:"foreignKey:ProjectID;constraint:OnDelete:SET NULL"`
 	TemplateID   *uint
 	Template     *Template `gorm:"foreignKey:TemplateID;constraint:OnDelete:SET NULL"`

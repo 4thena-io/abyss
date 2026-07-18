@@ -83,12 +83,15 @@ func (s *AppService) registerDocsWebhook(ctx context.Context, app *model.App) {
 }
 
 func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) (*model.App, error) {
-	project, err := s.projectRepository.GetByID(ctx, app.ProjectID)
-	if err != nil {
-		return nil, fmt.Errorf("there was an error reading getting the project: %w", err)
-	}
-	if project == nil {
-		return nil, fmt.Errorf("project doesn't exists")
+	// ProjectID is optional — apps can be standalone (e.g. shared libraries).
+	if app.ProjectID != nil {
+		project, err := s.projectRepository.GetByID(ctx, *app.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("there was an error reading getting the project: %w", err)
+		}
+		if project == nil {
+			return nil, fmt.Errorf("project doesn't exists")
+		}
 	}
 
 	if app.TemplateID == nil {
@@ -118,14 +121,18 @@ func (s *AppService) CreateAppFromTemplate(ctx context.Context, app *model.App) 
 	}
 	// Clone template, prepare files, and push to new repo
 	if err := s.initRepoFromTemplate(template.CloneURL, repo.CloneURL, app.Name); err != nil {
-		s.forge.DeleteRepo(ctx, s.owner, app.Name)
+		if delErr := s.forge.DeleteRepo(ctx, s.owner, app.Name); delErr != nil {
+			log.Warn().Err(delErr).Str("repo", app.Name).Msg("failed to roll back forge repo after template init failure")
+		}
 		return nil, fmt.Errorf("failed to initialize repo from template: %w", err)
 	}
 
 	// Activate CI for this repo
 	ciRepo, err := s.ci.ActivateRepo(ctx, repo.ID, repo.FullName)
 	if err != nil {
-		s.forge.DeleteRepo(ctx, s.owner, app.Name)
+		if delErr := s.forge.DeleteRepo(ctx, s.owner, app.Name); delErr != nil {
+			log.Warn().Err(delErr).Str("repo", app.Name).Msg("failed to roll back forge repo after ci activation failure")
+		}
 		return nil, fmt.Errorf("failed to activate ci repo: %w", err)
 	}
 
@@ -154,7 +161,7 @@ func (s *AppService) initRepoFromTemplate(templateCloneURL, newRepoCloneURL, app
 	if err != nil {
 		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	localPath := filepath.Join(tmpDir, "repo")
 
@@ -186,8 +193,8 @@ func (s *AppService) initRepoFromTemplate(templateCloneURL, newRepoCloneURL, app
 
 func (s *AppService) CreateAppFromRepo(ctx context.Context, app *model.App) (*model.App, error) {
 	// Validate project exists (if provided)
-	if app.ProjectID != 0 {
-		project, err := s.projectRepository.GetByID(ctx, app.ProjectID)
+	if app.ProjectID != nil {
+		project, err := s.projectRepository.GetByID(ctx, *app.ProjectID)
 		if err != nil {
 			return nil, fmt.Errorf("there was an error reading getting the project: %w", err)
 		}
@@ -247,7 +254,7 @@ func (s *AppService) ensureAbyssConfig(repoCloneURL, appName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	localPath := filepath.Join(tmpDir, "repo")
 
@@ -374,11 +381,7 @@ func (s *AppService) UpdateApp(ctx context.Context, id, callerID uint, isAdmin b
 
 	app.Name = name
 	app.Description = description
-	if projectID != nil {
-		app.ProjectID = *projectID
-	} else {
-		app.ProjectID = 0
-	}
+	app.ProjectID = projectID
 
 	if err := s.appRepository.Update(ctx, app); err != nil {
 		return nil, err

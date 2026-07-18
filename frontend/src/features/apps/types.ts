@@ -7,7 +7,9 @@ export interface App {
   repoUrl: string;
   ciUrl: string;
   projectId: number;
+  projectName?: string;
   templateId?: number;
+  templateName?: string;
   creatorId: number;
   creatorUsername: string;
 }
