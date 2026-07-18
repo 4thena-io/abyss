@@ -16,15 +16,14 @@
       message="No builds yet"
     />
 
-    <DataTable
-      v-else
-      :columns="columns"
-      :rows="paginatedBuilds"
-      row-key="id"
-    >
+    <DataTable v-else :columns="columns" :rows="paginatedBuilds" row-key="id">
       <template #cell-number="{ row }">
-        <a :href="row.link" target="_blank" rel="noopener noreferrer"
-          class="text-acc hover:opacity-80 font-medium transition-opacity">
+        <a
+          :href="row.link"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-acc hover:opacity-80 font-medium transition-opacity"
+        >
           #{{ row.number }}
         </a>
       </template>

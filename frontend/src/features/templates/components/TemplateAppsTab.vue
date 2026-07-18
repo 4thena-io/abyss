@@ -15,9 +15,21 @@
       <table class="w-full border-collapse">
         <thead>
           <tr>
-            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Application</th>
-            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Kind</th>
-            <th class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1">Language</th>
+            <th
+              class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1"
+            >
+              Application
+            </th>
+            <th
+              class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1"
+            >
+              Kind
+            </th>
+            <th
+              class="text-left text-xs font-semibold uppercase tracking-wide text-t3 px-4 py-2.5 border-b border-b1"
+            >
+              Language
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -29,11 +41,16 @@
           >
             <td class="px-4 py-3 border-b border-b0 text-sm font-medium text-t1">{{ app.name }}</td>
             <td class="px-4 py-3 border-b border-b0">
-              <span v-if="app.kind" class="px-2 py-0.5 rounded-full text-xs font-medium bg-surface border border-b1 text-t2">
+              <span
+                v-if="app.kind"
+                class="px-2 py-0.5 rounded-full text-xs font-medium bg-surface border border-b1 text-t2"
+              >
                 {{ app.kind }}
               </span>
             </td>
-            <td class="px-4 py-3 border-b border-b0 text-sm text-t3 font-mono">{{ app.language }}</td>
+            <td class="px-4 py-3 border-b border-b0 text-sm text-t3 font-mono">
+              {{ app.language }}
+            </td>
           </tr>
         </tbody>
       </table>

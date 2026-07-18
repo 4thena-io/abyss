@@ -26,8 +26,13 @@
           <div class="flex px-4 py-2.5 border-b border-b0">
             <dt class="w-36 shrink-0 text-xs font-medium text-t3 flex items-center">Repository</dt>
             <dd class="text-xs font-mono text-t1 truncate">
-              <a v-if="template.repoUrl" :href="template.repoUrl" target="_blank" rel="noopener"
-                class="text-acc hover:underline flex items-center gap-1">
+              <a
+                v-if="template.repoUrl"
+                :href="template.repoUrl"
+                target="_blank"
+                rel="noopener"
+                class="text-acc hover:underline flex items-center gap-1"
+              >
                 {{ repoLabel }}
                 <ArrowTopRightOnSquareIcon class="w-3 h-3 shrink-0" />
               </a>
@@ -57,7 +62,11 @@
       <div class="bg-panel border border-b1 rounded-xl overflow-hidden">
         <div class="flex items-center justify-between px-4 py-3 border-b border-b1 bg-surface">
           <span class="text-sm font-semibold text-t1">Used by</span>
-          <button v-if="apps.length > 3" @click="$emit('show-apps')" class="text-xs text-acc hover:underline">
+          <button
+            v-if="apps.length > 3"
+            @click="$emit('show-apps')"
+            class="text-xs text-acc hover:underline"
+          >
             View all →
           </button>
         </div>
@@ -74,14 +83,19 @@
             :to="`/apps/${app.id}`"
             class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-surface transition-colors"
           >
-            <div class="w-7 h-7 rounded-lg bg-surface border border-b1 flex items-center justify-center shrink-0">
+            <div
+              class="w-7 h-7 rounded-lg bg-surface border border-b1 flex items-center justify-center shrink-0"
+            >
               <CubeIcon class="w-3.5 h-3.5 text-t3" />
             </div>
             <p class="text-sm font-medium text-t1 truncate flex-1">{{ app.name }}</p>
             <TagGroup v-if="app.kind" :tags="[app.kind]" />
           </RouterLink>
           <div v-if="apps.length > 3" class="px-3 pt-1 pb-1 border-t border-b0 text-center">
-            <button @click="$emit('show-apps')" class="text-xs text-t3 hover:text-t1 transition-colors">
+            <button
+              @click="$emit('show-apps')"
+              class="text-xs text-t3 hover:text-t1 transition-colors"
+            >
               +{{ apps.length - 3 }} more
             </button>
           </div>

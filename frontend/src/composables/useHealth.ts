@@ -13,7 +13,7 @@ export function useHealth() {
       // If the health endpoint itself is unreachable, assume everything is down.
       status.value = {
         forge: { ok: false, error: 'unreachable' },
-        ci:    { ok: false, error: 'unreachable' },
+        ci: { ok: false, error: 'unreachable' },
       };
     }
   }

@@ -5,7 +5,7 @@
     :class="[
       'bg-panel border border-b1 rounded-lg p-5 block',
       hoverable && 'hover:border-b2 transition-all',
-      to && 'group'
+      to && 'group',
     ]"
   >
     <div class="flex items-start justify-between">
@@ -14,10 +14,7 @@
           <component :is="icon" class="w-5 h-5 text-t3" />
         </div>
         <div>
-          <h3 :class="[
-            'text-t1 font-medium',
-            to && 'group-hover:text-acc transition-colors'
-          ]">
+          <h3 :class="['text-t1 font-medium', to && 'group-hover:text-acc transition-colors']">
             {{ title }}
           </h3>
           <p v-if="subtitle" class="text-t3 text-xs mt-0.5">{{ subtitle }}</p>
@@ -46,18 +43,21 @@
 <script setup lang="ts">
 import type { Component } from 'vue';
 
-withDefaults(defineProps<{
-  icon: Component;
-  title: string;
-  subtitle?: string;
-  description?: string;
-  noDescriptionText?: string;
-  showNoDescription?: boolean;
-  to?: string;
-  hoverable?: boolean;
-}>(), {
-  noDescriptionText: 'No description',
-  showNoDescription: true,
-  hoverable: true,
-});
+withDefaults(
+  defineProps<{
+    icon: Component;
+    title: string;
+    subtitle?: string;
+    description?: string;
+    noDescriptionText?: string;
+    showNoDescription?: boolean;
+    to?: string;
+    hoverable?: boolean;
+  }>(),
+  {
+    noDescriptionText: 'No description',
+    showNoDescription: true,
+    hoverable: true,
+  },
+);
 </script>

@@ -43,7 +43,9 @@
 
       <DataTable :columns="columns" :rows="deployments" row-key="id">
         <template #cell-environment="{ row }">
-          <span :class="['px-2 py-0.5 rounded text-xs font-medium', envBadgeClass(row.environment)]">
+          <span
+            :class="['px-2 py-0.5 rounded text-xs font-medium', envBadgeClass(row.environment)]"
+          >
             {{ row.environment }}
           </span>
         </template>
@@ -95,16 +97,22 @@ const loading = ref(false);
 
 const envStatuses = computed(() => {
   const envs = ['production', 'staging', 'dev'] as const;
-  return envs.map(env => {
-    const latest = deployments.value
-      .filter(d => d.environment === env)
-      .sort((a, b) => new Date(b.deployedAt).getTime() - new Date(a.deployedAt).getTime())[0] ?? null;
+  return envs.map((env) => {
+    const latest =
+      deployments.value
+        .filter((d) => d.environment === env)
+        .sort((a, b) => new Date(b.deployedAt).getTime() - new Date(a.deployedAt).getTime())[0] ??
+      null;
     return { env, latest };
   });
 });
 
 const envLabel = (env: string) => {
-  const labels: Record<string, string> = { production: 'Production', staging: 'Staging', dev: 'Dev' };
+  const labels: Record<string, string> = {
+    production: 'Production',
+    staging: 'Staging',
+    dev: 'Dev',
+  };
   return labels[env] ?? env;
 };
 

@@ -1,32 +1,32 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router';
 import Home from './views/Home.vue';
-import Apps from "./views/Apps.vue";
-import Projects from "./views/Projects.vue";
-import Templates from "./views/Templates.vue";
-import TemplateDetail from "./views/TemplateDetail.vue";
-import AppDetail from "./views/AppDetail.vue";
-import ProjectDetail from "./views/ProjectDetail.vue";
-import Teams from "./views/Teams.vue";
-import TeamDetail from "./views/TeamDetail.vue";
-import Setup from "./views/Setup.vue";
-import Login from "./views/Login.vue";
-import Settings from "./views/Settings.vue";
-import UserProfile from "./views/UserProfile.vue";
+import Apps from './views/Apps.vue';
+import Projects from './views/Projects.vue';
+import Templates from './views/Templates.vue';
+import TemplateDetail from './views/TemplateDetail.vue';
+import AppDetail from './views/AppDetail.vue';
+import ProjectDetail from './views/ProjectDetail.vue';
+import Teams from './views/Teams.vue';
+import TeamDetail from './views/TeamDetail.vue';
+import Setup from './views/Setup.vue';
+import Login from './views/Login.vue';
+import Settings from './views/Settings.vue';
+import UserProfile from './views/UserProfile.vue';
 
 const routes = [
-  { path: "/setup", component: Setup },
-  { path: "/login", component: Login },
-  { path: "/", component: Home },
-  { path: "/teams", component: Teams },
-  { path: "/teams/:id", component: TeamDetail },
-  { path: "/apps", component: Apps },
-  { path: "/apps/:id", component: AppDetail },
-  { path: "/projects", component: Projects },
-  { path: "/projects/:id", component: ProjectDetail },
-  { path: "/templates", component: Templates },
-  { path: "/templates/:id", component: TemplateDetail },
-  { path: "/settings", component: Settings },
-  { path: "/users/:id", component: UserProfile },
+  { path: '/setup', component: Setup },
+  { path: '/login', component: Login },
+  { path: '/', component: Home },
+  { path: '/teams', component: Teams },
+  { path: '/teams/:id', component: TeamDetail },
+  { path: '/apps', component: Apps },
+  { path: '/apps/:id', component: AppDetail },
+  { path: '/projects', component: Projects },
+  { path: '/projects/:id', component: ProjectDetail },
+  { path: '/templates', component: Templates },
+  { path: '/templates/:id', component: TemplateDetail },
+  { path: '/settings', component: Settings },
+  { path: '/users/:id', component: UserProfile },
 ];
 
 const router = createRouter({

@@ -41,15 +41,18 @@
 import { ref, watch } from 'vue';
 import Modal from './Modal.vue';
 
-const props = withDefaults(defineProps<{
-  open: boolean;
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  confirmName?: string;
-}>(), {
-  confirmLabel: 'Delete',
-});
+const props = withDefaults(
+  defineProps<{
+    open: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    confirmName?: string;
+  }>(),
+  {
+    confirmLabel: 'Delete',
+  },
+);
 
 const emit = defineEmits<{
   confirm: [];
@@ -58,9 +61,12 @@ const emit = defineEmits<{
 
 const typed = ref('');
 
-watch(() => props.open, (v) => {
-  if (!v) typed.value = '';
-});
+watch(
+  () => props.open,
+  (v) => {
+    if (!v) typed.value = '';
+  },
+);
 
 function tryConfirm() {
   if (props.confirmName && typed.value !== props.confirmName) return;

@@ -2,7 +2,7 @@
   <aside
     :class="[
       'bg-panel border-r border-b1 flex flex-col items-center py-4 transition-all duration-300 ease-in-out',
-      expanded ? 'w-48' : 'w-12'
+      expanded ? 'w-48' : 'w-12',
     ]"
   >
     <nav class="flex-1 flex-col flex space-y-1 w-full px-2">
@@ -19,16 +19,15 @@
             'flex items-center gap-3 w-full transition-colors p-2 rounded-lg justify-start relative',
             isExactActive
               ? 'text-acc bg-active font-semibold'
-              : 'text-t2 hover:text-t1 hover:bg-surface'
+              : 'text-t2 hover:text-t1 hover:bg-surface',
           ]"
         >
-          <span v-if="isExactActive"
-            class="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-acc rounded-r" />
-          <component :is="item.icon" class="w-5 h-5 shrink-0" />
           <span
-            v-if="expanded"
-            class="text-sm font-medium whitespace-nowrap"
-          >
+            v-if="isExactActive"
+            class="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-acc rounded-r"
+          />
+          <component :is="item.icon" class="w-5 h-5 shrink-0" />
+          <span v-if="expanded" class="text-sm font-medium whitespace-nowrap">
             {{ item.label }}
           </span>
         </button>
@@ -48,7 +47,7 @@ import {
 } from '@heroicons/vue/24/outline';
 
 defineProps<{
-  expanded: boolean
+  expanded: boolean;
 }>();
 
 const navItems = [

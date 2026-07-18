@@ -1,80 +1,80 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Dark mode via data-theme attribute */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* ─── LIGHT THEME ─── */
 :root {
-  --bg:      #FAFAF9;
-  --panel:   #FFFFFF;
-  --surface: #F5F4F2;
-  --hover:   #F0EFEC;
-  --active:  #ECEAE6;
+  --bg: #fafaf9;
+  --panel: #ffffff;
+  --surface: #f5f4f2;
+  --hover: #f0efec;
+  --active: #eceae6;
 
-  --b0: rgba(0, 0, 0, .05);
-  --b1: rgba(0, 0, 0, .08);
-  --b2: rgba(0, 0, 0, .13);
-  --b3: rgba(0, 0, 0, .22);
+  --b0: rgba(0, 0, 0, 0.05);
+  --b1: rgba(0, 0, 0, 0.08);
+  --b2: rgba(0, 0, 0, 0.13);
+  --b3: rgba(0, 0, 0, 0.22);
 
   --t1: #111110;
-  --t2: #57534E;
-  --t3: #A8A29E;
-  --t4: #D4CFC9;
+  --t2: #57534e;
+  --t3: #a8a29e;
+  --t4: #d4cfc9;
 
-  --acc:   #0066FF;
-  --acc-s: rgba(0, 102, 255, .08);
-  --acc-b: rgba(0, 102, 255, .18);
+  --acc: #0066ff;
+  --acc-s: rgba(0, 102, 255, 0.08);
+  --acc-b: rgba(0, 102, 255, 0.18);
 
-  --ok:     #16A34A;
-  --ok-s:   rgba(22, 163, 74, .08);
-  --fail:   #DC2626;
-  --fail-s: rgba(220, 38, 38, .08);
-  --warn:   #D97706;
-  --warn-s: rgba(217, 119, 6, .08);
-  --run:    #2563EB;
-  --run-s:  rgba(37, 99, 235, .08);
+  --ok: #16a34a;
+  --ok-s: rgba(22, 163, 74, 0.08);
+  --fail: #dc2626;
+  --fail-s: rgba(220, 38, 38, 0.08);
+  --warn: #d97706;
+  --warn-s: rgba(217, 119, 6, 0.08);
+  --run: #2563eb;
+  --run-s: rgba(37, 99, 235, 0.08);
 }
 
 /* ─── DARK THEME ─── */
-[data-theme="dark"] {
-  --bg:      #0F1117;
-  --panel:   #161B25;
-  --surface: #1C2333;
-  --hover:   #212C40;
-  --active:  #263350;
+[data-theme='dark'] {
+  --bg: #0f1117;
+  --panel: #161b25;
+  --surface: #1c2333;
+  --hover: #212c40;
+  --active: #263350;
 
-  --b0: rgba(255, 255, 255, .04);
-  --b1: rgba(255, 255, 255, .07);
-  --b2: rgba(255, 255, 255, .12);
-  --b3: rgba(255, 255, 255, .20);
+  --b0: rgba(255, 255, 255, 0.04);
+  --b1: rgba(255, 255, 255, 0.07);
+  --b2: rgba(255, 255, 255, 0.12);
+  --b3: rgba(255, 255, 255, 0.2);
 
-  --t1: #F1F0EE;
-  --t2: #8B929E;
-  --t3: #4A5568;
-  --t4: #2D3748;
+  --t1: #f1f0ee;
+  --t2: #8b929e;
+  --t3: #4a5568;
+  --t4: #2d3748;
 
-  --acc:   #4D9FFF;
-  --acc-s: rgba(77, 159, 255, .1);
-  --acc-b: rgba(77, 159, 255, .22);
+  --acc: #4d9fff;
+  --acc-s: rgba(77, 159, 255, 0.1);
+  --acc-b: rgba(77, 159, 255, 0.22);
 
-  --ok:     #34D399;
-  --ok-s:   rgba(52, 211, 153, .1);
-  --fail:   #F87171;
-  --fail-s: rgba(248, 113, 113, .1);
-  --warn:   #FBBF24;
-  --warn-s: rgba(251, 191, 36, .1);
-  --run:    #60A5FA;
-  --run-s:  rgba(96, 165, 250, .1);
+  --ok: #34d399;
+  --ok-s: rgba(52, 211, 153, 0.1);
+  --fail: #f87171;
+  --fail-s: rgba(248, 113, 113, 0.1);
+  --warn: #fbbf24;
+  --warn-s: rgba(251, 191, 36, 0.1);
+  --run: #60a5fa;
+  --run-s: rgba(96, 165, 250, 0.1);
 }
 
 /* ─── TAILWIND THEME TOKENS ─── */
 @theme inline {
-  --color-bg:      var(--bg);
-  --color-panel:   var(--panel);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
   --color-surface: var(--surface);
-  --color-hover:   var(--hover);
-  --color-active:  var(--active);
+  --color-hover: var(--hover);
+  --color-active: var(--active);
 
   --color-b0: var(--b0);
   --color-b1: var(--b1);
@@ -86,25 +86,27 @@
   --color-t3: var(--t3);
   --color-t4: var(--t4);
 
-  --color-acc:   var(--acc);
+  --color-acc: var(--acc);
   --color-acc-s: var(--acc-s);
   --color-acc-b: var(--acc-b);
 
-  --color-ok:     var(--ok);
-  --color-ok-s:   var(--ok-s);
-  --color-fail:   var(--fail);
+  --color-ok: var(--ok);
+  --color-ok-s: var(--ok-s);
+  --color-fail: var(--fail);
   --color-fail-s: var(--fail-s);
-  --color-warn:   var(--warn);
+  --color-warn: var(--warn);
   --color-warn-s: var(--warn-s);
-  --color-run:    var(--run);
-  --color-run-s:  var(--run-s);
+  --color-run: var(--run);
+  --color-run-s: var(--run-s);
 
   --font-sans: 'Figtree', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 }
 
 /* ─── BASE ─── */
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
 }
 
@@ -113,7 +115,9 @@ body {
   font-size: 14px;
   color: var(--t1);
   background: var(--bg);
-  transition: background .2s, color .2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 @layer base {
@@ -123,6 +127,14 @@ body {
   }
 }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--b2);
+  border-radius: 2px;
+}

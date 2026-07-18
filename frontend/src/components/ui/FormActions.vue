@@ -14,7 +14,7 @@
         'px-4 py-2 rounded-lg font-medium transition-colors',
         !disabled && !saving
           ? 'bg-acc hover:opacity-90 text-white'
-          : 'bg-surface text-t3 cursor-not-allowed'
+          : 'bg-surface text-t3 cursor-not-allowed',
       ]"
     >
       {{ saving ? submittingLabel : submitLabel }}
@@ -25,20 +25,23 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-const props = withDefaults(defineProps<{
-  submitLabel: string;
-  submittingLabel?: string;
-  cancelLabel?: string;
-  disabled?: boolean;
-  saving?: boolean;
-}>(), {
-  cancelLabel: 'Cancel',
-  disabled: false,
-  saving: false,
-});
+const props = withDefaults(
+  defineProps<{
+    submitLabel: string;
+    submittingLabel?: string;
+    cancelLabel?: string;
+    disabled?: boolean;
+    saving?: boolean;
+  }>(),
+  {
+    cancelLabel: 'Cancel',
+    disabled: false,
+    saving: false,
+  },
+);
 
-const submittingLabel = computed(() =>
-  props.submittingLabel || props.submitLabel.replace(/^(\w+)/, '$1ing...')
+const submittingLabel = computed(
+  () => props.submittingLabel || props.submitLabel.replace(/^(\w+)/, '$1ing...'),
 );
 
 defineEmits<{

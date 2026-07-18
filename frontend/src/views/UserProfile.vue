@@ -14,8 +14,13 @@
         <p class="text-xs font-semibold uppercase tracking-wide text-t3 mb-1">Account</p>
         <h1 class="text-2xl font-bold text-t1 tracking-tight">Profile</h1>
       </div>
-      <a v-if="user?.forge_host" :href="`${user.forge_host}/${profile.username}`" target="_blank" rel="noopener"
-        class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-t2 border border-b2 rounded-lg hover:bg-surface hover:text-t1 transition-colors">
+      <a
+        v-if="user?.forge_host"
+        :href="`${user.forge_host}/${profile.username}`"
+        target="_blank"
+        rel="noopener"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-t2 border border-b2 rounded-lg hover:bg-surface hover:text-t1 transition-colors"
+      >
         <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" />
         View on {{ capitalize(user.forge_type) }}
       </a>
@@ -26,11 +31,21 @@
       <div class="flex items-center gap-5 mb-5">
         <!-- Avatar -->
         <div class="shrink-0">
-          <img v-if="profile.avatarUrl" :src="profile.avatarUrl" :alt="profile.username"
-            class="w-18 h-18 rounded-full object-cover ring-2 ring-b1" style="width:72px;height:72px" />
-          <div v-else class="w-18 h-18 rounded-full bg-acc-s border border-acc-b flex items-center justify-center"
-            style="width:72px;height:72px">
-            <span class="text-2xl font-semibold text-acc font-mono">{{ profile.username.slice(0, 2) }}</span>
+          <img
+            v-if="profile.avatarUrl"
+            :src="profile.avatarUrl"
+            :alt="profile.username"
+            class="w-18 h-18 rounded-full object-cover ring-2 ring-b1"
+            style="width: 72px; height: 72px"
+          />
+          <div
+            v-else
+            class="w-18 h-18 rounded-full bg-acc-s border border-acc-b flex items-center justify-center"
+            style="width: 72px; height: 72px"
+          >
+            <span class="text-2xl font-semibold text-acc font-mono">{{
+              profile.username.slice(0, 2)
+            }}</span>
           </div>
         </div>
 
@@ -42,12 +57,16 @@
             <span v-if="profile.email"> · {{ profile.email }}</span>
           </p>
           <div class="flex items-center gap-2 mt-2.5 flex-wrap">
-            <span v-if="profile.isAdmin"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-ok-s text-ok">
+            <span
+              v-if="profile.isAdmin"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-ok-s text-ok"
+            >
               admin
             </span>
-            <span v-if="user?.forge_type"
-              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-surface border border-b1 text-t2">
+            <span
+              v-if="user?.forge_type"
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-surface border border-b1 text-t2"
+            >
               <ServerIcon class="w-3 h-3" />
               via {{ capitalize(user.forge_type) }} OAuth
             </span>
@@ -77,7 +96,8 @@
         <p class="text-xs text-t3">
           Your identity is managed by
           <strong class="text-t2">{{ capitalize(user?.forge_type ?? 'your forge') }}</strong>
-          via OAuth2. To change your name, email or avatar, update them directly there and sign back in.
+          via OAuth2. To change your name, email or avatar, update them directly there and sign back
+          in.
         </p>
       </div>
     </div>
@@ -99,15 +119,23 @@
             :to="`/teams/${team.id}`"
             class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-surface transition-colors cursor-pointer"
           >
-            <div class="w-8 h-8 rounded-lg bg-acc-s border border-acc-b flex items-center justify-center shrink-0">
+            <div
+              class="w-8 h-8 rounded-lg bg-acc-s border border-acc-b flex items-center justify-center shrink-0"
+            >
               <UsersIcon class="w-4 h-4 text-acc" />
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-t1 truncate">{{ team.name }}</p>
-              <p class="text-xs text-t3 mt-0.5">{{ team.memberCount }} members · {{ team.projectCount }} projects</p>
+              <p class="text-xs text-t3 mt-0.5">
+                {{ team.memberCount }} members · {{ team.projectCount }} projects
+              </p>
             </div>
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-              :class="team.role === 'owner' ? 'bg-ok-s text-ok' : 'bg-surface border border-b1 text-t2'">
+            <span
+              class="px-2 py-0.5 rounded-full text-xs font-medium"
+              :class="
+                team.role === 'owner' ? 'bg-ok-s text-ok' : 'bg-surface border border-b1 text-t2'
+              "
+            >
               {{ team.role }}
             </span>
           </RouterLink>
@@ -145,17 +173,20 @@
 
         <!-- API Token shortcut (only for own profile) -->
         <template v-if="isOwnProfile">
-          <div class="flex items-center justify-between px-4 py-3 border-t border-b1 bg-surface mt-0">
+          <div
+            class="flex items-center justify-between px-4 py-3 border-t border-b1 bg-surface mt-0"
+          >
             <span class="text-sm font-semibold text-t1">API Token</span>
-            <RouterLink to="/settings?tab=token"
-              class="text-xs text-acc hover:underline">
+            <RouterLink to="/settings?tab=token" class="text-xs text-acc hover:underline">
               Manage in settings →
             </RouterLink>
           </div>
           <div class="px-4 py-3">
             <div class="flex items-center gap-2 px-3 py-2 bg-surface rounded-lg">
-              <span class="w-2 h-2 rounded-full shrink-0"
-                :class="tokenActive ? 'bg-ok' : 'bg-t3'" />
+              <span
+                class="w-2 h-2 rounded-full shrink-0"
+                :class="tokenActive ? 'bg-ok' : 'bg-t3'"
+              />
               <span class="text-xs" :class="tokenActive ? 'text-ok' : 'text-t3'">
                 {{ tokenActive ? 'Token active' : 'No token generated' }}
               </span>
@@ -170,7 +201,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
-import { ArrowTopRightOnSquareIcon, InformationCircleIcon, ServerIcon } from '@heroicons/vue/24/outline';
+import {
+  ArrowTopRightOnSquareIcon,
+  InformationCircleIcon,
+  ServerIcon,
+} from '@heroicons/vue/24/outline';
 import { UsersIcon } from '@heroicons/vue/24/outline';
 import type { UserProfile } from '../features/users/types';
 import { userApi } from '../api/user';

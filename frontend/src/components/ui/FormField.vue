@@ -1,8 +1,6 @@
 <template>
   <div>
-    <label class="block text-t3 text-sm mb-2">
-      {{ label }}{{ required ? ' *' : '' }}
-    </label>
+    <label class="block text-t3 text-sm mb-2"> {{ label }}{{ required ? ' *' : '' }} </label>
 
     <!-- Input -->
     <input
@@ -35,11 +33,7 @@
       :class="inputClasses"
     >
       <option v-if="placeholder" value="">{{ placeholder }}</option>
-      <option
-        v-for="option in options"
-        :key="option.value"
-        :value="option.value"
-      >
+      <option v-for="option in options" :key="option.value" :value="option.value">
         {{ option.label }}
       </option>
     </select>
@@ -52,22 +46,25 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-const props = withDefaults(defineProps<{
-  modelValue: string | number;
-  label: string;
-  type?: 'text' | 'textarea' | 'select';
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  rows?: number;
-  hint?: string;
-  options?: Array<{ value: string | number; label: string }>;
-}>(), {
-  type: 'text',
-  required: false,
-  disabled: false,
-  rows: 3,
-});
+const props = withDefaults(
+  defineProps<{
+    modelValue: string | number;
+    label: string;
+    type?: 'text' | 'textarea' | 'select';
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    rows?: number;
+    hint?: string;
+    options?: Array<{ value: string | number; label: string }>;
+  }>(),
+  {
+    type: 'text',
+    required: false,
+    disabled: false,
+    rows: 3,
+  },
+);
 
 defineEmits<{
   'update:modelValue': [value: string | number];
@@ -76,8 +73,6 @@ defineEmits<{
 const inputClasses = computed(() => [
   'w-full border border-b1 rounded-lg px-4 py-2.5 text-t1',
   'placeholder:text-t3 focus:outline-none focus:border-b2',
-  props.disabled
-    ? 'bg-bg/50 text-t3 cursor-not-allowed'
-    : 'bg-bg',
+  props.disabled ? 'bg-bg/50 text-t3 cursor-not-allowed' : 'bg-bg',
 ]);
 </script>

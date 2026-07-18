@@ -11,7 +11,9 @@
     <DetailHeader
       :icon="DocumentDuplicateIcon"
       :title="template.name"
-      :subtitle="[template.description, template.kind, template.language].filter(Boolean).join(' · ')"
+      :subtitle="
+        [template.description, template.kind, template.language].filter(Boolean).join(' · ')
+      "
     >
     </DetailHeader>
 
@@ -24,10 +26,13 @@
         @show-apps="activeTab = 'apps'"
       />
       <TemplateAppsTab v-else-if="activeTab === 'apps'" :template-id="template.id" />
-      <TemplateSettingsTab v-else-if="activeTab === 'settings'" :template="template" @updated="template = $event" />
+      <TemplateSettingsTab
+        v-else-if="activeTab === 'settings'"
+        :template="template"
+        @updated="template = $event"
+      />
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -53,10 +58,12 @@ const tabs = [
   { id: 'settings', label: 'Settings' },
 ];
 
-const validTabs = tabs.map(t => t.id);
-const activeTab = ref(validTabs.includes(route.query.tab as string) ? route.query.tab as string : 'overview');
+const validTabs = tabs.map((t) => t.id);
+const activeTab = ref(
+  validTabs.includes(route.query.tab as string) ? (route.query.tab as string) : 'overview',
+);
 
-watch(activeTab, tab => router.replace({ query: { tab } }));
+watch(activeTab, (tab) => router.replace({ query: { tab } }));
 
 const template = ref<Template | null>(null);
 const loading = ref(true);

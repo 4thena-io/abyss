@@ -5,10 +5,7 @@ import { onMounted, onUnmounted, type Ref } from 'vue';
  * @param elementRef - Ref to the target element
  * @param callback - Function to call when a click outside is detected
  */
-export function useClickOutside(
-  elementRef: Ref<HTMLElement | null>,
-  callback: () => void
-) {
+export function useClickOutside(elementRef: Ref<HTMLElement | null>, callback: () => void) {
   const handleClick = (event: Event) => {
     if (elementRef.value && !elementRef.value.contains(event.target as Node)) {
       callback();

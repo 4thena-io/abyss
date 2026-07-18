@@ -11,10 +11,13 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  title: string;
-  noPadding?: boolean;
-}>(), {
-  noPadding: false,
-});
+withDefaults(
+  defineProps<{
+    title: string;
+    noPadding?: boolean;
+  }>(),
+  {
+    noPadding: false,
+  },
+);
 </script>

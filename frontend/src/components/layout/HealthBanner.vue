@@ -32,10 +32,16 @@ const alerts = computed(() => {
   if (!status.value) return [];
   const list: { key: string; message: string }[] = [];
   if (!status.value.forge.ok)
-    list.push({ key: 'forge', message: `Forge is unreachable — app creation and webhooks are unavailable.${status.value.forge.error ? ' (' + status.value.forge.error + ')' : ''}` });
+    list.push({
+      key: 'forge',
+      message: `Forge is unreachable — app creation and webhooks are unavailable.${status.value.forge.error ? ' (' + status.value.forge.error + ')' : ''}`,
+    });
   if (!status.value.ci.ok)
-    list.push({ key: 'ci', message: `CI is unreachable — build and deployment data may be unavailable.${status.value.ci.error ? ' (' + status.value.ci.error + ')' : ''}` });
-  return list.filter(a => !dismissed.value.has(a.key));
+    list.push({
+      key: 'ci',
+      message: `CI is unreachable — build and deployment data may be unavailable.${status.value.ci.error ? ' (' + status.value.ci.error + ')' : ''}`,
+    });
+  return list.filter((a) => !dismissed.value.has(a.key));
 });
 
 // Auto-restore dismissed alerts when the service comes back up, so the next

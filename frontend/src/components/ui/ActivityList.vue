@@ -13,17 +13,12 @@
           :key="item.id"
           class="px-5 py-4 flex items-start gap-4 hover:bg-hover transition-colors"
         >
-          <div :class="[
-            'w-2 h-2 rounded-full mt-2 shrink-0',
-            statusColors[item.status] || 'bg-t3'
-          ]" />
+          <div
+            :class="['w-2 h-2 rounded-full mt-2 shrink-0', statusColors[item.status] || 'bg-t3']"
+          />
           <div class="flex-1 min-w-0">
             <p class="text-t1 text-sm">
-              <router-link
-                v-if="item.to"
-                :to="item.to"
-                class="font-medium hover:text-acc"
-              >
+              <router-link v-if="item.to" :to="item.to" class="font-medium hover:text-acc">
                 {{ item.title }}
               </router-link>
               <span v-else class="font-medium">{{ item.title }}</span>
@@ -52,14 +47,17 @@ export interface ActivityItem {
   to?: string;
 }
 
-withDefaults(defineProps<{
-  title: string;
-  items: ActivityItem[];
-  loading?: boolean;
-  emptyMessage?: string;
-}>(), {
-  emptyMessage: 'No recent activity'
-});
+withDefaults(
+  defineProps<{
+    title: string;
+    items: ActivityItem[];
+    loading?: boolean;
+    emptyMessage?: string;
+  }>(),
+  {
+    emptyMessage: 'No recent activity',
+  },
+);
 
 const statusColors: Record<string, string> = {
   success: 'bg-ok',

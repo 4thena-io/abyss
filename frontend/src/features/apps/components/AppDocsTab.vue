@@ -1,6 +1,5 @@
 <template>
   <div class="h-full overflow-hidden">
-
     <div v-if="loading" class="h-full flex items-center justify-center">
       <Spinner size="lg" />
     </div>
@@ -12,8 +11,11 @@
       message="Push changes to your docs/ folder to trigger the first render."
     />
 
-    <div v-else class="grid h-full border border-b1 rounded-xl overflow-hidden" style="grid-template-columns: 220px 1fr 200px">
-
+    <div
+      v-else
+      class="grid h-full border border-b1 rounded-xl overflow-hidden"
+      style="grid-template-columns: 220px 1fr 200px"
+    >
       <!-- Left: page list -->
       <nav class="border-r border-b1 bg-panel overflow-y-auto py-5">
         <template v-for="[section, pages] in groupedPages" :key="section">
@@ -65,7 +67,6 @@
           </a>
         </template>
       </div>
-
     </div>
   </div>
 </template>
@@ -98,31 +99,34 @@ const groupedPages = computed((): [string, DocPage[]][] => {
       if (a === '_root') return -1;
       if (b === '_root') return 1;
       // preserve the order sections first appear in the pages array
-      const aIdx = docs.value!.pages.findIndex(p => p.path.startsWith(a + '/'));
-      const bIdx = docs.value!.pages.findIndex(p => p.path.startsWith(b + '/'));
+      const aIdx = docs.value!.pages.findIndex((p) => p.path.startsWith(a + '/'));
+      const bIdx = docs.value!.pages.findIndex((p) => p.path.startsWith(b + '/'));
       return aIdx - bIdx;
     })
-    .map(([section, pages]) => [
-      section,
-      [...pages].sort((a, b) => {
-        const aIsIndex = a.path.endsWith('index.md');
-        const bIsIndex = b.path.endsWith('index.md');
-        if (aIsIndex && !bIsIndex) return -1;
-        if (!aIsIndex && bIsIndex) return 1;
-        return a.path.localeCompare(b.path);
-      }),
-    ] as [string, DocPage[]]);
+    .map(
+      ([section, pages]) =>
+        [
+          section,
+          [...pages].sort((a, b) => {
+            const aIsIndex = a.path.endsWith('index.md');
+            const bIsIndex = b.path.endsWith('index.md');
+            if (aIsIndex && !bIsIndex) return -1;
+            if (!aIsIndex && bIsIndex) return 1;
+            return a.path.localeCompare(b.path);
+          }),
+        ] as [string, DocPage[]],
+    );
 });
 
 const activePage = computed((): DocPage | undefined =>
-  docs.value?.pages.find(p => p.path === activePath.value),
+  docs.value?.pages.find((p) => p.path === activePath.value),
 );
 
 const pageToc = computed((): TOCItem[] => {
   if (!activePage.value) return [];
   const el = document.createElement('div');
   el.innerHTML = activePage.value.html;
-  return Array.from(el.querySelectorAll('h1, h2, h3')).map(h => ({
+  return Array.from(el.querySelectorAll('h1, h2, h3')).map((h) => ({
     title: h.textContent?.trim() ?? '',
     anchor: (h as HTMLElement).id,
     level: parseInt(h.tagName[1]!),
@@ -132,11 +136,11 @@ const pageToc = computed((): TOCItem[] => {
 function formatName(path: string): string {
   const file = path.split('/').pop()?.replace(/\.md$/, '') ?? '';
   if (file === 'index') return 'Overview';
-  return file.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return file.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function formatSection(dir: string): string {
-  return dir.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return dir.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 async function fetchDocs() {
@@ -150,7 +154,7 @@ async function fetchDocs() {
     if (!res.ok) throw new Error('Failed to fetch docs');
     docs.value = await res.json();
     const pages = docs.value?.pages ?? [];
-    activePath.value = (pages.find(p => p.path === 'index.md') ?? pages[0])?.path ?? '';
+    activePath.value = (pages.find((p) => p.path === 'index.md') ?? pages[0])?.path ?? '';
   } catch (err) {
     console.error('Failed to fetch docs:', err);
     docs.value = null;

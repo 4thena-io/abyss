@@ -23,6 +23,7 @@ export const templatesApi = {
   getById: (id: number) => api.get<Template>(`/templates/${id}`),
   getApps: (id: number) => api.get<App[]>(`/templates/${id}/apps`),
   create: (data: CreateTemplateRequest) => api.post<Template>('/templates', data),
-  update: (id: number, data: UpdateTemplateRequest) => api.patch<Template>(`/templates/${id}`, data),
+  update: (id: number, data: UpdateTemplateRequest) =>
+    api.patch<Template>(`/templates/${id}`, data),
   delete: (id: number) => api.delete(`/templates/${id}`),
 };
