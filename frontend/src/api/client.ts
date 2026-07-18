@@ -4,10 +4,7 @@ interface ApiError {
   message: string;
 }
 
-async function request<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -18,9 +15,13 @@ async function request<T>(
 
   if (!response.ok) {
     const error: ApiError = await response.json().catch(() => ({
-      message: 'Request failed'
+      message: 'Request failed',
     }));
     throw new Error(error.message);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json();
@@ -47,6 +48,5 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  delete: <T>(endpoint: string) =>
-    request<T>(endpoint, { method: 'DELETE' }),
+  delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
 };
