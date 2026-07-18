@@ -20,3 +20,7 @@ build-backend:
 
 build-frontend:
     cd {{frontend}} && bun run build
+
+mocks:
+    mockery
+    go mod tidy

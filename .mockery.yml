@@ -1,0 +1,18 @@
+dir: '{{.InterfaceDir}}/mocks'
+filename: 'mock_{{.InterfaceName}}.go'
+pkgname: mocks
+structname: 'Mock{{.InterfaceName}}'
+template: testify
+packages:
+  github.com/4thena-io/abyss/internal/service:
+    config:
+      all: true
+  github.com/4thena-io/abyss/internal/integration/forge:
+    config:
+      all: true
+  github.com/4thena-io/abyss/internal/integration/ci:
+    config:
+      all: true
+  github.com/4thena-io/abyss/internal/api/rest/middleware:
+    config:
+      all: true
