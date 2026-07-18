@@ -18,6 +18,7 @@ type fakeAppRepository struct {
 	GetByProjectFn func(ctx context.Context, id uint) ([]model.App, error)
 	UpdateFn       func(ctx context.Context, app *model.App) error
 	DeleteFn       func(ctx context.Context, app *model.App) error
+	CountByTeamFn  func(ctx context.Context, teamID uint) (int64, error)
 }
 
 func (f *fakeAppRepository) Save(ctx context.Context, app *model.App) error {
@@ -66,16 +67,20 @@ func (f *fakeAppRepository) Delete(ctx context.Context, app *model.App) error {
 	return f.DeleteFn(ctx, app)
 }
 func (f *fakeAppRepository) CountByTeam(ctx context.Context, teamID uint) (int64, error) {
-	panic("fakeAppRepository.CountByTeam not implemented")
+	if f.CountByTeamFn == nil {
+		panic("fakeAppRepository.CountByTeam not implemented")
+	}
+	return f.CountByTeamFn(ctx, teamID)
 }
 
 type fakeProjectRepository struct {
-	SaveFn      func(ctx context.Context, project *model.Project) error
-	UpdateFn    func(ctx context.Context, project *model.Project) error
-	GetAllFn    func(ctx context.Context) ([]model.Project, error)
-	GetByIDFn   func(ctx context.Context, id uint) (*model.Project, error)
-	GetByNameFn func(ctx context.Context, name string) (*model.Project, error)
-	DeleteFn    func(ctx context.Context, project *model.Project) error
+	SaveFn        func(ctx context.Context, project *model.Project) error
+	UpdateFn      func(ctx context.Context, project *model.Project) error
+	GetAllFn      func(ctx context.Context) ([]model.Project, error)
+	GetByIDFn     func(ctx context.Context, id uint) (*model.Project, error)
+	GetByNameFn   func(ctx context.Context, name string) (*model.Project, error)
+	DeleteFn      func(ctx context.Context, project *model.Project) error
+	CountByTeamFn func(ctx context.Context, teamID uint) (int64, error)
 }
 
 func (f *fakeProjectRepository) Save(ctx context.Context, project *model.Project) error {
@@ -118,7 +123,10 @@ func (f *fakeProjectRepository) Delete(ctx context.Context, project *model.Proje
 	return f.DeleteFn(ctx, project)
 }
 func (f *fakeProjectRepository) CountByTeam(ctx context.Context, teamID uint) (int64, error) {
-	panic("fakeProjectRepository.CountByTeam not implemented")
+	if f.CountByTeamFn == nil {
+		panic("fakeProjectRepository.CountByTeam not implemented")
+	}
+	return f.CountByTeamFn(ctx, teamID)
 }
 
 type fakeTemplateRepository struct{}
@@ -142,7 +150,9 @@ func (f *fakeTemplateRepository) Delete(ctx context.Context, template *model.Tem
 	panic("fakeTemplateRepository.Delete not implemented")
 }
 
-type fakeForge struct{}
+type fakeForge struct {
+	GetOrgReposFn func(ctx context.Context, name string) ([]model.Repo, error)
+}
 
 func (f *fakeForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
 	panic("fakeForge.GetAuthenticatedUser not implemented")
@@ -160,6 +170,9 @@ func (f *fakeForge) GetRepo(ctx context.Context, id int64) (*model.Repo, error) 
 	panic("fakeForge.GetRepo not implemented")
 }
 func (f *fakeForge) GetOrgRepos(ctx context.Context, name string) ([]model.Repo, error) {
+	if f.GetOrgReposFn != nil {
+		return f.GetOrgReposFn(ctx, name)
+	}
 	panic("fakeForge.GetOrgRepos not implemented")
 }
 func (f *fakeForge) DeleteRepo(ctx context.Context, owner, name string) error {
