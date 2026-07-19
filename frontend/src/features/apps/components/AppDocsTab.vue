@@ -44,7 +44,7 @@
       <!-- Center: rendered content -->
       <div class="overflow-y-auto">
         <div class="max-w-2xl mx-auto px-10 py-10">
-          <div v-if="activePage" class="doc-content" v-html="activePage.html" />
+          <div v-if="activePage" class="doc-content" v-html="sanitizedHtml" />
         </div>
       </div>
 
@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import DOMPurify from 'dompurify';
 import { DocumentTextIcon } from '@heroicons/vue/24/outline';
 import type { RenderedDocs, DocPage, TOCItem } from '../types';
 import Spinner from '../../../components/ui/Spinner.vue';
@@ -122,10 +123,17 @@ const activePage = computed((): DocPage | undefined =>
   docs.value?.pages.find((p) => p.path === activePath.value),
 );
 
+// Defense in depth: the backend already renders markdown with raw HTML
+// disabled, but sanitize again here so a bug or bypass on the backend
+// doesn't turn into script execution in every viewer's browser.
+const sanitizedHtml = computed(() =>
+  activePage.value ? DOMPurify.sanitize(activePage.value.html) : '',
+);
+
 const pageToc = computed((): TOCItem[] => {
   if (!activePage.value) return [];
   const el = document.createElement('div');
-  el.innerHTML = activePage.value.html;
+  el.innerHTML = sanitizedHtml.value;
   return Array.from(el.querySelectorAll('h1, h2, h3')).map((h) => ({
     title: h.textContent?.trim() ?? '',
     anchor: (h as HTMLElement).id,

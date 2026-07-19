@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/4thena-io/abyss/internal/git"
@@ -142,5 +143,24 @@ func TestDocsService_extractTOC_nestedInlineFormatting(t *testing.T) {
 	toc := svc.extractTOC(md, source)
 	if len(toc) != 1 || toc[0].Title != "Hello bold world" {
 		t.Fatalf("expected heading text to flatten inline formatting, got %+v", toc)
+	}
+}
+
+func TestDocsService_renderMarkdown_EscapesRawHTML(t *testing.T) {
+	svc := NewDocsService(nil, nil, t.TempDir())
+	md := svc.newMarkdown()
+
+	html, err := svc.renderMarkdown(md, []byte("hello <script>alert(1)</script> world\n"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Without WithUnsafe(), goldmark doesn't pass raw HTML tags through in
+	// any form (escaped or otherwise) — it drops them and leaves an HTML
+	// comment in their place, so <script> can never reach the browser.
+	if strings.Contains(html, "<script>") || strings.Contains(html, "</script>") {
+		t.Fatalf("expected raw <script> tags not to appear in the output at all, got: %s", html)
+	}
+	if !strings.Contains(html, "raw HTML omitted") {
+		t.Fatalf("expected goldmark's raw-HTML placeholder in output, got: %s", html)
 	}
 }

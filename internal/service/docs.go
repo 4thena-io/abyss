@@ -14,7 +14,6 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -116,9 +115,10 @@ func (s *DocsService) newMarkdown() goldmark.Markdown {
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
 		),
-		goldmark.WithRendererOptions(
-			goldmarkhtml.WithUnsafe(),
-		),
+		// No WithUnsafe(): raw HTML in repo-authored markdown (e.g. a
+		// malicious docs/*.md from anyone with push access) is escaped
+		// rather than passed through, since the rendered output is later
+		// injected into the browser via v-html.
 	)
 }
 

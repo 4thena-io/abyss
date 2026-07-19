@@ -116,7 +116,11 @@
         >
           <span :class="item.dotColor" class="w-2 h-2 rounded-full mt-1.5 shrink-0" />
           <div class="flex-1 min-w-0">
-            <p class="text-sm text-t1" v-html="item.text" />
+            <p class="text-sm text-t1">
+              <strong>Build #{{ item.number }}</strong> {{ item.status }} on
+              <strong>{{ item.branch }}</strong>
+              <span v-if="item.durationText"> — {{ item.durationText }}</span>
+            </p>
             <p class="text-[11px] text-t3 mt-0.5">{{ item.time }}</p>
           </div>
         </div>
@@ -186,7 +190,14 @@ function statusBadge(status: string) {
   return { class: 'bg-surface text-t2', dot: 'bg-t3' };
 }
 
-type ActivityItem = { dotColor: string; text: string; time: string };
+type ActivityItem = {
+  dotColor: string;
+  number: number;
+  status: string;
+  branch: string;
+  durationText: string;
+  time: string;
+};
 
 const activity = computed((): ActivityItem[] => {
   const items: ActivityItem[] = [];
@@ -196,7 +207,10 @@ const activity = computed((): ActivityItem[] => {
     const run = b.status === 'running';
     items.push({
       dotColor: ok ? 'bg-ok' : fail ? 'bg-fail' : run ? 'bg-run' : 'bg-t3',
-      text: `<strong>Build #${b.number}</strong> ${b.status} on <strong>${b.branch}</strong>${b.duration ? ` — ${formatDuration(b.duration)}` : ''}`,
+      number: b.number,
+      status: b.status,
+      branch: b.branch,
+      durationText: b.duration ? formatDuration(b.duration) : '',
       time: formatRelativeTime(b.startedAt),
     });
   }
