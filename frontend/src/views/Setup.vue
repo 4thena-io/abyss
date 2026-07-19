@@ -242,6 +242,20 @@
             </p>
           </div>
 
+          <div>
+            <label class="block text-t3 text-sm mb-2">Public URL</label>
+            <input
+              v-model="form.root_url"
+              type="text"
+              placeholder="https://abyss.example.com"
+              class="w-full bg-bg border border-b1 rounded-lg px-4 py-2.5 text-t1 placeholder:text-t3 focus:outline-none focus:border-b2"
+            />
+            <p class="text-xs text-t3 mt-1">
+              The address others use to reach this instance, e.g. behind a reverse proxy. Used to
+              build webhook URLs.
+            </p>
+          </div>
+
           <div class="bg-bg border border-b1 rounded-lg p-4 text-sm space-y-2">
             <p class="text-t2 font-medium">How to create the OAuth app:</p>
             <ol class="list-decimal list-inside text-t3 space-y-1">
@@ -429,6 +443,9 @@ const copied = ref(false);
 const restartReady = ref(false);
 
 const form = reactive({
+  // Public URL
+  root_url: window.location.origin,
+
   // Database
   db_type: 'sqlite',
   db_path: './abyss.db',
@@ -461,6 +478,7 @@ onMounted(async () => {
     const status = await setupApi.status();
     const d = status.defaults;
     if (!d) return;
+    if (d.root_url) form.root_url = d.root_url;
     if (d.db_type) form.db_type = d.db_type;
     if (d.db_path) form.db_path = d.db_path;
     if (d.db_host) form.db_host = d.db_host;

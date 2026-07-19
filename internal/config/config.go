@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	RootURL  string         `koanf:"root_url"`
 	Server   ServerConfig   `koanf:"server"`
 	Database DatabaseConfig `koanf:"database"`
 	Forge    ForgeConfig    `koanf:"forge"`

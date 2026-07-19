@@ -33,6 +33,7 @@ func (h *SetupHandler) Status(w http.ResponseWriter, r *http.Request) {
 	res := map[string]any{"configured": h.configured}
 	if !h.configured && h.defaults != nil {
 		res["defaults"] = map[string]string{
+			"root_url":    h.defaults.RootURL,
 			"db_type":     h.defaults.Database.Type,
 			"db_path":     h.defaults.Database.Path,
 			"db_host":     h.defaults.Database.Host,
@@ -51,6 +52,9 @@ func (h *SetupHandler) Status(w http.ResponseWriter, r *http.Request) {
 }
 
 type setupRequest struct {
+	// Public URL
+	RootURL string `json:"root_url"`
+
 	// Database
 	DBType     string `json:"db_type"`
 	DBPath     string `json:"db_path"`
@@ -135,7 +139,9 @@ func (h *SetupHandler) Configure(w http.ResponseWriter, r *http.Request) {
 }
 
 func buildConfigYAML(r setupRequest) string {
-	return fmt.Sprintf(`server:
+	return fmt.Sprintf(`root_url: %s
+
+server:
   host: "0.0.0.0"
   port: "8000"
 
@@ -163,6 +169,7 @@ logging:
   format: "pretty"
   file: ""
 `,
+		ys(r.RootURL),
 		buildDatabaseYAML(r),
 		ys(r.ForgeType), ys(r.ForgeHost), ys(r.ForgeToken), ys(r.ForgeOwner), ys(forgeBranch(r)),
 		ys(r.CIType), ys(r.CIHost), ys(r.CIToken),

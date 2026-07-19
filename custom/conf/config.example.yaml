@@ -1,3 +1,7 @@
+# Public address used to reach this instance (e.g. behind a reverse proxy).
+# Used to build webhook URLs. Falls back to http://<server.host>:<server.port> if unset.
+root_url: "https://abyss.example.com"
+
 server:
   host: 0.0.0.0
   port: 8000

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/4thena-io/abyss/internal/api/rest/handler"
 	"github.com/4thena-io/abyss/internal/api/rest/middleware"
@@ -77,11 +78,15 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 			log.Fatal().Err(err).Msg("failed to provision webhook secret")
 		}
 
-		host := cfg.Server.Host
-		if host == "" || host == "0.0.0.0" {
-			host = "localhost"
+		if cfg.RootURL != "" {
+			baseURL = strings.TrimSuffix(cfg.RootURL, "/")
+		} else {
+			host := cfg.Server.Host
+			if host == "" || host == "0.0.0.0" {
+				host = "localhost"
+			}
+			baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
 		}
-		baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
 
 		forgeProvider, err := forge.NewForge(cfg.Forge)
 		if err != nil {

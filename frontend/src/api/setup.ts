@@ -1,4 +1,5 @@
 export interface SetupDefaults {
+  root_url: string;
   db_type: string;
   db_path: string;
   db_host: string;
@@ -19,6 +20,9 @@ export interface SetupStatus {
 }
 
 export interface SetupRequest {
+  // Public URL
+  root_url: string;
+
   // Database
   db_type: string;
   db_path: string;
