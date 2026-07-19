@@ -1,0 +1,33 @@
+{
+  "name": "abyss",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "forwardPorts": [8000, 5173, 3000],
+  "portsAttributes": {
+    "8000": { "label": "abyss (backend)" },
+    "5173": { "label": "frontend (vite dev)" },
+    "3000": { "label": "forge (Gitea, compose.dev.yml)" }
+  },
+  "postCreateCommand": "go mod download && cd frontend && bun install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "Vue.volar",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "EditorConfig.EditorConfig"
+      ],
+      "settings": {
+        "go.toolsManagement.autoUpdate": true,
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}
