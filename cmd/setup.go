@@ -77,15 +77,11 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 			log.Fatal().Err(err).Msg("failed to provision webhook secret")
 		}
 
-		if cfg.Server.WebhookHost != "" {
-			baseURL = cfg.Server.WebhookHost
-		} else {
-			host := cfg.Server.Host
-			if host == "" || host == "0.0.0.0" {
-				host = "localhost"
-			}
-			baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
+		host := cfg.Server.Host
+		if host == "" || host == "0.0.0.0" {
+			host = "localhost"
 		}
+		baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
 
 		forgeProvider, err := forge.NewForge(cfg.Forge)
 		if err != nil {
