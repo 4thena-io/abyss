@@ -70,17 +70,24 @@ func (f *GitlabForge) GetUserByToken(ctx context.Context, token string) (*model.
 }
 
 func (f *GitlabForge) IsMemberOfOwner(ctx context.Context, owner, username string) (bool, error) {
-	members, resp, err := f.client.Groups.ListGroupMembers(owner, nil, gl.WithContext(ctx))
-	if err != nil {
-		if resp != nil && resp.StatusCode == http.StatusNotFound {
-			return false, nil
+	opts := &gl.ListGroupMembersOptions{ListOptions: gl.ListOptions{PerPage: 100}}
+	for {
+		members, resp, err := f.client.Groups.ListGroupMembers(owner, opts, gl.WithContext(ctx))
+		if err != nil {
+			if resp != nil && resp.StatusCode == http.StatusNotFound {
+				return false, nil
+			}
+			return false, fmt.Errorf("failed to list group members: %w", err)
 		}
-		return false, fmt.Errorf("failed to list group members: %w", err)
-	}
-	for _, m := range members {
-		if m.Username == username {
-			return true, nil
+		for _, m := range members {
+			if m.Username == username {
+				return true, nil
+			}
 		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 	return false, nil
 }
