@@ -38,6 +38,29 @@ var migrations = []*gormigrate.Migration{
 			)
 		},
 	},
+	{
+		// Replaces the plaintext User.Token column with TokenHash/TokenLastEight.
+		// Runs AutoMigrate to add the new columns, then drops the old one so no
+		// raw PAT is left sitting on disk.
+		ID: "20260719000001_hash_personal_access_tokens",
+		Migrate: func(tx *gorm.DB) error {
+			if err := tx.AutoMigrate(&model.User{}); err != nil {
+				return err
+			}
+			if tx.Migrator().HasColumn(&model.User{}, "token") {
+				return tx.Migrator().DropColumn(&model.User{}, "token")
+			}
+			return nil
+		},
+		Rollback: func(tx *gorm.DB) error {
+			// The raw tokens are gone for good; rollback only removes the hash
+			// columns so users regenerate a PAT afterward.
+			if err := tx.Migrator().DropColumn(&model.User{}, "token_hash"); err != nil {
+				return err
+			}
+			return tx.Migrator().DropColumn(&model.User{}, "token_last_eight")
+		},
+	},
 }
 
 func RunMigrations(db *gorm.DB) error {
