@@ -10,8 +10,9 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string `koanf:"host"`
-	Port string `koanf:"port"`
+	Host        string `koanf:"host"`
+	Port        string `koanf:"port"`
+	WebhookHost string `koanf:"webhook_host"`
 }
 
 type DatabaseConfig struct {
