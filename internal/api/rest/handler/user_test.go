@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +15,7 @@ import (
 
 func TestUserHandler_GetUser(t *testing.T) {
 	t.Run("returns 400 for invalid id", func(t *testing.T) {
-		teamSvc := service.NewTeamService(mocks.NewMockTeamRepository(t), &fakeProjectRepository{}, &fakeAppRepository{}, mocks.NewMockUserLookup(t))
+		teamSvc := service.NewTeamService(mocks.NewMockTeamRepository(t), mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 		h := NewUserHandler(teamSvc)
 
 		r := requestWithParams(http.MethodGet, "/users/abc", "", nil, map[string]string{"id": "abc"})
@@ -31,7 +30,7 @@ func TestUserHandler_GetUser(t *testing.T) {
 	t.Run("returns 404 when user does not exist", func(t *testing.T) {
 		userLookup := mocks.NewMockUserLookup(t)
 		userLookup.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
-		teamSvc := service.NewTeamService(mocks.NewMockTeamRepository(t), &fakeProjectRepository{}, &fakeAppRepository{}, userLookup)
+		teamSvc := service.NewTeamService(mocks.NewMockTeamRepository(t), mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), userLookup)
 		h := NewUserHandler(teamSvc)
 
 		r := requestWithParams(http.MethodGet, "/users/1", "", nil, map[string]string{"id": "1"})
@@ -52,12 +51,10 @@ func TestUserHandler_GetUser(t *testing.T) {
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(5)).Return(&model.Team{ID: 5, Name: "platform"}, nil)
 		teamRepo.EXPECT().CountMembers(mock.Anything, uint(5)).Return(int64(3), nil)
 
-		projectRepo := &fakeProjectRepository{
-			CountByTeamFn: func(_ context.Context, teamID uint) (int64, error) { return 2, nil },
-		}
-		appRepo := &fakeAppRepository{
-			CountByTeamFn: func(_ context.Context, teamID uint) (int64, error) { return 4, nil },
-		}
+		projectRepo := mocks.NewMockProjectRepository(t)
+		projectRepo.EXPECT().CountByTeam(mock.Anything, uint(5)).Return(2, nil)
+		appRepo := mocks.NewMockAppRepository(t)
+		appRepo.EXPECT().CountByTeam(mock.Anything, uint(5)).Return(4, nil)
 
 		teamSvc := service.NewTeamService(teamRepo, projectRepo, appRepo, userLookup)
 		h := NewUserHandler(teamSvc)

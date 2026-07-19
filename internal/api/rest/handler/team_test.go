@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +14,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func newTeamHandler(teamRepo *mocks.MockTeamRepository, projectRepo *fakeProjectRepository, appRepo *fakeAppRepository, userLookup *mocks.MockUserLookup) *TeamHandler {
+func newTeamHandler(t *testing.T, teamRepo *mocks.MockTeamRepository, projectRepo *mocks.MockProjectRepository, appRepo *mocks.MockAppRepository, userLookup *mocks.MockUserLookup) *TeamHandler {
+	t.Helper()
 	svc := service.NewTeamService(teamRepo, projectRepo, appRepo, userLookup)
 	return NewTeamHandler(svc)
 }
@@ -24,7 +24,7 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 	t.Run("returns 409 when team name already exists", func(t *testing.T) {
 		teamRepo := mocks.NewMockTeamRepository(t)
 		teamRepo.EXPECT().GetByName(mock.Anything, "taken").Return(&model.Team{ID: 1, Name: "taken"}, nil)
-		h := newTeamHandler(teamRepo, &fakeProjectRepository{}, &fakeAppRepository{}, mocks.NewMockUserLookup(t))
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
 		body := `{"name":"taken","description":"d"}`
 		r := requestWithParams(http.MethodPost, "/teams", body, &auth.Claims{UserID: 1}, nil)
@@ -41,7 +41,7 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 		teamRepo.EXPECT().GetByName(mock.Anything, "new-team").Return(nil, nil)
 		teamRepo.On("Save", mock.Anything, mock.AnythingOfType("*model.Team")).Return(nil)
 		teamRepo.On("SaveMember", mock.Anything, mock.AnythingOfType("*model.TeamMember")).Return(nil)
-		h := newTeamHandler(teamRepo, &fakeProjectRepository{}, &fakeAppRepository{}, mocks.NewMockUserLookup(t))
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
 		body := `{"name":"new-team","description":"d"}`
 		r := requestWithParams(http.MethodPost, "/teams", body, &auth.Claims{UserID: 7}, nil)
@@ -65,7 +65,7 @@ func TestTeamHandler_GetTeamByID(t *testing.T) {
 	t.Run("returns 404 when team missing", func(t *testing.T) {
 		teamRepo := mocks.NewMockTeamRepository(t)
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
-		h := newTeamHandler(teamRepo, &fakeProjectRepository{}, &fakeAppRepository{}, mocks.NewMockUserLookup(t))
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
 		r := requestWithParams(http.MethodGet, "/teams/1", "", nil, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -80,13 +80,11 @@ func TestTeamHandler_GetTeamByID(t *testing.T) {
 		teamRepo := mocks.NewMockTeamRepository(t)
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.Team{ID: 1, Name: "team"}, nil)
 		teamRepo.EXPECT().CountMembers(mock.Anything, uint(1)).Return(int64(2), nil)
-		projectRepo := &fakeProjectRepository{
-			CountByTeamFn: func(ctx context.Context, teamID uint) (int64, error) { return 3, nil },
-		}
-		appRepo := &fakeAppRepository{
-			CountByTeamFn: func(ctx context.Context, teamID uint) (int64, error) { return 4, nil },
-		}
-		h := newTeamHandler(teamRepo, projectRepo, appRepo, mocks.NewMockUserLookup(t))
+		projectRepo := mocks.NewMockProjectRepository(t)
+		projectRepo.EXPECT().CountByTeam(mock.Anything, uint(1)).Return(3, nil)
+		appRepo := mocks.NewMockAppRepository(t)
+		appRepo.EXPECT().CountByTeam(mock.Anything, uint(1)).Return(4, nil)
+		h := newTeamHandler(t, teamRepo, projectRepo, appRepo, mocks.NewMockUserLookup(t))
 
 		r := requestWithParams(http.MethodGet, "/teams/1", "", nil, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -109,7 +107,7 @@ func TestTeamHandler_DeleteTeam(t *testing.T) {
 	t.Run("returns 404 when team missing", func(t *testing.T) {
 		teamRepo := mocks.NewMockTeamRepository(t)
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
-		h := newTeamHandler(teamRepo, &fakeProjectRepository{}, &fakeAppRepository{}, mocks.NewMockUserLookup(t))
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
 		r := requestWithParams(http.MethodDelete, "/teams/1", "", nil, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -125,7 +123,7 @@ func TestTeamHandler_DeleteTeam(t *testing.T) {
 		team := &model.Team{ID: 1}
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(team, nil)
 		teamRepo.EXPECT().Delete(mock.Anything, team).Return(nil)
-		h := newTeamHandler(teamRepo, &fakeProjectRepository{}, &fakeAppRepository{}, mocks.NewMockUserLookup(t))
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
 		r := requestWithParams(http.MethodDelete, "/teams/1", "", nil, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -141,7 +139,7 @@ func TestTeamHandler_AddTeamMember(t *testing.T) {
 	t.Run("returns 404 when user does not exist", func(t *testing.T) {
 		userLookup := mocks.NewMockUserLookup(t)
 		userLookup.EXPECT().GetByUsername(mock.Anything, "ghost").Return(nil, nil)
-		h := newTeamHandler(mocks.NewMockTeamRepository(t), &fakeProjectRepository{}, &fakeAppRepository{}, userLookup)
+		h := newTeamHandler(t, mocks.NewMockTeamRepository(t), mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), userLookup)
 
 		body := `{"username":"ghost","role":"member"}`
 		r := requestWithParams(http.MethodPost, "/teams/1/members", body, nil, map[string]string{"id": "1"})
@@ -158,7 +156,7 @@ func TestTeamHandler_AddTeamMember(t *testing.T) {
 		teamRepo.On("SaveMember", mock.Anything, mock.AnythingOfType("*model.TeamMember")).Return(nil)
 		userLookup := mocks.NewMockUserLookup(t)
 		userLookup.EXPECT().GetByUsername(mock.Anything, "alice").Return(&model.User{ID: 9, Username: "alice"}, nil)
-		h := newTeamHandler(teamRepo, &fakeProjectRepository{}, &fakeAppRepository{}, userLookup)
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), userLookup)
 
 		body := `{"username":"alice"}`
 		r := requestWithParams(http.MethodPost, "/teams/1/members", body, nil, map[string]string{"id": "1"})

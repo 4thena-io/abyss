@@ -8,15 +8,18 @@ import (
 
 	"github.com/4thena-io/abyss/internal/api/rest/response"
 	"github.com/4thena-io/abyss/internal/auth"
+	cimocks "github.com/4thena-io/abyss/internal/integration/ci/mocks"
+	forgemocks "github.com/4thena-io/abyss/internal/integration/forge/mocks"
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
 	"github.com/4thena-io/abyss/internal/service/mocks"
 	"github.com/stretchr/testify/mock"
 )
 
-func newTemplateHandler(templateRepo *mocks.MockTemplateRepository, forge *fakeForge) *TemplateHandler {
+func newTemplateHandler(t *testing.T, templateRepo *mocks.MockTemplateRepository, forge *forgemocks.MockForge) *TemplateHandler {
+	t.Helper()
 	templateSvc := service.NewTemplateService(templateRepo, forge, "owner")
-	appSvc := service.NewAppService(&fakeAppRepository{}, &fakeProjectRepository{}, templateRepo, forge, &fakeCI{}, nil, "owner", "", "secret", "main")
+	appSvc := service.NewAppService(mocks.NewMockAppRepository(t), mocks.NewMockProjectRepository(t), templateRepo, forge, cimocks.NewMockCI(t), nil, "owner", "", "secret", "main")
 	return NewTemplateHandler(templateSvc, appSvc)
 }
 
@@ -24,7 +27,7 @@ func TestTemplateHandler_CreateTemplate(t *testing.T) {
 	t.Run("returns 409 when a repo-based template name already exists", func(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByName(mock.Anything, "taken").Return(&model.Template{ID: 1, Name: "taken"}, nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		body := `{"source":"repo","name":"taken","repoUrl":"https://forge/owner/taken"}`
 		r := requestWithParams(http.MethodPost, "/templates", body, &auth.Claims{UserID: 1}, nil)
@@ -40,7 +43,7 @@ func TestTemplateHandler_CreateTemplate(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByName(mock.Anything, "new-template").Return(nil, nil)
 		repo.On("Save", mock.Anything, mock.AnythingOfType("*model.Template")).Return(nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		body := `{"source":"repo","name":"new-template","kind":"service","language":"go","repoUrl":"https://forge/owner/new-template"}`
 		r := requestWithParams(http.MethodPost, "/templates", body, &auth.Claims{UserID: 7}, nil)
@@ -60,7 +63,7 @@ func TestTemplateHandler_CreateTemplate(t *testing.T) {
 	})
 
 	t.Run("returns 400 for malformed body", func(t *testing.T) {
-		h := newTemplateHandler(mocks.NewMockTemplateRepository(t), &fakeForge{})
+		h := newTemplateHandler(t, mocks.NewMockTemplateRepository(t), forgemocks.NewMockForge(t))
 
 		r := requestWithParams(http.MethodPost, "/templates", "{not json", &auth.Claims{UserID: 1}, nil)
 		w := httptest.NewRecorder()
@@ -76,7 +79,7 @@ func TestTemplateHandler_UpdateTemplate(t *testing.T) {
 	t.Run("returns 404 when template missing", func(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		body := `{"name":"n","description":"d","kind":"k","language":"l"}`
 		r := requestWithParams(http.MethodPut, "/templates/1", body, &auth.Claims{UserID: 1}, map[string]string{"id": "1"})
@@ -91,7 +94,7 @@ func TestTemplateHandler_UpdateTemplate(t *testing.T) {
 	t.Run("returns 403 when caller is not creator or admin", func(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.Template{ID: 1, CreatorID: 42}, nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		body := `{"name":"n","description":"d","kind":"k","language":"l"}`
 		r := requestWithParams(http.MethodPut, "/templates/1", body, &auth.Claims{UserID: 999}, map[string]string{"id": "1"})
@@ -108,7 +111,7 @@ func TestTemplateHandler_GetTemplateByID(t *testing.T) {
 	t.Run("returns 404 when template missing", func(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		r := requestWithParams(http.MethodGet, "/templates/1", "", nil, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -122,7 +125,7 @@ func TestTemplateHandler_GetTemplateByID(t *testing.T) {
 	t.Run("returns template as json", func(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.Template{ID: 1, Name: "template"}, nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		r := requestWithParams(http.MethodGet, "/templates/1", "", nil, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -145,7 +148,7 @@ func TestTemplateHandler_DeleteTemplate(t *testing.T) {
 	t.Run("returns 404 when template missing", func(t *testing.T) {
 		repo := mocks.NewMockTemplateRepository(t)
 		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		r := requestWithParams(http.MethodDelete, "/templates/1", "", &auth.Claims{UserID: 1}, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
@@ -161,7 +164,7 @@ func TestTemplateHandler_DeleteTemplate(t *testing.T) {
 		template := &model.Template{ID: 1, CreatorID: 7}
 		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(template, nil)
 		repo.EXPECT().Delete(mock.Anything, template).Return(nil)
-		h := newTemplateHandler(repo, &fakeForge{})
+		h := newTemplateHandler(t, repo, forgemocks.NewMockForge(t))
 
 		r := requestWithParams(http.MethodDelete, "/templates/1", "", &auth.Claims{UserID: 7}, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()

@@ -6,15 +6,14 @@ import (
 	"testing"
 
 	"github.com/4thena-io/abyss/internal/model"
+	"github.com/4thena-io/abyss/internal/service/mocks"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestProjectService_SaveProject(t *testing.T) {
 	t.Run("returns ErrConflict when name already taken", func(t *testing.T) {
-		repo := &mockProjectRepository{
-			GetByNameFn: func(ctx context.Context, name string) (*model.Project, error) {
-				return &model.Project{ID: 1, Name: name}, nil
-			},
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByName(mock.Anything, "taken").Return(&model.Project{ID: 1, Name: "taken"}, nil)
 		svc := NewProjectService(repo)
 
 		_, err := svc.SaveProject(context.Background(), &model.Project{Name: "taken"})
@@ -24,11 +23,8 @@ func TestProjectService_SaveProject(t *testing.T) {
 	})
 
 	t.Run("propagates lookup error", func(t *testing.T) {
-		repo := &mockProjectRepository{
-			GetByNameFn: func(ctx context.Context, name string) (*model.Project, error) {
-				return nil, errBoom
-			},
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByName(mock.Anything, "x").Return(nil, errBoom)
 		svc := NewProjectService(repo)
 
 		_, err := svc.SaveProject(context.Background(), &model.Project{Name: "x"})
@@ -38,34 +34,26 @@ func TestProjectService_SaveProject(t *testing.T) {
 	})
 
 	t.Run("saves when name is free", func(t *testing.T) {
-		var saved *model.Project
-		repo := &mockProjectRepository{
-			GetByNameFn: func(ctx context.Context, name string) (*model.Project, error) { return nil, nil },
-			SaveFn: func(ctx context.Context, project *model.Project) error {
-				saved = project
-				return nil
-			},
-		}
+		project := &model.Project{Name: "new-project"}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByName(mock.Anything, "new-project").Return(nil, nil)
+		repo.EXPECT().Save(mock.Anything, project).Return(nil)
 		svc := NewProjectService(repo)
 
-		project := &model.Project{Name: "new-project"}
 		got, err := svc.SaveProject(context.Background(), project)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if got != project || saved != project {
-			t.Fatalf("expected the same project instance to be returned and saved")
+		if got != project {
+			t.Fatalf("expected the same project instance to be returned")
 		}
 	})
 }
 
 func TestProjectService_UpdateProject(t *testing.T) {
-	existing := &model.Project{ID: 1, Name: "old", CreatorID: 42}
-
 	t.Run("returns ErrNotFound when project missing", func(t *testing.T) {
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return nil, nil },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
 		svc := NewProjectService(repo)
 
 		_, err := svc.UpdateProject(context.Background(), 1, 42, false, "new", "desc", nil)
@@ -75,9 +63,9 @@ func TestProjectService_UpdateProject(t *testing.T) {
 	})
 
 	t.Run("returns ErrForbidden for non-admin non-creator", func(t *testing.T) {
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return existing, nil },
-		}
+		existing := &model.Project{ID: 1, Name: "old", CreatorID: 42}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(existing, nil)
 		svc := NewProjectService(repo)
 
 		_, err := svc.UpdateProject(context.Background(), 1, 999, false, "new", "desc", nil)
@@ -88,10 +76,9 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 	t.Run("allows admin to update someone else's project", func(t *testing.T) {
 		p := &model.Project{ID: 1, Name: "old", CreatorID: 42}
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return p, nil },
-			UpdateFn:  func(ctx context.Context, project *model.Project) error { return nil },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(p, nil)
+		repo.EXPECT().Update(mock.Anything, p).Return(nil)
 		svc := NewProjectService(repo)
 
 		teamID := uint(7)
@@ -106,10 +93,9 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 	t.Run("allows creator to update own project", func(t *testing.T) {
 		p := &model.Project{ID: 1, Name: "old", CreatorID: 42}
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return p, nil },
-			UpdateFn:  func(ctx context.Context, project *model.Project) error { return nil },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(p, nil)
+		repo.EXPECT().Update(mock.Anything, p).Return(nil)
 		svc := NewProjectService(repo)
 
 		got, err := svc.UpdateProject(context.Background(), 1, 42, false, "renamed", "new desc", nil)
@@ -123,10 +109,9 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 	t.Run("propagates update error", func(t *testing.T) {
 		p := &model.Project{ID: 1, Name: "old", CreatorID: 42}
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return p, nil },
-			UpdateFn:  func(ctx context.Context, project *model.Project) error { return errBoom },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(p, nil)
+		repo.EXPECT().Update(mock.Anything, p).Return(errBoom)
 		svc := NewProjectService(repo)
 
 		_, err := svc.UpdateProject(context.Background(), 1, 42, false, "renamed", "desc", nil)
@@ -138,9 +123,8 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 func TestProjectService_DeleteProject(t *testing.T) {
 	t.Run("returns ErrNotFound when project missing", func(t *testing.T) {
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return nil, nil },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
 		svc := NewProjectService(repo)
 
 		err := svc.DeleteProject(context.Background(), 1, 42, false)
@@ -151,9 +135,8 @@ func TestProjectService_DeleteProject(t *testing.T) {
 
 	t.Run("returns ErrForbidden for non-admin non-creator", func(t *testing.T) {
 		p := &model.Project{ID: 1, CreatorID: 42}
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return p, nil },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(p, nil)
 		svc := NewProjectService(repo)
 
 		err := svc.DeleteProject(context.Background(), 1, 999, false)
@@ -164,21 +147,13 @@ func TestProjectService_DeleteProject(t *testing.T) {
 
 	t.Run("deletes when caller is creator", func(t *testing.T) {
 		p := &model.Project{ID: 1, CreatorID: 42}
-		deleted := false
-		repo := &mockProjectRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) { return p, nil },
-			DeleteFn: func(ctx context.Context, project *model.Project) error {
-				deleted = true
-				return nil
-			},
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(p, nil)
+		repo.EXPECT().Delete(mock.Anything, p).Return(nil)
 		svc := NewProjectService(repo)
 
 		if err := svc.DeleteProject(context.Background(), 1, 42, false); err != nil {
 			t.Fatalf("unexpected error: %v", err)
-		}
-		if !deleted {
-			t.Fatalf("expected repository Delete to be called")
 		}
 	})
 }
@@ -186,9 +161,8 @@ func TestProjectService_DeleteProject(t *testing.T) {
 func TestProjectService_GetAllProjects(t *testing.T) {
 	t.Run("returns projects from repository", func(t *testing.T) {
 		want := []model.Project{{ID: 1}, {ID: 2}}
-		repo := &mockProjectRepository{
-			GetAllFn: func(ctx context.Context) ([]model.Project, error) { return want, nil },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetAll(mock.Anything).Return(want, nil)
 		svc := NewProjectService(repo)
 
 		got, err := svc.GetAllProjects(context.Background())
@@ -201,9 +175,8 @@ func TestProjectService_GetAllProjects(t *testing.T) {
 	})
 
 	t.Run("propagates repository error", func(t *testing.T) {
-		repo := &mockProjectRepository{
-			GetAllFn: func(ctx context.Context) ([]model.Project, error) { return nil, errBoom },
-		}
+		repo := mocks.NewMockProjectRepository(t)
+		repo.EXPECT().GetAll(mock.Anything).Return(nil, errBoom)
 		svc := NewProjectService(repo)
 
 		_, err := svc.GetAllProjects(context.Background())
@@ -214,14 +187,9 @@ func TestProjectService_GetAllProjects(t *testing.T) {
 }
 
 func TestProjectService_GetProjectByID(t *testing.T) {
-	repo := &mockProjectRepository{
-		GetByIDFn: func(ctx context.Context, id uint) (*model.Project, error) {
-			if id == 1 {
-				return &model.Project{ID: 1}, nil
-			}
-			return nil, nil
-		},
-	}
+	repo := mocks.NewMockProjectRepository(t)
+	repo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.Project{ID: 1}, nil)
+	repo.EXPECT().GetByID(mock.Anything, uint(2)).Return(nil, nil)
 	svc := NewProjectService(repo)
 
 	got, err := svc.GetProjectByID(context.Background(), 1)

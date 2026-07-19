@@ -16,7 +16,7 @@ import (
 )
 
 func TestAuthHandler_Config(t *testing.T) {
-	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), &fakeForge{}, "", "", "gitea", "https://forge.example.com", "", "secret", "owner")
+	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forgemocks.NewMockForge(t), "", "", "gitea", "https://forge.example.com", "", "secret", "owner")
 	h := NewAuthHandler(svc)
 
 	r := requestWithParams(http.MethodGet, "/api/auth/config", "", nil, nil)
@@ -33,7 +33,7 @@ func TestAuthHandler_Config(t *testing.T) {
 }
 
 func TestAuthHandler_Login(t *testing.T) {
-	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), &fakeForge{}, "client-id", "", "gitea", "https://forge.example.com", "https://abyss.example.com/callback", "secret", "owner")
+	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forgemocks.NewMockForge(t), "client-id", "", "gitea", "https://forge.example.com", "https://abyss.example.com/callback", "secret", "owner")
 	h := NewAuthHandler(svc)
 
 	r := requestWithParams(http.MethodGet, "/api/auth/login", "", nil, nil)
@@ -54,7 +54,7 @@ func TestAuthHandler_Login(t *testing.T) {
 
 func TestAuthHandler_Callback(t *testing.T) {
 	t.Run("returns 400 when state does not match the cookie", func(t *testing.T) {
-		svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), &fakeForge{}, "", "", "", "", "", "secret", "owner")
+		svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")
 		h := NewAuthHandler(svc)
 
 		r := httptest.NewRequest(http.MethodGet, "/api/auth/callback?state=wrong", nil)
@@ -108,7 +108,7 @@ func TestAuthHandler_Callback(t *testing.T) {
 
 func TestAuthHandler_Me(t *testing.T) {
 	t.Run("returns 401 when unauthenticated", func(t *testing.T) {
-		svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), &fakeForge{}, "", "", "", "", "", "secret", "owner")
+		svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")
 		h := NewAuthHandler(svc)
 
 		r := requestWithParams(http.MethodGet, "/api/auth/me", "", nil, nil)
@@ -123,7 +123,7 @@ func TestAuthHandler_Me(t *testing.T) {
 	t.Run("returns the authenticated user's profile", func(t *testing.T) {
 		userRepo := svcmocks.NewMockUserRepository(t)
 		userRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.User{ID: 1, Username: "alice", Email: "a@example.com"}, nil)
-		svc := service.NewAuthService(userRepo, &fakeForge{}, "", "", "gitea", "https://forge.example.com", "", "secret", "owner")
+		svc := service.NewAuthService(userRepo, forgemocks.NewMockForge(t), "", "", "gitea", "https://forge.example.com", "", "secret", "owner")
 		h := NewAuthHandler(svc)
 
 		r := requestWithParams(http.MethodGet, "/api/auth/me", "", &auth.Claims{UserID: 1}, nil)
@@ -147,7 +147,7 @@ func TestAuthHandler_TokenStatus(t *testing.T) {
 	t.Run("reports has_token false when no token is set", func(t *testing.T) {
 		userRepo := svcmocks.NewMockUserRepository(t)
 		userRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.User{ID: 1}, nil)
-		svc := service.NewAuthService(userRepo, &fakeForge{}, "", "", "", "", "", "secret", "owner")
+		svc := service.NewAuthService(userRepo, forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")
 		h := NewAuthHandler(svc)
 
 		r := requestWithParams(http.MethodGet, "/api/auth/token", "", &auth.Claims{UserID: 1}, nil)
@@ -169,7 +169,7 @@ func TestAuthHandler_GenerateToken(t *testing.T) {
 	user := &model.User{ID: 1}
 	userRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(user, nil)
 	userRepo.On("Update", mock.Anything, user).Return(nil)
-	svc := service.NewAuthService(userRepo, &fakeForge{}, "", "", "", "", "", "secret", "owner")
+	svc := service.NewAuthService(userRepo, forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")
 	h := NewAuthHandler(svc)
 
 	r := requestWithParams(http.MethodPost, "/api/auth/token", "", &auth.Claims{UserID: 1}, nil)
@@ -194,7 +194,7 @@ func TestAuthHandler_RevokeToken(t *testing.T) {
 	user := &model.User{ID: 1, Token: &tok}
 	userRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(user, nil)
 	userRepo.On("Update", mock.Anything, user).Return(nil)
-	svc := service.NewAuthService(userRepo, &fakeForge{}, "", "", "", "", "", "secret", "owner")
+	svc := service.NewAuthService(userRepo, forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")
 	h := NewAuthHandler(svc)
 
 	r := requestWithParams(http.MethodDelete, "/api/auth/token", "", &auth.Claims{UserID: 1}, nil)
@@ -207,7 +207,7 @@ func TestAuthHandler_RevokeToken(t *testing.T) {
 }
 
 func TestAuthHandler_Logout(t *testing.T) {
-	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), &fakeForge{}, "", "", "", "", "", "secret", "owner")
+	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")
 	h := NewAuthHandler(svc)
 
 	r := requestWithParams(http.MethodPost, "/api/auth/logout", "", nil, nil)

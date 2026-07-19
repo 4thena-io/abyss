@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/4thena-io/abyss/internal/service"
+	"github.com/4thena-io/abyss/internal/service/mocks"
 )
 
 func TestPushPayload_IsOnBranch(t *testing.T) {
@@ -63,7 +64,7 @@ func TestPushPayload_TouchesDocs(t *testing.T) {
 
 func TestHookHandler_Forge(t *testing.T) {
 	t.Run("returns 401 when access_token does not match the webhook secret", func(t *testing.T) {
-		docsSvc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewHookHandler(docsSvc, "main", "expected-secret")
 
 		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1?access_token=wrong", `{"ref":"refs/heads/main"}`, nil, map[string]string{"appID": "1"})
@@ -76,7 +77,7 @@ func TestHookHandler_Forge(t *testing.T) {
 	})
 
 	t.Run("returns 400 for invalid app id", func(t *testing.T) {
-		docsSvc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewHookHandler(docsSvc, "main", "")
 
 		r := requestWithParams(http.MethodPost, "/api/hooks/forge/abc", `{"ref":"refs/heads/main"}`, nil, map[string]string{"appID": "abc"})
@@ -89,7 +90,7 @@ func TestHookHandler_Forge(t *testing.T) {
 	})
 
 	t.Run("returns 400 for malformed payload", func(t *testing.T) {
-		docsSvc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewHookHandler(docsSvc, "main", "")
 
 		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", "{not json", nil, map[string]string{"appID": "1"})
@@ -102,7 +103,7 @@ func TestHookHandler_Forge(t *testing.T) {
 	})
 
 	t.Run("skips with 200 when push is on a different branch", func(t *testing.T) {
-		docsSvc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewHookHandler(docsSvc, "main", "")
 
 		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", `{"ref":"refs/heads/develop"}`, nil, map[string]string{"appID": "1"})
@@ -115,7 +116,7 @@ func TestHookHandler_Forge(t *testing.T) {
 	})
 
 	t.Run("skips with 200 when no docs-relevant files changed", func(t *testing.T) {
-		docsSvc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewHookHandler(docsSvc, "main", "")
 
 		body := `{"ref":"refs/heads/main","commits":[{"modified":["src/main.go"]}]}`
@@ -131,7 +132,7 @@ func TestHookHandler_Forge(t *testing.T) {
 	t.Run("returns 500 when a docs-relevant push fails to render (git not configured)", func(t *testing.T) {
 		// RenderDocs rejects with a nil git client before ever touching the
 		// app repository, so no fake app data is needed here.
-		docsSvc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewHookHandler(docsSvc, "main", "")
 
 		body := `{"ref":"refs/heads/main","commits":[{"modified":["docs/index.md"]}]}`

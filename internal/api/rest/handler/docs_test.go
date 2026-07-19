@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,11 +10,13 @@ import (
 
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
+	"github.com/4thena-io/abyss/internal/service/mocks"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDocsHandler_GetAppDocs(t *testing.T) {
 	t.Run("returns 400 for invalid id", func(t *testing.T) {
-		svc := service.NewDocsService(&fakeAppRepository{}, nil, t.TempDir())
+		svc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
 		h := NewDocsHandler(svc)
 
 		r := requestWithParams(http.MethodGet, "/apps/abc/docs", "", nil, map[string]string{"id": "abc"})
@@ -28,9 +29,8 @@ func TestDocsHandler_GetAppDocs(t *testing.T) {
 	})
 
 	t.Run("returns 404 when app does not exist", func(t *testing.T) {
-		appRepo := &fakeAppRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.App, error) { return nil, nil },
-		}
+		appRepo := mocks.NewMockAppRepository(t)
+		appRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
 		svc := service.NewDocsService(appRepo, nil, t.TempDir())
 		h := NewDocsHandler(svc)
 
@@ -44,9 +44,8 @@ func TestDocsHandler_GetAppDocs(t *testing.T) {
 	})
 
 	t.Run("returns 404 when docs have not been rendered", func(t *testing.T) {
-		appRepo := &fakeAppRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.App, error) { return &model.App{ID: id}, nil },
-		}
+		appRepo := mocks.NewMockAppRepository(t)
+		appRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.App{ID: 1}, nil)
 		svc := service.NewDocsService(appRepo, nil, t.TempDir())
 		h := NewDocsHandler(svc)
 
@@ -61,9 +60,9 @@ func TestDocsHandler_GetAppDocs(t *testing.T) {
 
 	t.Run("returns rendered docs as json", func(t *testing.T) {
 		docsDir := t.TempDir()
-		appRepo := &fakeAppRepository{
-			GetByIDFn: func(ctx context.Context, id uint) (*model.App, error) { return &model.App{ID: id}, nil },
-		}
+		appRepo := mocks.NewMockAppRepository(t)
+		appRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(&model.App{ID: 1}, nil)
+
 		appDocsDir := filepath.Join(docsDir, "1")
 		if err := os.MkdirAll(appDocsDir, 0755); err != nil {
 			t.Fatalf("failed to create docs dir: %v", err)

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,17 +8,16 @@ import (
 	"testing"
 
 	"github.com/4thena-io/abyss/internal/api/rest/response"
+	forgemocks "github.com/4thena-io/abyss/internal/integration/forge/mocks"
 	"github.com/4thena-io/abyss/internal/model"
 	"github.com/4thena-io/abyss/internal/service"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestRepoHandler_GetAllRepos(t *testing.T) {
 	t.Run("returns repos as json", func(t *testing.T) {
-		forge := &fakeForge{
-			GetOrgReposFn: func(ctx context.Context, name string) ([]model.Repo, error) {
-				return []model.Repo{{ID: 1, Name: "app", FullName: "owner/app", URL: "https://forge/owner/app"}}, nil
-			},
-		}
+		forge := forgemocks.NewMockForge(t)
+		forge.EXPECT().GetOrgRepos(mock.Anything, "owner").Return([]model.Repo{{ID: 1, Name: "app", FullName: "owner/app", URL: "https://forge/owner/app"}}, nil)
 		svc := service.NewRepoService(forge, "owner")
 		h := NewRepoHandler(svc)
 
@@ -40,9 +38,8 @@ func TestRepoHandler_GetAllRepos(t *testing.T) {
 	})
 
 	t.Run("returns 500 when the forge lookup fails", func(t *testing.T) {
-		forge := &fakeForge{
-			GetOrgReposFn: func(ctx context.Context, name string) ([]model.Repo, error) { return nil, errors.New("boom") },
-		}
+		forge := forgemocks.NewMockForge(t)
+		forge.EXPECT().GetOrgRepos(mock.Anything, "owner").Return(nil, errors.New("boom"))
 		svc := service.NewRepoService(forge, "owner")
 		h := NewRepoHandler(svc)
 
