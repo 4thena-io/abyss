@@ -24,7 +24,12 @@ type HookHandler struct {
 }
 
 func NewHookHandler(docsService *service.DocsService, branch, webhookSecret, forgeType string) *HookHandler {
-	return &HookHandler{*docsService, branch, webhookSecret, forgeType}
+	return &HookHandler{
+		docsService:   *docsService,
+		branch:        branch,
+		webhookSecret: webhookSecret,
+		forgeType:     forgeType,
+	}
 }
 
 // pushPayload captures the common push event shape across GitHub, GitLab, Gitea, and Forgejo.
