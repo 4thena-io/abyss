@@ -35,6 +35,10 @@ func NewGithubForge(host, token string) (*GithubForge, error) {
 	return &GithubForge{client: client, host: host}, nil
 }
 
+func (f *GithubForge) OAuthEndpoints() (authPath, tokenPath string) {
+	return "/login/oauth/authorize", "/login/oauth/access_token"
+}
+
 func (f *GithubForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
 	user, _, err := f.client.Users.Get(ctx, "")
 	if err != nil {

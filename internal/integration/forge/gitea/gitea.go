@@ -22,6 +22,10 @@ func NewGiteaForge(url, secret string) (*GiteaForge, error) {
 	return &GiteaForge{client: client, url: url}, nil
 }
 
+func (f *GiteaForge) OAuthEndpoints() (authPath, tokenPath string) {
+	return "/login/oauth/authorize", "/login/oauth/access_token"
+}
+
 func (f *GiteaForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
 	user, _, err := f.client.GetMyUserInfo()
 	if err != nil {

@@ -33,7 +33,9 @@ func TestAuthHandler_Config(t *testing.T) {
 }
 
 func TestAuthHandler_Login(t *testing.T) {
-	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forgemocks.NewMockForge(t), "client-id", "", "gitea", "https://forge.example.com", "https://abyss.example.com/callback", "secret", "owner")
+	forge := forgemocks.NewMockForge(t)
+	forge.EXPECT().OAuthEndpoints().Return("/login/oauth/authorize", "/login/oauth/access_token")
+	svc := service.NewAuthService(svcmocks.NewMockUserRepository(t), forge, "client-id", "", "gitea", "https://forge.example.com", "https://abyss.example.com/callback", "secret", "owner")
 	h := NewAuthHandler(svc)
 
 	r := requestWithParams(http.MethodGet, "/api/auth/login", "", nil, nil)
@@ -75,6 +77,7 @@ func TestAuthHandler_Callback(t *testing.T) {
 		defer forgeServer.Close()
 
 		forge := forgemocks.NewMockForge(t)
+		forge.EXPECT().OAuthEndpoints().Return("/login/oauth/authorize", "/login/oauth/access_token")
 		forge.EXPECT().GetUserByToken(mock.Anything, "real-token").Return(&model.ForgeUser{ID: 1, Username: "alice"}, nil)
 		forge.EXPECT().IsMemberOfOwner(mock.Anything, "owner", "alice").Return(true, nil)
 

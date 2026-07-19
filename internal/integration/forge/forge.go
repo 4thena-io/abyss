@@ -19,4 +19,7 @@ type Forge interface {
 	// DeleteWebhook removes any webhooks whose URL matches callbackURL (query
 	// params ignored). No-op if none found.
 	DeleteWebhook(ctx context.Context, owner, repo, callbackURL string) error
+	// OAuthEndpoints returns the forge's OAuth2 authorization and token URL
+	// paths (relative to the forge host), e.g. "/login/oauth/authorize".
+	OAuthEndpoints() (authPath, tokenPath string)
 }

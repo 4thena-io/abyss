@@ -24,6 +24,10 @@ func NewGitlabForge(host, token string) (*GitlabForge, error) {
 	return &GitlabForge{client: client, host: host}, nil
 }
 
+func (f *GitlabForge) OAuthEndpoints() (authPath, tokenPath string) {
+	return "/oauth/authorize", "/oauth/token"
+}
+
 func (f *GitlabForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
 	user, _, err := f.client.Users.CurrentUser(gl.WithContext(ctx))
 	if err != nil {

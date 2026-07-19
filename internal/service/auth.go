@@ -66,17 +66,21 @@ func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*
 	return s.userRepository.GetByUsername(ctx, username)
 }
 
-// oauthConfig builds the OAuth2 config for the configured forge.
-// Each forge follows the same OAuth2 spec but has different endpoint paths.
+// oauthConfig builds the OAuth2 config for the configured forge, delegating
+// the endpoint paths to the forge implementation since each forge follows
+// the same OAuth2 spec but exposes it at different paths.
 func (s *AuthService) oauthConfig() *oauth2.Config {
+	authPath, tokenPath := "/login/oauth/authorize", "/login/oauth/access_token"
+	if s.forge != nil {
+		authPath, tokenPath = s.forge.OAuthEndpoints()
+	}
 	return &oauth2.Config{
 		ClientID:     s.clientID,
 		ClientSecret: s.clientSecret,
 		RedirectURL:  s.callbackURL,
 		Endpoint: oauth2.Endpoint{
-			// Gitea and Forgejo use these paths. GitHub uses different ones.
-			AuthURL:  s.forgeHost + "/login/oauth/authorize",
-			TokenURL: s.forgeHost + "/login/oauth/access_token",
+			AuthURL:  s.forgeHost + authPath,
+			TokenURL: s.forgeHost + tokenPath,
 		},
 	}
 }

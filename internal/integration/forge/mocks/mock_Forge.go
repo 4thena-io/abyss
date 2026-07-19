@@ -662,3 +662,56 @@ func (_c *MockForge_IsMemberOfOwner_Call) RunAndReturn(run func(ctx context.Cont
 	_c.Call.Return(run)
 	return _c
 }
+
+// OAuthEndpoints provides a mock function for the type MockForge
+func (_mock *MockForge) OAuthEndpoints() (string, string) {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for OAuthEndpoints")
+	}
+
+	var r0 string
+	var r1 string
+	if returnFunc, ok := ret.Get(0).(func() (string, string)); ok {
+		return returnFunc()
+	}
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func() string); ok {
+		r1 = returnFunc()
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+	return r0, r1
+}
+
+// MockForge_OAuthEndpoints_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OAuthEndpoints'
+type MockForge_OAuthEndpoints_Call struct {
+	*mock.Call
+}
+
+// OAuthEndpoints is a helper method to define mock.On call
+func (_e *MockForge_Expecter) OAuthEndpoints() *MockForge_OAuthEndpoints_Call {
+	return &MockForge_OAuthEndpoints_Call{Call: _e.mock.On("OAuthEndpoints")}
+}
+
+func (_c *MockForge_OAuthEndpoints_Call) Run(run func()) *MockForge_OAuthEndpoints_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockForge_OAuthEndpoints_Call) Return(authPath string, tokenPath string) *MockForge_OAuthEndpoints_Call {
+	_c.Call.Return(authPath, tokenPath)
+	return _c
+}
+
+func (_c *MockForge_OAuthEndpoints_Call) RunAndReturn(run func() (string, string)) *MockForge_OAuthEndpoints_Call {
+	_c.Call.Return(run)
+	return _c
+}

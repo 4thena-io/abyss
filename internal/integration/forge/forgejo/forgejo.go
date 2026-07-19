@@ -22,6 +22,10 @@ func NewForgejoForge(url, secret string) (*ForgejoForge, error) {
 	return &ForgejoForge{client: client, url: url}, nil
 }
 
+func (f *ForgejoForge) OAuthEndpoints() (authPath, tokenPath string) {
+	return "/login/oauth/authorize", "/login/oauth/access_token"
+}
+
 func (f *ForgejoForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser, error) {
 	user, _, err := f.client.GetMyUserInfo()
 	if err != nil {
