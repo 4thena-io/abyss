@@ -70,9 +70,14 @@ func (h *TeamHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = r.Body.Close() }()
 
-	team, err := h.service.UpdateTeam(r.Context(), uint(id), req.Name, req.Description)
+	claims := middleware.ClaimsFromContext(r.Context())
+	team, err := h.service.UpdateTeam(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Name, req.Description)
 	if errors.Is(err, service.ErrNotFound) {
 		response.NotFound(w, "team not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
 		return
 	}
 	if err != nil {
@@ -149,9 +154,14 @@ func (h *TeamHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.DeleteTeam(r.Context(), uint(id))
+	claims := middleware.ClaimsFromContext(r.Context())
+	err = h.service.DeleteTeam(r.Context(), uint(id), claims.UserID, claims.IsAdmin)
 	if errors.Is(err, service.ErrNotFound) {
 		response.NotFound(w, "team not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
 		return
 	}
 	if err != nil {
@@ -235,7 +245,13 @@ func (h *TeamHandler) RemoveTeamMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.RemoveTeamMember(r.Context(), uint(id), uint(memberID)); err != nil {
+	claims := middleware.ClaimsFromContext(r.Context())
+	err = h.service.RemoveTeamMember(r.Context(), uint(id), uint(memberID), claims.UserID, claims.IsAdmin)
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
+		return
+	}
+	if err != nil {
 		log.Error().Err(err).Msg("failed to remove team member")
 		response.InternalError(w)
 		return
@@ -263,9 +279,14 @@ func (h *TeamHandler) AddTeamMember(w http.ResponseWriter, r *http.Request) {
 		role = "member"
 	}
 
-	member, err := h.service.AddTeamMember(r.Context(), uint(id), req.Username, role)
+	claims := middleware.ClaimsFromContext(r.Context())
+	member, err := h.service.AddTeamMember(r.Context(), uint(id), claims.UserID, claims.IsAdmin, req.Username, role)
 	if errors.Is(err, service.ErrNotFound) {
 		response.NotFound(w, "user not found")
+		return
+	}
+	if errors.Is(err, service.ErrForbidden) {
+		response.Forbidden(w)
 		return
 	}
 	if err != nil {

@@ -109,7 +109,7 @@ func TestTeamHandler_DeleteTeam(t *testing.T) {
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(nil, nil)
 		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
-		r := requestWithParams(http.MethodDelete, "/teams/1", "", nil, map[string]string{"id": "1"})
+		r := requestWithParams(http.MethodDelete, "/teams/1", "", &auth.Claims{UserID: 1}, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
 		h.DeleteTeam(w, r)
 
@@ -118,14 +118,31 @@ func TestTeamHandler_DeleteTeam(t *testing.T) {
 		}
 	})
 
-	t.Run("deletes and returns 204", func(t *testing.T) {
+	t.Run("returns 403 for a non-owner member", func(t *testing.T) {
 		teamRepo := mocks.NewMockTeamRepository(t)
 		team := &model.Team{ID: 1}
 		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(team, nil)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(999)).Return(&model.TeamMember{TeamID: 1, UserID: 999, Role: "member"}, nil)
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
+
+		r := requestWithParams(http.MethodDelete, "/teams/1", "", &auth.Claims{UserID: 999}, map[string]string{"id": "1"})
+		w := httptest.NewRecorder()
+		h.DeleteTeam(w, r)
+
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("expected 403, got %d", w.Code)
+		}
+	})
+
+	t.Run("owner deletes and returns 204", func(t *testing.T) {
+		teamRepo := mocks.NewMockTeamRepository(t)
+		team := &model.Team{ID: 1}
+		teamRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(team, nil)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(7)).Return(&model.TeamMember{TeamID: 1, UserID: 7, Role: "owner"}, nil)
 		teamRepo.EXPECT().Delete(mock.Anything, team).Return(nil)
 		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
-		r := requestWithParams(http.MethodDelete, "/teams/1", "", nil, map[string]string{"id": "1"})
+		r := requestWithParams(http.MethodDelete, "/teams/1", "", &auth.Claims{UserID: 7}, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
 		h.DeleteTeam(w, r)
 
@@ -136,13 +153,30 @@ func TestTeamHandler_DeleteTeam(t *testing.T) {
 }
 
 func TestTeamHandler_AddTeamMember(t *testing.T) {
-	t.Run("returns 404 when user does not exist", func(t *testing.T) {
-		userLookup := mocks.NewMockUserLookup(t)
-		userLookup.EXPECT().GetByUsername(mock.Anything, "ghost").Return(nil, nil)
-		h := newTeamHandler(t, mocks.NewMockTeamRepository(t), mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), userLookup)
+	t.Run("returns 403 when caller is not an owner", func(t *testing.T) {
+		teamRepo := mocks.NewMockTeamRepository(t)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(999)).Return(nil, nil)
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
 
 		body := `{"username":"ghost","role":"member"}`
-		r := requestWithParams(http.MethodPost, "/teams/1/members", body, nil, map[string]string{"id": "1"})
+		r := requestWithParams(http.MethodPost, "/teams/1/members", body, &auth.Claims{UserID: 999}, map[string]string{"id": "1"})
+		w := httptest.NewRecorder()
+		h.AddTeamMember(w, r)
+
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("expected 403, got %d", w.Code)
+		}
+	})
+
+	t.Run("returns 404 when user does not exist", func(t *testing.T) {
+		teamRepo := mocks.NewMockTeamRepository(t)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(7)).Return(&model.TeamMember{TeamID: 1, UserID: 7, Role: "owner"}, nil)
+		userLookup := mocks.NewMockUserLookup(t)
+		userLookup.EXPECT().GetByUsername(mock.Anything, "ghost").Return(nil, nil)
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), userLookup)
+
+		body := `{"username":"ghost","role":"member"}`
+		r := requestWithParams(http.MethodPost, "/teams/1/members", body, &auth.Claims{UserID: 7}, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
 		h.AddTeamMember(w, r)
 
@@ -151,15 +185,16 @@ func TestTeamHandler_AddTeamMember(t *testing.T) {
 		}
 	})
 
-	t.Run("defaults role to member and returns 201", func(t *testing.T) {
+	t.Run("owner adds member, defaults role to member, returns 201", func(t *testing.T) {
 		teamRepo := mocks.NewMockTeamRepository(t)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(7)).Return(&model.TeamMember{TeamID: 1, UserID: 7, Role: "owner"}, nil)
 		teamRepo.On("SaveMember", mock.Anything, mock.AnythingOfType("*model.TeamMember")).Return(nil)
 		userLookup := mocks.NewMockUserLookup(t)
 		userLookup.EXPECT().GetByUsername(mock.Anything, "alice").Return(&model.User{ID: 9, Username: "alice"}, nil)
 		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), userLookup)
 
 		body := `{"username":"alice"}`
-		r := requestWithParams(http.MethodPost, "/teams/1/members", body, nil, map[string]string{"id": "1"})
+		r := requestWithParams(http.MethodPost, "/teams/1/members", body, &auth.Claims{UserID: 7}, map[string]string{"id": "1"})
 		w := httptest.NewRecorder()
 		h.AddTeamMember(w, r)
 
@@ -172,6 +207,37 @@ func TestTeamHandler_AddTeamMember(t *testing.T) {
 		}
 		if got.Role != "member" || got.Username != "alice" {
 			t.Fatalf("unexpected member: %+v", got)
+		}
+	})
+}
+
+func TestTeamHandler_RemoveTeamMember(t *testing.T) {
+	t.Run("returns 403 when caller is not an owner", func(t *testing.T) {
+		teamRepo := mocks.NewMockTeamRepository(t)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(999)).Return(&model.TeamMember{TeamID: 1, UserID: 999, Role: "member"}, nil)
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
+
+		r := requestWithParams(http.MethodDelete, "/teams/1/members/5", "", &auth.Claims{UserID: 999}, map[string]string{"id": "1", "memberID": "5"})
+		w := httptest.NewRecorder()
+		h.RemoveTeamMember(w, r)
+
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("expected 403, got %d", w.Code)
+		}
+	})
+
+	t.Run("owner removes a member and returns 204", func(t *testing.T) {
+		teamRepo := mocks.NewMockTeamRepository(t)
+		teamRepo.EXPECT().GetMemberByUserID(mock.Anything, uint(1), uint(7)).Return(&model.TeamMember{TeamID: 1, UserID: 7, Role: "owner"}, nil)
+		teamRepo.EXPECT().DeleteMember(mock.Anything, uint(1), uint(5)).Return(nil)
+		h := newTeamHandler(t, teamRepo, mocks.NewMockProjectRepository(t), mocks.NewMockAppRepository(t), mocks.NewMockUserLookup(t))
+
+		r := requestWithParams(http.MethodDelete, "/teams/1/members/5", "", &auth.Claims{UserID: 7}, map[string]string{"id": "1", "memberID": "5"})
+		w := httptest.NewRecorder()
+		h.RemoveTeamMember(w, r)
+
+		if w.Code != http.StatusNoContent {
+			t.Fatalf("expected 204, got %d body=%s", w.Code, w.Body.String())
 		}
 	})
 }

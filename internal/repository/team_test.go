@@ -133,6 +133,16 @@ func TestTeamRepository_Members(t *testing.T) {
 		t.Fatalf("expected 1 membership for user, got %+v, err %v", byUser, err)
 	}
 
+	own, err := repo.GetMemberByUserID(context.Background(), team.ID, user.ID)
+	if err != nil || own == nil || own.Role != "owner" {
+		t.Fatalf("expected to find the caller's own membership, got %+v, err %v", own, err)
+	}
+
+	missing, err := repo.GetMemberByUserID(context.Background(), team.ID, 999)
+	if err != nil || missing != nil {
+		t.Fatalf("expected nil for a non-member, got %+v, err %v", missing, err)
+	}
+
 	if err := repo.DeleteMember(context.Background(), team.ID, member.ID); err != nil {
 		t.Fatalf("failed to delete member: %v", err)
 	}

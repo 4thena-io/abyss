@@ -490,6 +490,80 @@ func (_c *MockTeamRepository_GetByUserID_Call) RunAndReturn(run func(ctx context
 	return _c
 }
 
+// GetMemberByUserID provides a mock function for the type MockTeamRepository
+func (_mock *MockTeamRepository) GetMemberByUserID(ctx context.Context, teamID uint, userID uint) (*model.TeamMember, error) {
+	ret := _mock.Called(ctx, teamID, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMemberByUserID")
+	}
+
+	var r0 *model.TeamMember
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint, uint) (*model.TeamMember, error)); ok {
+		return returnFunc(ctx, teamID, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint, uint) *model.TeamMember); ok {
+		r0 = returnFunc(ctx, teamID, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.TeamMember)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uint, uint) error); ok {
+		r1 = returnFunc(ctx, teamID, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockTeamRepository_GetMemberByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetMemberByUserID'
+type MockTeamRepository_GetMemberByUserID_Call struct {
+	*mock.Call
+}
+
+// GetMemberByUserID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - teamID uint
+//   - userID uint
+func (_e *MockTeamRepository_Expecter) GetMemberByUserID(ctx any, teamID any, userID any) *MockTeamRepository_GetMemberByUserID_Call {
+	return &MockTeamRepository_GetMemberByUserID_Call{Call: _e.mock.On("GetMemberByUserID", ctx, teamID, userID)}
+}
+
+func (_c *MockTeamRepository_GetMemberByUserID_Call) Run(run func(ctx context.Context, teamID uint, userID uint)) *MockTeamRepository_GetMemberByUserID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uint
+		if args[1] != nil {
+			arg1 = args[1].(uint)
+		}
+		var arg2 uint
+		if args[2] != nil {
+			arg2 = args[2].(uint)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockTeamRepository_GetMemberByUserID_Call) Return(teamMember *model.TeamMember, err error) *MockTeamRepository_GetMemberByUserID_Call {
+	_c.Call.Return(teamMember, err)
+	return _c
+}
+
+func (_c *MockTeamRepository_GetMemberByUserID_Call) RunAndReturn(run func(ctx context.Context, teamID uint, userID uint) (*model.TeamMember, error)) *MockTeamRepository_GetMemberByUserID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetMembers provides a mock function for the type MockTeamRepository
 func (_mock *MockTeamRepository) GetMembers(ctx context.Context, teamID uint) ([]model.TeamMember, error) {
 	ret := _mock.Called(ctx, teamID)

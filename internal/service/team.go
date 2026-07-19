@@ -13,6 +13,7 @@ type TeamRepository interface {
 	GetByID(ctx context.Context, id uint) (*model.Team, error)
 	GetByName(ctx context.Context, name string) (*model.Team, error)
 	GetMembers(ctx context.Context, teamID uint) ([]model.TeamMember, error)
+	GetMemberByUserID(ctx context.Context, teamID, userID uint) (*model.TeamMember, error)
 	GetByUserID(ctx context.Context, userID uint) ([]model.TeamMember, error)
 	SaveMember(ctx context.Context, member *model.TeamMember) error
 	DeleteMember(ctx context.Context, teamID, memberID uint) error
@@ -124,13 +125,34 @@ func (s *TeamService) SaveTeam(ctx context.Context, team *model.Team, creatorID 
 	return team, nil
 }
 
-func (s *TeamService) UpdateTeam(ctx context.Context, id uint, name, description string) (*model.Team, error) {
+// requireTeamOwner returns ErrForbidden unless the caller is a platform admin
+// or holds the "owner" role on the team. Team has no CreatorID (unlike
+// Project/App/Template) since ownership is shared via TeamMember rows, so
+// authorization has to go through membership rather than a creator check.
+func (s *TeamService) requireTeamOwner(ctx context.Context, teamID, callerID uint, isAdmin bool) error {
+	if isAdmin {
+		return nil
+	}
+	member, err := s.teamRepo.GetMemberByUserID(ctx, teamID, callerID)
+	if err != nil {
+		return err
+	}
+	if member == nil || member.Role != "owner" {
+		return ErrForbidden
+	}
+	return nil
+}
+
+func (s *TeamService) UpdateTeam(ctx context.Context, id, callerID uint, isAdmin bool, name, description string) (*model.Team, error) {
 	team, err := s.teamRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	if team == nil {
 		return nil, ErrNotFound
+	}
+	if err := s.requireTeamOwner(ctx, id, callerID, isAdmin); err != nil {
+		return nil, err
 	}
 
 	team.Name = name
@@ -142,13 +164,16 @@ func (s *TeamService) UpdateTeam(ctx context.Context, id uint, name, description
 	return team, nil
 }
 
-func (s *TeamService) DeleteTeam(ctx context.Context, id uint) error {
+func (s *TeamService) DeleteTeam(ctx context.Context, id, callerID uint, isAdmin bool) error {
 	team, err := s.teamRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	if team == nil {
 		return ErrNotFound
+	}
+	if err := s.requireTeamOwner(ctx, id, callerID, isAdmin); err != nil {
+		return err
 	}
 	return s.teamRepo.Delete(ctx, team)
 }
@@ -161,7 +186,11 @@ func (s *TeamService) GetTeamMembers(ctx context.Context, teamID uint) ([]model.
 	return s.teamRepo.GetMembers(ctx, teamID)
 }
 
-func (s *TeamService) AddTeamMember(ctx context.Context, teamID uint, username, role string) (*model.TeamMember, error) {
+func (s *TeamService) AddTeamMember(ctx context.Context, teamID, callerID uint, isAdmin bool, username, role string) (*model.TeamMember, error) {
+	if err := s.requireTeamOwner(ctx, teamID, callerID, isAdmin); err != nil {
+		return nil, err
+	}
+
 	user, err := s.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return nil, err
@@ -182,7 +211,10 @@ func (s *TeamService) AddTeamMember(ctx context.Context, teamID uint, username, 
 	return member, nil
 }
 
-func (s *TeamService) RemoveTeamMember(ctx context.Context, teamID, memberID uint) error {
+func (s *TeamService) RemoveTeamMember(ctx context.Context, teamID, memberID, callerID uint, isAdmin bool) error {
+	if err := s.requireTeamOwner(ctx, teamID, callerID, isAdmin); err != nil {
+		return err
+	}
 	return s.teamRepo.DeleteMember(ctx, teamID, memberID)
 }
 

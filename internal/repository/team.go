@@ -64,6 +64,21 @@ func (r *TeamRepository) GetMembers(ctx context.Context, teamID uint) ([]model.T
 	return members, result.Error
 }
 
+// GetMemberByUserID returns the caller's own membership row for a team, or
+// nil if they aren't a member — used to check their Role before allowing a
+// mutation.
+func (r *TeamRepository) GetMemberByUserID(ctx context.Context, teamID, userID uint) (*model.TeamMember, error) {
+	var member model.TeamMember
+	result := r.db.WithContext(ctx).Where("team_id = ? AND user_id = ?", teamID, userID).First(&member)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &member, nil
+}
+
 func (r *TeamRepository) GetByUserID(ctx context.Context, userID uint) ([]model.TeamMember, error) {
 	var members []model.TeamMember
 	result := r.db.WithContext(ctx).Where("user_id = ?", userID).Preload("User").Find(&members)
