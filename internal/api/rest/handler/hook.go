@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,10 +20,11 @@ type HookHandler struct {
 	docsService   service.DocsService
 	branch        string
 	webhookSecret string
+	forgeType     string
 }
 
-func NewHookHandler(docsService *service.DocsService, branch, webhookSecret string) *HookHandler {
-	return &HookHandler{*docsService, branch, webhookSecret}
+func NewHookHandler(docsService *service.DocsService, branch, webhookSecret, forgeType string) *HookHandler {
+	return &HookHandler{*docsService, branch, webhookSecret, forgeType}
 }
 
 // pushPayload captures the common push event shape across GitHub, GitLab, Gitea, and Forgejo.
@@ -59,9 +65,56 @@ func (p pushPayload) touchesDocs() bool {
 	return false
 }
 
+// verifySignature checks the webhook request's authenticity against the
+// configured secret. GitHub/Gitea/Forgejo sign the raw body with
+// HMAC-SHA256; GitLab instead sends the secret verbatim in a header. Both
+// forms are compared in constant time to avoid timing side-channels.
+func (h *HookHandler) verifySignature(r *http.Request, body []byte) bool {
+	if h.webhookSecret == "" {
+		return false
+	}
+
+	switch h.forgeType {
+	case "gitlab":
+		return subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Gitlab-Token")), []byte(h.webhookSecret)) == 1
+	case "github":
+		return verifyHMACSignature(r.Header.Get("X-Hub-Signature-256"), "sha256=", h.webhookSecret, body)
+	default: // "gitea", "forgejo"
+		sig := r.Header.Get("X-Forgejo-Signature")
+		if sig == "" {
+			sig = r.Header.Get("X-Gitea-Signature")
+		}
+		return verifyHMACSignature(sig, "", h.webhookSecret, body)
+	}
+}
+
+func verifyHMACSignature(header, prefix, secret string, body []byte) bool {
+	if header == "" || !strings.HasPrefix(header, prefix) {
+		return false
+	}
+	sig, err := hex.DecodeString(strings.TrimPrefix(header, prefix))
+	if err != nil {
+		return false
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	expected := mac.Sum(nil)
+
+	return hmac.Equal(sig, expected)
+}
+
 // Forge handles push-event webhooks forwarded by the repository provider.
 func (h *HookHandler) Forge(w http.ResponseWriter, r *http.Request) {
-	if h.webhookSecret != "" && r.URL.Query().Get("access_token") != h.webhookSecret {
+	defer func() { _ = r.Body.Close() }()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	if !h.verifySignature(r, body) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -73,11 +126,10 @@ func (h *HookHandler) Forge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload pushPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err := json.Unmarshal(body, &payload); err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
 		return
 	}
-	defer func() { _ = r.Body.Close() }()
 
 	logger := log.With().Uint64("app_id", id).Str("ref", payload.Ref).Logger()
 	logger.Debug().Msg("forge webhook received")

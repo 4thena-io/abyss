@@ -44,16 +44,15 @@ func (r *UserRepository) GetByForgeID(ctx context.Context, forgeID int64) (*mode
 	return &user, nil
 }
 
-func (r *UserRepository) GetByToken(ctx context.Context, token string) (*model.User, error) {
-	var user model.User
-	result := r.db.WithContext(ctx).Where("token = ?", token).First(&user)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
+// GetByTokenLastEight returns the (normally small) set of users whose PAT
+// ends in the given eight characters. The caller must still compare the full
+// token hash, since this is only a fast index lookup, not authentication.
+func (r *UserRepository) GetByTokenLastEight(ctx context.Context, lastEight string) ([]model.User, error) {
+	var users []model.User
+	if err := r.db.WithContext(ctx).Where("token_last_eight = ?", lastEight).Find(&users).Error; err != nil {
+		return nil, err
 	}
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &user, nil
+	return users, nil
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, id uint) (*model.User, error) {

@@ -51,12 +51,11 @@ func RequireAuth(svc AuthProvider) func(http.Handler) http.Handler {
 
 			var claims *auth.Claims
 
-			// Resolve PAT from Bearer header or ?access_token query param.
+			// Resolve PAT from the Bearer header only — query params leak into
+			// server logs and forge config, so they're not accepted here.
 			pat := ""
 			if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") {
 				pat = strings.TrimPrefix(h, "Bearer ")
-			} else if q := r.URL.Query().Get("access_token"); q != "" {
-				pat = q
 			}
 
 			if pat != "" {

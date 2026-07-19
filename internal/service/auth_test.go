@@ -174,7 +174,7 @@ func TestAuthService_JWTRoundtrip(t *testing.T) {
 }
 
 func TestAuthService_PersonalTokenLifecycle(t *testing.T) {
-	t.Run("generates and persists a token", func(t *testing.T) {
+	t.Run("generates and persists a hashed token, never the raw value", func(t *testing.T) {
 		userRepo := svcmocks.NewMockUserRepository(t)
 		user := &model.User{ID: 1}
 		userRepo.EXPECT().Update(context.Background(), user).Return(nil)
@@ -185,15 +185,21 @@ func TestAuthService_PersonalTokenLifecycle(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if token == "" || user.Token == nil || *user.Token != token {
-			t.Fatalf("expected token to be generated and attached to the user, got token=%q user.Token=%v", token, user.Token)
+		if token == "" {
+			t.Fatal("expected a non-empty raw token")
+		}
+		if user.TokenHash == nil || *user.TokenHash == token {
+			t.Fatalf("expected a stored hash distinct from the raw token, got %v", user.TokenHash)
+		}
+		if user.TokenLastEight != token[len(token)-8:] {
+			t.Fatalf("expected TokenLastEight to match the token's suffix, got %q for token %q", user.TokenLastEight, token)
 		}
 	})
 
 	t.Run("revokes a token", func(t *testing.T) {
 		userRepo := svcmocks.NewMockUserRepository(t)
-		tok := "existing-token"
-		user := &model.User{ID: 1, Token: &tok}
+		hash := "existing-hash"
+		user := &model.User{ID: 1, TokenHash: &hash, TokenLastEight: "abc12345"}
 		userRepo.EXPECT().Update(context.Background(), user).Return(nil)
 
 		svc := NewAuthService(userRepo, nil, "", "", "", "", "", "secret", "owner")
@@ -201,8 +207,61 @@ func TestAuthService_PersonalTokenLifecycle(t *testing.T) {
 		if err := svc.RevokePersonalToken(context.Background(), user); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if user.Token != nil {
-			t.Fatalf("expected token to be cleared, got %v", user.Token)
+		if user.TokenHash != nil || user.TokenLastEight != "" {
+			t.Fatalf("expected token hash and suffix to be cleared, got hash=%v suffix=%q", user.TokenHash, user.TokenLastEight)
+		}
+	})
+}
+
+func TestAuthService_GetUserByToken(t *testing.T) {
+	t.Run("finds the matching user among last-eight candidates", func(t *testing.T) {
+		userRepo := svcmocks.NewMockUserRepository(t)
+		user := &model.User{ID: 1}
+
+		svc := NewAuthService(userRepo, nil, "", "", "", "", "", "secret", "owner")
+		userRepo.EXPECT().Update(context.Background(), user).Return(nil)
+		token, err := svc.GeneratePersonalToken(context.Background(), user)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		userRepo.EXPECT().GetByTokenLastEight(context.Background(), token[len(token)-8:]).Return([]model.User{*user}, nil)
+
+		got, err := svc.GetUserByToken(context.Background(), token)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got == nil || got.ID != 1 {
+			t.Fatalf("expected to find user by token, got %+v", got)
+		}
+	})
+
+	t.Run("rejects a token whose hash does not match a candidate", func(t *testing.T) {
+		userRepo := svcmocks.NewMockUserRepository(t)
+		otherHash := "some-other-hash"
+		candidate := model.User{ID: 2, TokenHash: &otherHash, TokenLastEight: "abc12345"}
+
+		svc := NewAuthService(userRepo, nil, "", "", "", "", "", "secret", "owner")
+
+		token := "0000000000000000000000000000000000000000000000000000000abc12345"
+		userRepo.EXPECT().GetByTokenLastEight(context.Background(), "abc12345").Return([]model.User{candidate}, nil)
+
+		got, err := svc.GetUserByToken(context.Background(), token)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got != nil {
+			t.Fatalf("expected no match for an incorrect token, got %+v", got)
+		}
+	})
+
+	t.Run("returns nil without a repository call for a too-short token", func(t *testing.T) {
+		userRepo := svcmocks.NewMockUserRepository(t)
+		svc := NewAuthService(userRepo, nil, "", "", "", "", "", "secret", "owner")
+
+		got, err := svc.GetUserByToken(context.Background(), "short")
+		if err != nil || got != nil {
+			t.Fatalf("expected nil, nil for a short token, got %+v, %v", got, err)
 		}
 	})
 }

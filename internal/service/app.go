@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,7 +75,7 @@ func (s *AppService) registerDocsWebhook(ctx context.Context, app *model.App) {
 	if !ok {
 		return
 	}
-	callbackURL := fmt.Sprintf("%s/api/hooks/forge/%d?access_token=%s", s.baseURL, app.ID, url.QueryEscape(s.webhookSecret))
+	callbackURL := fmt.Sprintf("%s/api/hooks/forge/%d", s.baseURL, app.ID)
 	if err := s.forge.CreateWebhook(ctx, owner, repoName, callbackURL, s.webhookSecret, s.branch); err != nil {
 		log.Warn().Err(err).Uint("app_id", app.ID).Msg("failed to register docs webhook")
 	}
@@ -356,7 +355,7 @@ func (s *AppService) RepairWebhook(ctx context.Context, id uint) error {
 		return fmt.Errorf("invalid repo full name: %s", app.RepoFullName)
 	}
 
-	callbackURL := fmt.Sprintf("%s/api/hooks/forge/%d?access_token=%s", s.baseURL, app.ID, url.QueryEscape(s.webhookSecret))
+	callbackURL := fmt.Sprintf("%s/api/hooks/forge/%d", s.baseURL, app.ID)
 
 	if err := s.forge.DeleteWebhook(ctx, owner, repoName, callbackURL); err != nil {
 		return fmt.Errorf("failed to remove old webhook: %w", err)

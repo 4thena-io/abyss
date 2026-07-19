@@ -140,7 +140,7 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		handler.NewRepoHandler(repoService),
 		handler.NewTeamHandler(teamService),
 		handler.NewUserHandler(teamService),
-		handler.NewHookHandler(docsService, branch, webhookSecret),
+		handler.NewHookHandler(docsService, branch, webhookSecret, cfg.Forge.Type),
 		handler.NewDocsHandler(docsService),
 		handler.NewHealthHandler(healthService),
 	)

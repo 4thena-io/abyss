@@ -190,8 +190,8 @@ func TestAuthHandler_GenerateToken(t *testing.T) {
 
 func TestAuthHandler_RevokeToken(t *testing.T) {
 	userRepo := svcmocks.NewMockUserRepository(t)
-	tok := "existing"
-	user := &model.User{ID: 1, Token: &tok}
+	hash := "existing-hash"
+	user := &model.User{ID: 1, TokenHash: &hash, TokenLastEight: "abc12345"}
 	userRepo.EXPECT().GetByID(mock.Anything, uint(1)).Return(user, nil)
 	userRepo.On("Update", mock.Anything, user).Return(nil)
 	svc := service.NewAuthService(userRepo, forgemocks.NewMockForge(t), "", "", "", "", "", "secret", "owner")

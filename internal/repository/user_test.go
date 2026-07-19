@@ -81,24 +81,24 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 	}
 }
 
-func TestUserRepository_GetByToken(t *testing.T) {
+func TestUserRepository_GetByTokenLastEight(t *testing.T) {
 	db := newTestDB(t)
 	repo := NewUserRepository(db)
 
-	token := "pat-abc123"
-	user := &model.User{ForgeID: 1, Username: "dave", Token: &token}
+	hash := "hashed-value"
+	user := &model.User{ForgeID: 1, Username: "dave", TokenHash: &hash, TokenLastEight: "abc12345"}
 	if err := repo.Save(context.Background(), user); err != nil {
 		t.Fatalf("failed to save user: %v", err)
 	}
 
-	got, err := repo.GetByToken(context.Background(), token)
-	if err != nil || got == nil {
-		t.Fatalf("expected to find user by token, got %+v, err %v", got, err)
+	got, err := repo.GetByTokenLastEight(context.Background(), "abc12345")
+	if err != nil || len(got) != 1 {
+		t.Fatalf("expected to find one user by token suffix, got %+v, err %v", got, err)
 	}
 
-	missing, err := repo.GetByToken(context.Background(), "does-not-exist")
-	if err != nil || missing != nil {
-		t.Fatalf("expected nil for missing token, got %+v, err %v", missing, err)
+	missing, err := repo.GetByTokenLastEight(context.Background(), "notfound")
+	if err != nil || len(missing) != 0 {
+		t.Fatalf("expected no users for missing token suffix, got %+v, err %v", missing, err)
 	}
 }
 

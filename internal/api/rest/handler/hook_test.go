@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -62,12 +65,22 @@ func TestPushPayload_TouchesDocs(t *testing.T) {
 	})
 }
 
-func TestHookHandler_Forge(t *testing.T) {
-	t.Run("returns 401 when access_token does not match the webhook secret", func(t *testing.T) {
-		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
-		h := NewHookHandler(docsSvc, "main", "expected-secret")
+func giteaSignedRequest(secret, body, target string, params map[string]string) *http.Request {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(body))
+	sig := hex.EncodeToString(mac.Sum(nil))
 
-		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1?access_token=wrong", `{"ref":"refs/heads/main"}`, nil, map[string]string{"appID": "1"})
+	r := requestWithParams(http.MethodPost, target, body, nil, params)
+	r.Header.Set("X-Gitea-Signature", sig)
+	return r
+}
+
+func TestHookHandler_Forge(t *testing.T) {
+	t.Run("returns 401 when no secret is configured (fail closed)", func(t *testing.T) {
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
+		h := NewHookHandler(docsSvc, "main", "", "gitea")
+
+		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", `{"ref":"refs/heads/main"}`, nil, map[string]string{"appID": "1"})
 		w := httptest.NewRecorder()
 		h.Forge(w, r)
 
@@ -76,11 +89,52 @@ func TestHookHandler_Forge(t *testing.T) {
 		}
 	})
 
+	t.Run("returns 401 when the signature does not match the secret", func(t *testing.T) {
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
+		h := NewHookHandler(docsSvc, "main", "expected-secret", "gitea")
+
+		body := `{"ref":"refs/heads/main"}`
+		r := giteaSignedRequest("wrong-secret", body, "/api/hooks/forge/1", map[string]string{"appID": "1"})
+		w := httptest.NewRecorder()
+		h.Forge(w, r)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Fatalf("expected 401, got %d", w.Code)
+		}
+	})
+
+	t.Run("returns 401 when the signature header is missing", func(t *testing.T) {
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
+		h := NewHookHandler(docsSvc, "main", "expected-secret", "gitea")
+
+		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", `{"ref":"refs/heads/main"}`, nil, map[string]string{"appID": "1"})
+		w := httptest.NewRecorder()
+		h.Forge(w, r)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Fatalf("expected 401, got %d", w.Code)
+		}
+	})
+
+	t.Run("accepts a GitLab-style token header", func(t *testing.T) {
+		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
+		h := NewHookHandler(docsSvc, "main", "expected-secret", "gitlab")
+
+		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", `{"ref":"refs/heads/develop"}`, nil, map[string]string{"appID": "1"})
+		r.Header.Set("X-Gitlab-Token", "expected-secret")
+		w := httptest.NewRecorder()
+		h.Forge(w, r)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200 (skipped, wrong branch), got %d body=%s", w.Code, w.Body.String())
+		}
+	})
+
 	t.Run("returns 400 for invalid app id", func(t *testing.T) {
 		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
-		h := NewHookHandler(docsSvc, "main", "")
+		h := NewHookHandler(docsSvc, "main", "secret", "gitea")
 
-		r := requestWithParams(http.MethodPost, "/api/hooks/forge/abc", `{"ref":"refs/heads/main"}`, nil, map[string]string{"appID": "abc"})
+		r := giteaSignedRequest("secret", `{"ref":"refs/heads/main"}`, "/api/hooks/forge/abc", map[string]string{"appID": "abc"})
 		w := httptest.NewRecorder()
 		h.Forge(w, r)
 
@@ -91,9 +145,9 @@ func TestHookHandler_Forge(t *testing.T) {
 
 	t.Run("returns 400 for malformed payload", func(t *testing.T) {
 		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
-		h := NewHookHandler(docsSvc, "main", "")
+		h := NewHookHandler(docsSvc, "main", "secret", "gitea")
 
-		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", "{not json", nil, map[string]string{"appID": "1"})
+		r := giteaSignedRequest("secret", "{not json", "/api/hooks/forge/1", map[string]string{"appID": "1"})
 		w := httptest.NewRecorder()
 		h.Forge(w, r)
 
@@ -104,9 +158,9 @@ func TestHookHandler_Forge(t *testing.T) {
 
 	t.Run("skips with 200 when push is on a different branch", func(t *testing.T) {
 		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
-		h := NewHookHandler(docsSvc, "main", "")
+		h := NewHookHandler(docsSvc, "main", "secret", "gitea")
 
-		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", `{"ref":"refs/heads/develop"}`, nil, map[string]string{"appID": "1"})
+		r := giteaSignedRequest("secret", `{"ref":"refs/heads/develop"}`, "/api/hooks/forge/1", map[string]string{"appID": "1"})
 		w := httptest.NewRecorder()
 		h.Forge(w, r)
 
@@ -117,10 +171,10 @@ func TestHookHandler_Forge(t *testing.T) {
 
 	t.Run("skips with 200 when no docs-relevant files changed", func(t *testing.T) {
 		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
-		h := NewHookHandler(docsSvc, "main", "")
+		h := NewHookHandler(docsSvc, "main", "secret", "gitea")
 
 		body := `{"ref":"refs/heads/main","commits":[{"modified":["src/main.go"]}]}`
-		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", body, nil, map[string]string{"appID": "1"})
+		r := giteaSignedRequest("secret", body, "/api/hooks/forge/1", map[string]string{"appID": "1"})
 		w := httptest.NewRecorder()
 		h.Forge(w, r)
 
@@ -133,10 +187,10 @@ func TestHookHandler_Forge(t *testing.T) {
 		// RenderDocs rejects with a nil git client before ever touching the
 		// app repository, so no fake app data is needed here.
 		docsSvc := service.NewDocsService(mocks.NewMockAppRepository(t), nil, t.TempDir())
-		h := NewHookHandler(docsSvc, "main", "")
+		h := NewHookHandler(docsSvc, "main", "secret", "gitea")
 
 		body := `{"ref":"refs/heads/main","commits":[{"modified":["docs/index.md"]}]}`
-		r := requestWithParams(http.MethodPost, "/api/hooks/forge/1", body, nil, map[string]string{"appID": "1"})
+		r := giteaSignedRequest("secret", body, "/api/hooks/forge/1", map[string]string{"appID": "1"})
 		w := httptest.NewRecorder()
 		h.Forge(w, r)
 

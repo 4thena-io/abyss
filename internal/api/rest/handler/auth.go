@@ -142,7 +142,7 @@ func (h *AuthHandler) TokenStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]bool{"has_token": user.Token != nil})
+	_ = json.NewEncoder(w).Encode(map[string]bool{"has_token": user.TokenHash != nil})
 }
 
 func (h *AuthHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {

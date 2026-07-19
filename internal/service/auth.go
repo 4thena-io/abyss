@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 
@@ -19,7 +21,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id uint) (*model.User, error)
 	GetByUsername(ctx context.Context, username string) (*model.User, error)
 	GetByForgeID(ctx context.Context, forgeID int64) (*model.User, error)
-	GetByToken(ctx context.Context, token string) (*model.User, error)
+	GetByTokenLastEight(ctx context.Context, lastEight string) ([]model.User, error)
 	Count(ctx context.Context) (int64, error)
 }
 
@@ -162,8 +164,21 @@ func (s *AuthService) ValidateJWT(tokenStr string) (*auth.Claims, error) {
 	return auth.Verify(tokenStr, s.sessionSecret)
 }
 
-// GeneratePersonalToken creates a random PAT, persists it, and returns the raw value.
-// Used by the CLI — the token is shown once and stored hashed or plain depending on policy.
+// tokenLastEightLen is how many trailing characters of a PAT are kept in the
+// clear to make lookup an indexed query instead of a full-table hash compare.
+const tokenLastEightLen = 8
+
+// hashToken returns the hex-encoded SHA-256 digest of a PAT. The token itself
+// is generated from 32 bytes of crypto/rand (256 bits of entropy), so it
+// already carries enough randomness to stand in as its own salt.
+func hashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+// GeneratePersonalToken creates a random PAT, persists only its hash, and
+// returns the raw value. Used by the CLI — the raw token is shown once here
+// and never stored, so a DB leak alone can't be used to authenticate.
 func (s *AuthService) GeneratePersonalToken(ctx context.Context, user *model.User) (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
@@ -171,7 +186,9 @@ func (s *AuthService) GeneratePersonalToken(ctx context.Context, user *model.Use
 	}
 	token := hex.EncodeToString(b)
 
-	user.Token = &token
+	hash := hashToken(token)
+	user.TokenHash = &hash
+	user.TokenLastEight = token[len(token)-tokenLastEightLen:]
 	if err := s.userRepository.Update(ctx, user); err != nil {
 		return "", err
 	}
@@ -184,12 +201,31 @@ func (s *AuthService) GetUserByID(ctx context.Context, id uint) (*model.User, er
 }
 
 // GetUserByToken looks up a user by their PAT. Used by the auth middleware.
+// The last-eight-character index narrows candidates to a handful of rows,
+// then a constant-time compare of the full hash confirms the match.
 func (s *AuthService) GetUserByToken(ctx context.Context, token string) (*model.User, error) {
-	return s.userRepository.GetByToken(ctx, token)
+	if len(token) < tokenLastEightLen {
+		return nil, nil
+	}
+
+	candidates, err := s.userRepository.GetByTokenLastEight(ctx, token[len(token)-tokenLastEightLen:])
+	if err != nil {
+		return nil, err
+	}
+
+	hash := []byte(hashToken(token))
+	for i := range candidates {
+		u := candidates[i]
+		if u.TokenHash != nil && subtle.ConstantTimeCompare([]byte(*u.TokenHash), hash) == 1 {
+			return &u, nil
+		}
+	}
+	return nil, nil
 }
 
 // RevokePersonalToken clears the user's PAT.
 func (s *AuthService) RevokePersonalToken(ctx context.Context, user *model.User) error {
-	user.Token = nil
+	user.TokenHash = nil
+	user.TokenLastEight = ""
 	return s.userRepository.Update(ctx, user)
 }

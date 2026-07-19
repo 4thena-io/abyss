@@ -296,47 +296,47 @@ func (_c *MockUserRepository_GetByID_Call) RunAndReturn(run func(ctx context.Con
 	return _c
 }
 
-// GetByToken provides a mock function for the type MockUserRepository
-func (_mock *MockUserRepository) GetByToken(ctx context.Context, token string) (*model.User, error) {
-	ret := _mock.Called(ctx, token)
+// GetByTokenLastEight provides a mock function for the type MockUserRepository
+func (_mock *MockUserRepository) GetByTokenLastEight(ctx context.Context, lastEight string) ([]model.User, error) {
+	ret := _mock.Called(ctx, lastEight)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetByToken")
+		panic("no return value specified for GetByTokenLastEight")
 	}
 
-	var r0 *model.User
+	var r0 []model.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
-		return returnFunc(ctx, token)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]model.User, error)); ok {
+		return returnFunc(ctx, lastEight)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
-		r0 = returnFunc(ctx, token)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []model.User); ok {
+		r0 = returnFunc(ctx, lastEight)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.User)
+			r0 = ret.Get(0).([]model.User)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, token)
+		r1 = returnFunc(ctx, lastEight)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// MockUserRepository_GetByToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByToken'
-type MockUserRepository_GetByToken_Call struct {
+// MockUserRepository_GetByTokenLastEight_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByTokenLastEight'
+type MockUserRepository_GetByTokenLastEight_Call struct {
 	*mock.Call
 }
 
-// GetByToken is a helper method to define mock.On call
+// GetByTokenLastEight is a helper method to define mock.On call
 //   - ctx context.Context
-//   - token string
-func (_e *MockUserRepository_Expecter) GetByToken(ctx any, token any) *MockUserRepository_GetByToken_Call {
-	return &MockUserRepository_GetByToken_Call{Call: _e.mock.On("GetByToken", ctx, token)}
+//   - lastEight string
+func (_e *MockUserRepository_Expecter) GetByTokenLastEight(ctx any, lastEight any) *MockUserRepository_GetByTokenLastEight_Call {
+	return &MockUserRepository_GetByTokenLastEight_Call{Call: _e.mock.On("GetByTokenLastEight", ctx, lastEight)}
 }
 
-func (_c *MockUserRepository_GetByToken_Call) Run(run func(ctx context.Context, token string)) *MockUserRepository_GetByToken_Call {
+func (_c *MockUserRepository_GetByTokenLastEight_Call) Run(run func(ctx context.Context, lastEight string)) *MockUserRepository_GetByTokenLastEight_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -354,12 +354,12 @@ func (_c *MockUserRepository_GetByToken_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *MockUserRepository_GetByToken_Call) Return(user *model.User, err error) *MockUserRepository_GetByToken_Call {
-	_c.Call.Return(user, err)
+func (_c *MockUserRepository_GetByTokenLastEight_Call) Return(users []model.User, err error) *MockUserRepository_GetByTokenLastEight_Call {
+	_c.Call.Return(users, err)
 	return _c
 }
 
-func (_c *MockUserRepository_GetByToken_Call) RunAndReturn(run func(ctx context.Context, token string) (*model.User, error)) *MockUserRepository_GetByToken_Call {
+func (_c *MockUserRepository_GetByTokenLastEight_Call) RunAndReturn(run func(ctx context.Context, lastEight string) ([]model.User, error)) *MockUserRepository_GetByTokenLastEight_Call {
 	_c.Call.Return(run)
 	return _c
 }
