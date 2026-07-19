@@ -106,7 +106,7 @@ func (f *GitlabForge) CreateRepo(ctx context.Context, owner, name string) (*mode
 	proj, _, err := f.client.Projects.CreateProject(&gl.CreateProjectOptions{
 		Name:        gl.Ptr(name),
 		NamespaceID: gl.Ptr(nsID),
-		Visibility:  gl.Ptr(gl.InternalVisibility),
+		Visibility:  gl.Ptr(gl.PrivateVisibility),
 	}, gl.WithContext(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %w", err)
