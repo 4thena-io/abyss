@@ -10,6 +10,13 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] - 2026-08-11
+
+### Fixed
+
+- 🐛 Forge provider left as a typed-nil interface when initialization failed
+  at startup, causing a panic on every OAuth login attempt afterward.
+
 ## [0.1.0-alpha.1] - 2026-07-19
 
 ### Added
