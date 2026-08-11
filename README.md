@@ -34,6 +34,18 @@ one binary, one SQLite file, and it's yours to run.
   membership.
 - **Self-hosted, always**: your code, your infra, your rules.
 
+## Getting started
+
+```bash
+docker run -d \
+  --name abyss \
+  -p 8000:8000 \
+  -v abyss-data:/var/lib/abyss \
+  ghcr.io/4thena-io/abyss:latest
+```
+
+Then open `http://localhost:8000` and complete the first-run setup wizard.
+
 ## License
 
 Abyss is licensed under the [GNU Affero General Public License v3.0](./LICENSE).
