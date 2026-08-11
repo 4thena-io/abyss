@@ -2,8 +2,8 @@
     <img src="./assets/logo.svg" alt="" width="100px" align="center" />
     <h1 align="center">Welcome to Abyss</h1>
     <p align="center">
-        <a href="./LICENSE"><img src="https://img.shields.io/github/license/4thena-io/abyss?style=flat&color=black&labelColor=black" alt="License"></a>
-        <a href="https://github.com/4thena-io/abyss/releases"><img src="https://img.shields.io/github/v/release/4thena-io/abyss?include_prereleases&style=flat&color=black&labelColor=black" alt="Latest release"></a>
+        <a href="./LICENSE"><img src="https://img.shields.io/github/license/4thena-io/abyss?style=for-the-badge&color=black&labelColor=black" alt="License"></a>
+        <a href="https://github.com/4thena-io/abyss/releases"><img src="https://img.shields.io/github/v/release/4thena-io/abyss?include_prereleases&style=for-the-badge&color=black&labelColor=black" alt="Latest release"></a>
         <a href="https://github.com/4thena-io/abyss/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/4thena-io/abyss/release.yml" alt="Build status"></a>
         <a href="https://go.dev"><img src="https://img.shields.io/github/go-mod/go-version/4thena-io/abyss" alt="Go version"></a>
     </p>
