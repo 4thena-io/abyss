@@ -91,6 +91,7 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		forgeProvider, err := forge.NewForge(cfg.Forge)
 		if err != nil {
 			log.Warn().Err(err).Msg("forge unavailable at startup — forge-dependent features disabled")
+			forgeProvider = nil
 		} else {
 			botUser, err := forgeProvider.GetAuthenticatedUser(context.Background())
 			if err != nil {
