@@ -5,7 +5,6 @@ import (
 
 	"github.com/4thena-io/abyss/internal/api/rest/handler"
 	"github.com/4thena-io/abyss/internal/api/rest/middleware"
-	"github.com/4thena-io/abyss/internal/web"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -23,11 +22,10 @@ func New(
 	hook *handler.HookHandler,
 	docs *handler.DocsHandler,
 	health *handler.HealthHandler,
+	ui *handler.UIHandler,
 ) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-
-	frontend := web.NewFrontendHandler()
 
 	// Public endpoints — always accessible, no auth required
 	r.Route("/api/setup", func(r chi.Router) {
@@ -127,7 +125,7 @@ func New(
 	})
 
 	// Frontend SPA — catch-all, always accessible
-	r.Get("/*", frontend.Serve)
+	r.Get("/*", ui.Serve)
 
 	return r
 }

@@ -1,4 +1,4 @@
-frontend := "frontend"
+ui := "ui"
 
 watch:
     #!/usr/bin/env sh
@@ -11,15 +11,15 @@ watch-backend:
     air -c .air.toml
 
 watch-frontend:
-    cd {{frontend}} && bun run dev
+    cd {{ui}} && bun run dev
 
 build: build-frontend build-backend
 
 build-backend:
-    go build -o build/abyss .
+    go build -tags embed_ui -o build/abyss .
 
 build-frontend:
-    cd {{frontend}} && bun run build
+    cd {{ui}} && bun run build
 
 mocks:
     mockery
