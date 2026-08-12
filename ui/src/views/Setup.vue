@@ -526,8 +526,9 @@ const tokenPermissions = computed(() => {
       },
       {
         scope: 'Organization',
-        access: 'Read',
-        reason: 'Verify that users belong to the owner organization',
+        access: 'Read & Write',
+        reason:
+          'Verify that users belong to the owner organization, and create repositories under it',
       },
       { scope: 'User', access: 'Read', reason: 'Identify and authenticate the bot account' },
     ];
@@ -538,7 +539,11 @@ const tokenPermissions = computed(() => {
       access: 'Full control',
       reason: 'Create and delete repositories, manage webhooks',
     },
-    { scope: 'read:org', access: 'Read', reason: 'Verify organization membership' },
+    {
+      scope: 'read:org, write:org',
+      access: 'Read & Write',
+      reason: 'Verify organization membership and create repositories under the organization',
+    },
     { scope: 'read:user', access: 'Read', reason: 'Identify and authenticate the bot account' },
   ];
 });
