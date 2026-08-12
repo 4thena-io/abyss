@@ -149,6 +149,7 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		handler.NewHookHandler(docsService, branch, webhookSecret, cfg.Forge.Type),
 		handler.NewDocsHandler(docsService),
 		handler.NewHealthHandler(healthService),
+		handler.NewUIHandler(),
 	)
 
 	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r)

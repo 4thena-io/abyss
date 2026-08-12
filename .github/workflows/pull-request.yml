@@ -14,7 +14,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
+      ui: ${{ steps.filter.outputs.ui }}
       backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +23,8 @@ jobs:
         id: filter
         with:
           filters: |
-            frontend:
-              - 'frontend/**'
+            ui:
+              - 'ui/**'
             backend:
               - '**/*.go'
               - 'go.mod'
@@ -32,8 +32,9 @@ jobs:
               - '.golangci.yml'
               - '.github/workflows/pull-request.yml'
 
-  frontend:
+  ui:
     needs: changes
+    if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,60 +44,43 @@ jobs:
           bun-version: "1.3.3"
 
       - name: Install dependencies
-        working-directory: frontend
+        working-directory: ui
         run: bun install --frozen-lockfile
 
       - name: Lint
-        if: needs.changes.outputs.frontend == 'true'
-        working-directory: frontend
+        working-directory: ui
         run: bun run lint
 
       - name: Format check
-        if: needs.changes.outputs.frontend == 'true'
-        working-directory: frontend
+        working-directory: ui
         run: bun run format:check
 
       - name: Test
-        if: needs.changes.outputs.frontend == 'true'
-        working-directory: frontend
+        working-directory: ui
         run: bun run test
 
-      # Always builds: the backend embeds frontend/dist via go:embed, so the
-      # binary can't compile without it even when only backend files changed.
       - name: Typecheck and build
-        working-directory: frontend
+        working-directory: ui
         run: bun run build
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-
   backend:
-    needs: [changes, frontend]
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
 
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26.2"
 
       - name: Vet
-        if: needs.changes.outputs.backend == 'true'
         run: go vet ./...
 
       - name: Lint
-        if: needs.changes.outputs.backend == 'true'
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.12.2
 
       - name: Test
-        if: needs.changes.outputs.backend == 'true'
         run: go test ./...

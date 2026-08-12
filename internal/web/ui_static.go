@@ -1,4 +1,6 @@
-package frontend
+//go:build embed_ui
+
+package web
 
 import (
 	"embed"

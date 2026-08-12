@@ -40,6 +40,7 @@ go.work
 
 # Build
 build/
+internal/web/dist/
 
 # Graphify
 graphify*
