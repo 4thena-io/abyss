@@ -36,10 +36,17 @@ export interface TOCItem {
   level: number;
 }
 
+export interface NavNode {
+  title: string;
+  path?: string;
+  // null for a plain leaf page, an array (possibly empty) for a directory —
+  // "is this a folder" is independent of whether it has sibling files.
+  children: NavNode[] | null;
+}
+
 export interface RenderedDocs {
   pages: DocPage[];
-  toc: TOCItem[];
-  structure: string[];
+  nav: NavNode[];
 }
 
 export interface Deployment {

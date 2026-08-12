@@ -18,27 +18,11 @@
     >
       <!-- Left: page list -->
       <nav class="border-r border-b1 bg-panel overflow-y-auto py-5">
-        <template v-for="[section, pages] in groupedPages" :key="section">
-          <div
-            v-if="section !== '_root'"
-            class="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest uppercase text-t3"
-          >
-            {{ formatSection(section) }}
-          </div>
-          <button
-            v-for="page in pages"
-            :key="page.path"
-            @click="activePath = page.path"
-            :class="[
-              'w-full text-left px-4 py-[7px] text-[13px] border-l-2 transition-colors',
-              activePath === page.path
-                ? 'text-acc border-acc bg-acc-s font-medium'
-                : 'text-t2 border-transparent hover:bg-surface hover:text-t1',
-            ]"
-          >
-            {{ formatName(page.path) }}
-          </button>
-        </template>
+        <DocsNavTree
+          :nodes="docs.nav ?? []"
+          :active-path="activePath"
+          @select="activePath = $event"
+        />
       </nav>
 
       <!-- Center: rendered content -->
@@ -78,46 +62,13 @@ import { DocumentTextIcon } from '@heroicons/vue/24/outline';
 import type { RenderedDocs, DocPage, TOCItem } from '../types';
 import Spinner from '../../../components/ui/Spinner.vue';
 import EmptyState from '../../../components/ui/EmptyState.vue';
+import DocsNavTree from './DocsNavTree.vue';
 
 const props = defineProps<{ appId: number }>();
 
 const docs = ref<RenderedDocs | null>(null);
 const loading = ref(true);
 const activePath = ref('');
-
-const groupedPages = computed((): [string, DocPage[]][] => {
-  if (!docs.value?.pages) return [];
-
-  const groups = new Map<string, DocPage[]>();
-  for (const page of docs.value.pages) {
-    const dir = page.path.includes('/') ? page.path.split('/')[0]! : '_root';
-    if (!groups.has(dir)) groups.set(dir, []);
-    groups.get(dir)!.push(page);
-  }
-
-  return [...groups.entries()]
-    .sort(([a], [b]) => {
-      if (a === '_root') return -1;
-      if (b === '_root') return 1;
-      // preserve the order sections first appear in the pages array
-      const aIdx = docs.value!.pages.findIndex((p) => p.path.startsWith(a + '/'));
-      const bIdx = docs.value!.pages.findIndex((p) => p.path.startsWith(b + '/'));
-      return aIdx - bIdx;
-    })
-    .map(
-      ([section, pages]) =>
-        [
-          section,
-          [...pages].sort((a, b) => {
-            const aIsIndex = a.path.endsWith('index.md');
-            const bIsIndex = b.path.endsWith('index.md');
-            if (aIsIndex && !bIsIndex) return -1;
-            if (!aIsIndex && bIsIndex) return 1;
-            return a.path.localeCompare(b.path);
-          }),
-        ] as [string, DocPage[]],
-    );
-});
 
 const activePage = computed((): DocPage | undefined =>
   docs.value?.pages.find((p) => p.path === activePath.value),
@@ -140,16 +91,6 @@ const pageToc = computed((): TOCItem[] => {
     level: parseInt(h.tagName[1]!),
   }));
 });
-
-function formatName(path: string): string {
-  const file = path.split('/').pop()?.replace(/\.md$/, '') ?? '';
-  if (file === 'index') return 'Overview';
-  return file.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function formatSection(dir: string): string {
-  return dir.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 async function fetchDocs() {
   try {
