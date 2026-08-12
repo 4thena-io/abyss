@@ -1,5 +1,11 @@
 <template>
-  <div class="space-y-6">
+  <EmptyState
+    v-if="!canManage"
+    :icon="LockClosedIcon"
+    title="No permission"
+    message="Only a team owner or an admin can manage this team's settings."
+  />
+  <div v-else class="space-y-6">
     <!-- General -->
     <div class="bg-panel border border-b1 rounded-xl p-5 space-y-4">
       <h3 class="text-sm font-semibold text-t1">General</h3>
@@ -59,6 +65,7 @@
   </div>
 
   <ConfirmModal
+    v-if="canManage"
     :open="showDelete"
     title="Delete team"
     :message="`This will permanently delete ${team.name} and remove all members. Projects will remain but lose their team association. This cannot be undone.`"
@@ -70,18 +77,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import { ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/vue/24/outline';
 import type { Team } from '../types';
 import { teamsApi } from '../../../api/team';
+import { useCurrentUser } from '../../auth/composables/useCurrentUser';
 import FormField from '../../../components/ui/FormField.vue';
 import ConfirmModal from '../../../components/ui/ConfirmModal.vue';
+import EmptyState from '../../../components/ui/EmptyState.vue';
 
 const props = defineProps<{ team: Team }>();
 const emit = defineEmits<{ updated: [team: Team] }>();
 
 const router = useRouter();
+const { user, fetch: fetchCurrentUser } = useCurrentUser();
+const isOwner = ref(false);
+
+const canManage = computed(() => !!user.value && (user.value.is_admin || isOwner.value));
 
 const form = reactive({
   name: props.team.name,
@@ -135,4 +148,11 @@ async function deleteTeam() {
   await teamsApi.delete(props.team.id);
   router.push('/teams');
 }
+
+onMounted(async () => {
+  await fetchCurrentUser();
+  if (!user.value) return;
+  const members = await teamsApi.getMembers(props.team.id);
+  isOwner.value = members.some((m) => m.userId === user.value!.id && m.role === 'owner');
+});
 </script>
