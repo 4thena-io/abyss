@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/4thena-io/abyss/internal/git"
 	"github.com/rs/zerolog/log"
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/text"
 )
 
 type DocPage struct {
@@ -22,16 +22,31 @@ type DocPage struct {
 	HTML string `json:"html"`
 }
 
-type TOCItem struct {
-	Title  string `json:"title"`
-	Anchor string `json:"anchor"`
-	Level  int    `json:"level"`
+// NavNode is one entry in the docs sidebar tree. Children is deliberately
+// NOT omitempty: a directory node always serializes it (as `[]` when the
+// directory has no other files, `null` for a plain leaf page) so the
+// frontend can tell "this is a folder" apart from "this is a leaf" without
+// that depending on whether the folder happens to have sibling files. If it
+// also has Path set, the section header links to that directory's index.md
+// (folder-as-clickable-header); without Path it's a non-clickable group
+// label (no index.md in that directory).
+type NavNode struct {
+	Title    string    `json:"title"`
+	Path     string    `json:"path,omitempty"`
+	Children []NavNode `json:"children"`
+
+	// slug is the raw (non-humanized) directory name for section nodes; it
+	// is unexported (never reaches the JSON contract) and exists purely so
+	// applyNavManifest can match a nav.yml entry's `path: getting-started`
+	// against this node even though Title has already been humanized to
+	// "Getting Started" and Path (when set) points at the section's
+	// index.md rather than the directory itself.
+	slug string
 }
 
 type RenderedDocs struct {
-	Pages     []DocPage `json:"pages"`
-	TOC       []TOCItem `json:"toc"`
-	Structure []string  `json:"structure"`
+	Pages []DocPage `json:"pages"`
+	Nav   []NavNode `json:"nav"`
 }
 
 type DocsService struct {
@@ -84,7 +99,7 @@ func (s *DocsService) RenderDocs(ctx context.Context, appID uint) error {
 		return fmt.Errorf("failed to render docs dir: %w", err)
 	}
 
-	logger.Debug().Int("pages", len(rendered.Pages)).Int("toc_items", len(rendered.TOC)).Msg("storing rendered docs")
+	logger.Debug().Int("pages", len(rendered.Pages)).Int("nav_nodes", len(rendered.Nav)).Msg("storing rendered docs")
 	if err := s.store(appID, rendered); err != nil {
 		return err
 	}
@@ -156,8 +171,6 @@ func (s *DocsService) renderDocsDir(root string) (*RenderedDocs, error) {
 	md := s.newMarkdown()
 
 	var pages []DocPage
-	var structure []string
-	var toc []TOCItem
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -181,13 +194,9 @@ func (s *DocsService) renderDocsDir(root string) (*RenderedDocs, error) {
 		}
 
 		rel, _ := filepath.Rel(root, path)
+		rel = filepath.ToSlash(rel)
 
 		pages = append(pages, DocPage{Path: rel, HTML: rendered})
-		structure = append(structure, rel)
-
-		if filepath.Base(path) == "index.md" {
-			toc = s.extractTOC(md, content)
-		}
 
 		return nil
 	})
@@ -195,7 +204,23 @@ func (s *DocsService) renderDocsDir(root string) (*RenderedDocs, error) {
 		return nil, err
 	}
 
-	return &RenderedDocs{Pages: pages, TOC: toc, Structure: structure}, nil
+	nav := buildNavTree(pages)
+	if manifest, err := loadNavManifest(root); err != nil {
+		log.Warn().Err(err).Str("path", root).Msg("failed to parse docs/nav.yml, falling back to auto-discovered nav")
+	} else if manifest != nil {
+		// The root's own Overview (docs/index.md) is pinned first by
+		// buildNavTree and isn't something a manifest entry can address
+		// (there's no directory name or filename to write as its `path`) —
+		// exclude it from the overlay pass so it can't get shuffled to the
+		// end as just another unmatched node.
+		if len(nav) > 0 && nav[0].Path == "index.md" && nav[0].Children == nil {
+			nav = append([]NavNode{nav[0]}, applyNavManifest(nav[1:], manifest)...)
+		} else {
+			nav = applyNavManifest(nav, manifest)
+		}
+	}
+
+	return &RenderedDocs{Pages: pages, Nav: nav}, nil
 }
 
 func (s *DocsService) renderMarkdown(md goldmark.Markdown, content []byte) (string, error) {
@@ -206,49 +231,85 @@ func (s *DocsService) renderMarkdown(md goldmark.Markdown, content []byte) (stri
 	return buf.String(), nil
 }
 
-func (s *DocsService) extractTOC(md goldmark.Markdown, source []byte) []TOCItem {
-	reader := text.NewReader(source)
-	doc := md.Parser().Parse(reader)
-
-	var toc []TOCItem
-
-	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if !entering {
-			return ast.WalkContinue, nil
-		}
-
-		h, ok := n.(*ast.Heading)
-		if !ok {
-			return ast.WalkContinue, nil
-		}
-
-		anchor := ""
-		if id, ok := h.AttributeString("id"); ok {
-			anchor = string(id.([]byte))
-		}
-
-		toc = append(toc, TOCItem{
-			Title:  string(headingText(h, source)),
-			Anchor: anchor,
-			Level:  h.Level,
-		})
-
-		return ast.WalkContinue, nil
-	})
-
-	return toc
+// navDir accumulates one directory's leaf pages and subdirectories while
+// buildNavTree groups the flat page list into a tree.
+type navDir struct {
+	title    string
+	index    string // rel path of this dir's index.md, "" if none
+	children []NavNode
+	dirs     map[string]*navDir
 }
 
-// headingText concatenates the plain text of a heading's descendants.
-// ast.Node.Text is deprecated; this walks *ast.Text leaves directly instead.
-func headingText(n ast.Node, source []byte) []byte {
-	var buf bytes.Buffer
-	for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-		if t, ok := c.(*ast.Text); ok {
-			buf.Write(t.Segment.Value(source))
+// buildNavTree groups a flat, walk-ordered page list into a directory tree.
+// A directory's index.md becomes its own NavNode.Path (the folder-as-header
+// case) instead of also appearing as a sibling leaf page.
+func buildNavTree(pages []DocPage) []NavNode {
+	root := &navDir{dirs: map[string]*navDir{}}
+
+	getOrCreateDir := func(parent *navDir, name string) *navDir {
+		if d, ok := parent.dirs[name]; ok {
+			return d
+		}
+		d := &navDir{title: humanizeTitle(name), dirs: map[string]*navDir{}}
+		parent.dirs[name] = d
+		return d
+	}
+
+	for _, p := range pages {
+		parts := strings.Split(p.Path, "/")
+		dir := root
+		for _, seg := range parts[:len(parts)-1] {
+			dir = getOrCreateDir(dir, seg)
+		}
+
+		file := parts[len(parts)-1]
+		if file == "index.md" {
+			dir.index = p.Path
 			continue
 		}
-		buf.Write(headingText(c, source))
+		dir.children = append(dir.children, NavNode{
+			Title: humanizeTitle(strings.TrimSuffix(file, ".md")),
+			Path:  p.Path,
+		})
 	}
-	return buf.Bytes()
+
+	nodes := navDirNodes(root)
+	if root.index != "" {
+		nodes = append([]NavNode{{Title: "Overview", Path: root.index}}, nodes...)
+	}
+	return nodes
+}
+
+func navDirNodes(d *navDir) []NavNode {
+	nodes := append([]NavNode{}, d.children...)
+
+	names := make([]string, 0, len(d.dirs))
+	for name := range d.dirs {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		sub := d.dirs[name]
+		node := NavNode{Title: sub.title, Children: navDirNodes(sub), slug: name}
+		if sub.index != "" {
+			node.Path = sub.index
+		}
+		nodes = append(nodes, node)
+	}
+
+	sort.SliceStable(nodes, func(i, j int) bool { return nodes[i].Title < nodes[j].Title })
+	return nodes
+}
+
+// humanizeTitle turns a file or directory name into display text:
+// "getting-started" -> "Getting Started".
+func humanizeTitle(name string) string {
+	name = strings.ReplaceAll(name, "-", " ")
+	name = strings.ReplaceAll(name, "_", " ")
+	words := strings.Fields(name)
+	for i, w := range words {
+		words[i] = strings.ToUpper(w[:1]) + w[1:]
+	}
+	return strings.Join(words, " ")
 }
