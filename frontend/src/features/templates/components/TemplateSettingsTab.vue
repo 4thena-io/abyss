@@ -1,5 +1,11 @@
 <template>
-  <div class="space-y-6">
+  <EmptyState
+    v-if="!canManage"
+    :icon="LockClosedIcon"
+    title="No permission"
+    message="Only the template's creator or an admin can manage its settings."
+  />
+  <div v-else class="space-y-6">
     <!-- General -->
     <div class="bg-panel border border-b1 rounded-xl p-5 space-y-4">
       <h3 class="text-sm font-semibold text-t1">General</h3>
@@ -77,6 +83,7 @@
   </div>
 
   <ConfirmModal
+    v-if="canManage"
     :open="showDelete"
     title="Delete template"
     :message="`This will permanently delete ${template.name}. Apps created from it are not affected. This cannot be undone.`"
@@ -88,19 +95,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import { ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/vue/24/outline';
 import type { Template } from '../types';
 import { templatesApi } from '../../../api/template';
+import { useCurrentUser } from '../../auth/composables/useCurrentUser';
 import FormField from '../../../components/ui/FormField.vue';
 import Dropdown from '../../../components/ui/Dropdown.vue';
 import ConfirmModal from '../../../components/ui/ConfirmModal.vue';
+import EmptyState from '../../../components/ui/EmptyState.vue';
 
 const props = defineProps<{ template: Template }>();
 const emit = defineEmits<{ updated: [template: Template] }>();
 
 const router = useRouter();
+const { user, fetch: fetchCurrentUser } = useCurrentUser();
+
+const canManage = computed(
+  () => !!user.value && (user.value.is_admin || user.value.id === props.template.creatorId),
+);
+
+onMounted(fetchCurrentUser);
 
 const form = reactive({
   name: props.template.name,

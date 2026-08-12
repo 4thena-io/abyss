@@ -1,5 +1,11 @@
 <template>
-  <div class="space-y-6">
+  <EmptyState
+    v-if="!canManage"
+    :icon="LockClosedIcon"
+    title="No permission"
+    message="Only the project's creator or an admin can manage its settings."
+  />
+  <div v-else class="space-y-6">
     <!-- General -->
     <div class="bg-panel border border-b1 rounded-xl p-5 space-y-4">
       <h3 class="text-sm font-semibold text-t1">General</h3>
@@ -69,6 +75,7 @@
   </div>
 
   <ConfirmModal
+    v-if="canManage"
     :open="showDelete"
     title="Delete project"
     :message="`This will permanently delete ${project.name}. Applications in this project will become standalone. This action cannot be undone.`"
@@ -82,20 +89,27 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import { ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/vue/24/outline';
 import type { Project } from '../types';
 import type { Team } from '../../teams/types';
 import { projectsApi } from '../../../api/project';
 import { teamsApi } from '../../../api/team';
+import { useCurrentUser } from '../../auth/composables/useCurrentUser';
 import FormField from '../../../components/ui/FormField.vue';
 import Dropdown from '../../../components/ui/Dropdown.vue';
 import ConfirmModal from '../../../components/ui/ConfirmModal.vue';
+import EmptyState from '../../../components/ui/EmptyState.vue';
 
 const props = defineProps<{ project: Project }>();
 const emit = defineEmits<{ updated: [project: Project] }>();
 
 const router = useRouter();
 const teams = ref<Team[]>([]);
+const { user, fetch: fetchCurrentUser } = useCurrentUser();
+
+const canManage = computed(
+  () => !!user.value && (user.value.is_admin || user.value.id === props.project.creatorId),
+);
 
 const form = reactive({
   name: props.project.name,
@@ -160,6 +174,7 @@ async function deleteProject() {
 }
 
 onMounted(async () => {
+  await fetchCurrentUser();
   teams.value = await teamsApi.getAll();
 });
 </script>
