@@ -18,6 +18,13 @@ From here on, new changes should be added under `[Unreleased]` as they land.
   the UI-serving handler into `internal/api/rest/handler`, consistent with
   the rest of the REST handlers.
 
+### Fixed
+
+- 🐛 App/project/template/team settings screens showed the Delete and Save
+  controls to users who weren't the resource's creator (or team owner) or an
+  admin, even though the backend already rejected those actions with a 403.
+  Non-owners now see a permission-denied state instead.
+
 ## [0.1.0-alpha.2] - 2026-08-11
 
 ### Fixed
