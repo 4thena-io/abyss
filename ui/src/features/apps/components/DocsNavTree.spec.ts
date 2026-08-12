@@ -30,7 +30,9 @@ describe('DocsNavTree', () => {
       {
         title: 'Getting Started',
         path: 'getting-started/index.md',
-        children: [{ title: 'Installation', path: 'getting-started/installation.md', children: null }],
+        children: [
+          { title: 'Installation', path: 'getting-started/installation.md', children: null },
+        ],
       },
     ];
 
@@ -63,7 +65,9 @@ describe('DocsNavTree', () => {
     // rather than on whether it's a directory at all. An index-only folder
     // (children: []) must render identically to one with siblings, not fall
     // back to the plain-leaf style.
-    const nodes: NavNode[] = [{ title: 'Architecture', path: 'architecture/index.md', children: [] }];
+    const nodes: NavNode[] = [
+      { title: 'Architecture', path: 'architecture/index.md', children: [] },
+    ];
 
     const wrapper = mount(DocsNavTree, { props: { nodes, activePath: '' } });
 
