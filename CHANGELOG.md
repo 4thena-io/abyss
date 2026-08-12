@@ -10,6 +10,14 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ## [Unreleased]
 
+### Changed
+
+- ♻️ Gated the embedded UI behind a Go build tag (`embed_ui`) instead of an
+  unconditional `//go:embed`, so the backend builds and runs without the
+  frontend having been built first. Renamed `frontend/` to `ui/` and moved
+  the UI-serving handler into `internal/api/rest/handler`, consistent with
+  the rest of the REST handlers.
+
 ## [0.1.0-alpha.2] - 2026-08-11
 
 ### Fixed
