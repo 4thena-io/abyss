@@ -10,6 +10,15 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ## [Unreleased]
 
+### Added
+
+- ✨ Docs sidebar is now a proper tree instead of a flat, one-level-deep
+  list: a directory's `index.md` becomes its own clickable section header
+  rather than a duplicate "Overview" row, and nesting is no longer capped
+  at one level. An optional `docs/nav.yml` lets authors override title and
+  order without renaming files (additive only — anything left out still
+  appears, appended after the explicit entries).
+
 ### Changed
 
 - ♻️ Gated the embedded UI behind a Go build tag (`embed_ui`) instead of an
@@ -24,6 +33,12 @@ From here on, new changes should be added under `[Unreleased]` as they land.
   controls to users who weren't the resource's creator (or team owner) or an
   admin, even though the backend already rejected those actions with a 403.
   Non-owners now see a permission-denied state instead.
+- 🐛 Team overview member list never rendered profile avatars, always
+  falling back to initials, even though the data and the correct
+  img/fallback pattern already existed on the full Members tab.
+- 🐛 Setup screen told users a Gitea/Forgejo/GitHub token only needed
+  `Organization: Read`, but creating repos under the configured org is a
+  write operation — the required-permissions list now says so.
 
 ## [0.1.0-alpha.2] - 2026-08-11
 

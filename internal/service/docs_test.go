@@ -71,8 +71,8 @@ func TestDocsService_GetDocs(t *testing.T) {
 		svc := NewDocsService(appRepo, nil, docsDir)
 
 		rendered := &RenderedDocs{
-			Pages:     []DocPage{{Path: "index.md", HTML: "<h1>Hi</h1>"}},
-			Structure: []string{"index.md"},
+			Pages: []DocPage{{Path: "index.md", HTML: "<h1>Hi</h1>"}},
+			Nav:   []NavNode{{Title: "Overview", Path: "index.md"}},
 		}
 		if err := svc.store(1, rendered); err != nil {
 			t.Fatalf("failed to seed stored docs: %v", err)
@@ -101,9 +101,9 @@ func TestDocsService_renderDocsDir(t *testing.T) {
 		}
 	})
 
-	t.Run("renders markdown files and extracts TOC from index.md", func(t *testing.T) {
+	t.Run("renders markdown files, ignoring non-.md files", func(t *testing.T) {
 		root := t.TempDir()
-		if err := os.WriteFile(filepath.Join(root, "index.md"), []byte("# Getting Started\n\ntext\n\n## Install\n\nmore text\n"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(root, "index.md"), []byte("# Getting Started\n"), 0644); err != nil {
 			t.Fatalf("failed to write fixture: %v", err)
 		}
 		if err := os.WriteFile(filepath.Join(root, "guide.md"), []byte("# Guide\n"), 0644); err != nil {
@@ -120,29 +120,142 @@ func TestDocsService_renderDocsDir(t *testing.T) {
 		if len(got.Pages) != 2 {
 			t.Fatalf("expected 2 markdown pages (non-.md file excluded), got %d: %+v", len(got.Pages), got.Pages)
 		}
-		if len(got.TOC) != 2 {
-			t.Fatalf("expected 2 TOC entries from index.md headings, got %d: %+v", len(got.TOC), got.TOC)
+	})
+
+	t.Run("root index.md becomes a leading Overview nav node", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "index.md"), "# Home\n")
+		mustWrite(t, filepath.Join(root, "guide.md"), "# Guide\n")
+
+		got, err := svc.renderDocsDir(root)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
 		}
-		if got.TOC[0].Title != "Getting Started" || got.TOC[0].Level != 1 {
-			t.Fatalf("unexpected first TOC entry: %+v", got.TOC[0])
+		if len(got.Nav) != 2 {
+			t.Fatalf("expected 2 nav nodes, got %d: %+v", len(got.Nav), got.Nav)
 		}
-		if got.TOC[1].Title != "Install" || got.TOC[1].Level != 2 {
-			t.Fatalf("unexpected second TOC entry: %+v", got.TOC[1])
+		if got.Nav[0].Title != "Overview" || got.Nav[0].Path != "index.md" {
+			t.Fatalf("expected root index.md to be a leading Overview node, got %+v", got.Nav[0])
 		}
-		if got.TOC[0].Anchor == "" || got.TOC[1].Anchor == "" {
-			t.Fatalf("expected auto-generated heading anchors, got %+v", got.TOC)
+	})
+
+	t.Run("nested directories preserve full depth", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "a", "b", "c.md"), "# Deep\n")
+
+		got, err := svc.renderDocsDir(root)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got.Nav) != 1 || got.Nav[0].Title != "A" || len(got.Nav[0].Children) != 1 {
+			t.Fatalf("expected top-level 'A' section, got %+v", got.Nav)
+		}
+		b := got.Nav[0].Children[0]
+		if b.Title != "B" || len(b.Children) != 1 {
+			t.Fatalf("expected nested 'B' section under 'A', got %+v", b)
+		}
+		c := b.Children[0]
+		if c.Title != "C" || c.Path != "a/b/c.md" {
+			t.Fatalf("expected leaf 'C' at full depth path, got %+v", c)
+		}
+	})
+
+	t.Run("a directory's index.md becomes its section header, not a separate Overview row", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "getting-started", "index.md"), "# Getting Started\n")
+		mustWrite(t, filepath.Join(root, "getting-started", "installation.md"), "# Installation\n")
+
+		got, err := svc.renderDocsDir(root)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got.Nav) != 1 {
+			t.Fatalf("expected 1 top-level section, got %d: %+v", len(got.Nav), got.Nav)
+		}
+		section := got.Nav[0]
+		if section.Title != "Getting Started" {
+			t.Fatalf("expected section title 'Getting Started', got %q", section.Title)
+		}
+		if section.Path != "getting-started/index.md" {
+			t.Fatalf("expected section header to link to its index.md, got path %q", section.Path)
+		}
+		if len(section.Children) != 1 || section.Children[0].Path != "getting-started/installation.md" {
+			t.Fatalf("expected exactly one sibling child (installation.md), no duplicate Overview row, got %+v", section.Children)
+		}
+	})
+
+	t.Run("a present nav.yml overrides auto-discovered titles and order", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "api", "index.md"), "# API\n")
+		mustWrite(t, filepath.Join(root, "getting-started", "index.md"), "# Getting Started\n")
+		mustWrite(t, filepath.Join(root, "nav.yml"), `
+- title: Getting Started
+  path: getting-started
+- title: API Reference
+  path: api
+`)
+
+		got, err := svc.renderDocsDir(root)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got.Nav) != 2 || got.Nav[0].Title != "Getting Started" || got.Nav[1].Title != "API Reference" {
+			t.Fatalf("expected nav.yml order/titles to apply, got %+v", got.Nav)
+		}
+		// nav.yml itself must not surface as a page.
+		for _, p := range got.Pages {
+			if p.Path == "nav.yml" {
+				t.Fatalf("expected nav.yml to be excluded from Pages, got %+v", got.Pages)
+			}
+		}
+	})
+
+	t.Run("the root Overview stays first regardless of nav.yml, since it can't be addressed by a manifest entry", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "index.md"), "# Home\n")
+		mustWrite(t, filepath.Join(root, "api", "index.md"), "# API\n")
+		mustWrite(t, filepath.Join(root, "getting-started", "index.md"), "# Getting Started\n")
+		mustWrite(t, filepath.Join(root, "nav.yml"), `
+- title: Getting Started
+  path: getting-started
+- title: API Reference
+  path: api
+`)
+
+		got, err := svc.renderDocsDir(root)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got.Nav) != 3 || got.Nav[0].Title != "Overview" || got.Nav[0].Path != "index.md" {
+			t.Fatalf("expected Overview to stay pinned first, got %+v", got.Nav)
+		}
+		if got.Nav[1].Title != "Getting Started" || got.Nav[2].Title != "API Reference" {
+			t.Fatalf("expected manifest order to apply to the remaining entries, got %+v", got.Nav)
+		}
+	})
+
+	t.Run("a malformed nav.yml is non-fatal: rendering still succeeds with the auto-discovered nav", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "getting-started", "index.md"), "# Getting Started\n")
+		mustWrite(t, filepath.Join(root, "nav.yml"), "title: [not a list of entries\n")
+
+		got, err := svc.renderDocsDir(root)
+		if err != nil {
+			t.Fatalf("expected malformed nav.yml to be non-fatal, got error: %v", err)
+		}
+		if len(got.Nav) != 1 || got.Nav[0].Title != "Getting Started" {
+			t.Fatalf("expected auto-discovered nav to be used as a fallback, got %+v", got.Nav)
 		}
 	})
 }
 
-func TestDocsService_extractTOC_nestedInlineFormatting(t *testing.T) {
-	svc := NewDocsService(nil, nil, t.TempDir())
-	md := svc.newMarkdown()
-	source := []byte("# Hello **bold** world\n")
-
-	toc := svc.extractTOC(md, source)
-	if len(toc) != 1 || toc[0].Title != "Hello bold world" {
-		t.Fatalf("expected heading text to flatten inline formatting, got %+v", toc)
+func mustWrite(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatalf("failed to create fixture dir: %v", err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write fixture: %v", err)
 	}
 }
 
