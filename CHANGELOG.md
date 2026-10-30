@@ -29,6 +29,10 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ### Fixed
 
+- 🐛 Database-dependent requests now return retryable 503 responses during
+  outages without clearing sessions or consuming OAuth state. OAuth failures
+  log their stage without exposing provider secrets; frontend checks no longer
+  mistake backend failures for logout or an unconfigured installation.
 - 🐛 Forge clients now initialize on demand and recover after temporary outages
   without a restart. OAuth identity lookup no longer depends on startup bot
   availability, and git commit authorship is resolved when needed.
