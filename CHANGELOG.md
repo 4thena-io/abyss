@@ -12,6 +12,8 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ### Added
 
+- ✨ Separate `/api/live` and `/api/ready` probes, database status in health
+  diagnostics, and a database outage banner in the UI.
 - ✨ Docs sidebar is now a proper tree instead of a flat, one-level-deep
   list: a directory's `index.md` becomes its own clickable section header
   rather than a duplicate "Overview" row, and nesting is no longer capped
@@ -29,6 +31,8 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ### Fixed
 
+- 🐛 Health checks now reject HTTP error responses and check the configured
+  forge bot through its API instead of reporting website reachability as healthy.
 - 🐛 Database-dependent requests now return retryable 503 responses during
   outages without clearing sessions or consuming OAuth state. OAuth failures
   log their stage without exposing provider secrets; frontend checks no longer
