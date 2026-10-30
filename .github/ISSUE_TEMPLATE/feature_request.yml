@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest an improvement to Abyss.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea! Please search existing issues before submitting a request.
+        Do not post security vulnerabilities publicly. Use GitHub's private vulnerability reporting if available, or contact a maintainer privately.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe your use case and what is difficult today.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like Abyss to do?
+      description: Describe the improvement you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: Have you tried another approach? What are its limitations?

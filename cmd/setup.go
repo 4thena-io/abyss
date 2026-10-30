@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/4thena-io/abyss/internal/api/rest/handler"
 	"github.com/4thena-io/abyss/internal/api/rest/middleware"
@@ -22,14 +23,24 @@ import (
 	"gorm.io/gorm"
 )
 
-func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Server {
+func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) (*Server, error) {
 	db, err := database.NewConnection(cfg.Database)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to connect to database")
+		return nil, err
 	}
-	if err := database.RunMigrations(db); err != nil {
-		log.Fatal().Err(err).Msg("failed to run migrations")
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
 	}
+	initialized := false
+	defer func() {
+		if !initialized {
+			if sqlDB, err := db.DB(); err == nil {
+				_ = sqlDB.Close()
+			}
+		}
+	}()
 
 	setupHandler := handler.NewSetupHandler(configPath, cfg.Auth.ClientID != "", cfg, restartCh)
 
@@ -57,7 +68,7 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 	if ciHost == "" {
 		ciHost = cfg.Forge.Host
 	}
-	healthService := service.NewHealthService(cfg.Forge.Host, cfg.CI.Type, ciHost)
+	healthService := service.NewHealthService(cfg.Forge.Host, cfg.CI.Type, ciHost).WithDependencies(sqlDB.PingContext, nil)
 
 	appService := service.NewAppService(appRepo, projectRepo, templateRepo, nil, nil, gitClient, cfg.Forge.Owner, "", "", branch)
 	deploymentService := service.NewDeploymentService(deploymentRepo)
@@ -70,12 +81,12 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 	if cfg.Auth.ClientID != "" {
 		jwtSecret, err := ensureJWTSecret(db)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to provision jwt secret")
+			return nil, fmt.Errorf("failed to provision jwt secret: %w", err)
 		}
 
 		webhookSecret, err = ensureWebhookSecret(db)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to provision webhook secret")
+			return nil, fmt.Errorf("failed to provision webhook secret: %w", err)
 		}
 
 		if cfg.RootURL != "" {
@@ -88,20 +99,23 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 			baseURL = fmt.Sprintf("http://%s:%s", host, cfg.Server.Port)
 		}
 
-		forgeProvider, err := forge.NewForge(cfg.Forge)
+		forgeProvider, err := forge.NewRecovering(cfg.Forge)
 		if err != nil {
-			log.Warn().Err(err).Msg("forge unavailable at startup — forge-dependent features disabled")
-			forgeProvider = nil
-		} else {
-			botUser, err := forgeProvider.GetAuthenticatedUser(context.Background())
-			if err != nil {
-				log.Warn().Err(err).Msg("could not identify forge bot user — forge-dependent features disabled")
-				forgeProvider = nil
-			} else {
-				log.Info().Str("username", botUser.Username).Msg("forge bot user identified")
-				gitClient = git.New(cfg.Forge.Token, botUser.FullName, botUser.Email, branch)
-			}
+			return nil, err
 		}
+		healthService.WithDependencies(sqlDB.PingContext, func(ctx context.Context) error {
+			_, err := forgeProvider.GetAuthenticatedUser(ctx)
+			return err
+		})
+		gitClient = git.NewWithIdentity(cfg.Forge.Token, branch, func() (string, string, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			bot, err := forgeProvider.GetAuthenticatedUser(ctx)
+			if err != nil {
+				return "", "", err
+			}
+			return bot.FullName, bot.Email, nil
+		})
 
 		ciProvider, err := ci.NewCi(cfg.CI, cfg.Forge)
 		if err != nil {
@@ -152,7 +166,8 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		handler.NewUIHandler(),
 	)
 
-	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r)
+	initialized = true
+	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, middleware.DatabaseAvailable(sqlDB.PingContext)(r)), nil
 }
 
 func ensureWebhookSecret(db *gorm.DB) (string, error) {

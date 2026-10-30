@@ -33,6 +33,8 @@ func New(
 		r.Post("/configure", setupHandler.Configure)
 	})
 	r.Get("/api/health", health.Check)
+	r.Get("/api/live", health.Live)
+	r.Get("/api/ready", health.Ready)
 
 	// Auth routes: require OAuth to be configured
 	r.Route("/auth", func(r chi.Router) {
