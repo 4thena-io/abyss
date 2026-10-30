@@ -58,7 +58,7 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create template")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 
@@ -182,7 +182,7 @@ func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request)
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("failed to delete template")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 

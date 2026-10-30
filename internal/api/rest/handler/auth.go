@@ -1,12 +1,18 @@
 package handler
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/4thena-io/abyss/internal/database"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/oauth2"
 
 	"github.com/4thena-io/abyss/internal/api/rest/middleware"
 	"github.com/4thena-io/abyss/internal/api/rest/response"
@@ -69,13 +75,13 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.service.Exchange(r.Context(), r.URL.Query().Get("code"))
 	if err != nil {
-		response.BadRequest(w, "failed to exchange code")
+		h.callbackFailure(w, r, "code_exchange", err)
 		return
 	}
 
 	forgeUser, err := h.service.GetForgeUser(r.Context(), token)
 	if err != nil {
-		response.InternalError(w)
+		h.callbackFailure(w, r, "identity", err)
 		return
 	}
 
@@ -85,13 +91,13 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		response.InternalError(w)
+		h.callbackFailure(w, r, "user_sync", err)
 		return
 	}
 
 	jwt, err := h.service.GenerateJWT(user)
 	if err != nil {
-		response.InternalError(w)
+		h.callbackFailure(w, r, "session", err)
 		return
 	}
 
@@ -105,6 +111,36 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	})
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// callbackFailure deliberately does not log err: OAuth responses can contain secrets.
+func (h *AuthHandler) callbackFailure(w http.ResponseWriter, r *http.Request, stage string, err error) {
+	var detail *service.AuthStageError
+	if errors.As(err, &detail) {
+		stage = detail.Stage
+	}
+	status := http.StatusServiceUnavailable
+	message := "Authentication service temporarily unavailable. Please start login again shortly."
+	if stage == "session" || stage == "database" && !database.IsTransient(err) && !errors.Is(err, context.DeadlineExceeded) {
+		status = http.StatusInternalServerError
+		message = "Unable to complete login. Please contact your administrator."
+	}
+	var exchange *oauth2.RetrieveError
+	if stage == "code_exchange" && errors.As(err, &exchange) && exchange.Response != nil && exchange.Response.StatusCode >= 400 && exchange.Response.StatusCode < 500 && exchange.Response.StatusCode != 429 {
+		status = http.StatusBadRequest
+		message = "Authorization could not be completed. Please start login again."
+	}
+	log.Error().Str("stage", stage).Int("status", status).Msg("OAuth callback failed")
+	if status == http.StatusServiceUnavailable {
+		w.Header().Set("Retry-After", "5")
+	}
+	if strings.Contains(r.Header.Get("Accept"), "text/html") {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte("<!doctype html><title>Login unavailable</title><p>" + message + "</p><a href=\"/auth/login\">Try login again</a>"))
+		return
+	}
+	response.WriteError(w, status, message)
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {

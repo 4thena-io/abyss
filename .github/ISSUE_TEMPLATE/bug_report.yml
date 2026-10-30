@@ -1,0 +1,58 @@
+name: Bug report
+description: Report a problem with Abyss.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Abyss! Please search existing issues before reporting a bug.
+        Do not post security vulnerabilities publicly. Use GitHub's private vulnerability reporting if available, or contact a maintainer privately.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem you encountered.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide enough detail for someone else to reproduce the problem.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+  - type: input
+    id: version
+    attributes:
+      label: Abyss version
+      description: Include the release version, image tag, or commit SHA.
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - Docker
+        - Binary
+        - Source
+        - Other
+  - type: input
+    id: integrations
+    attributes:
+      label: Forge / CI integration
+      description: If relevant, include the provider and version.
+      placeholder: Gitea, Forgejo, GitHub, GitLab, Woodpecker, Drone, or Actions
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove tokens, passwords, secrets, and other sensitive information before posting.

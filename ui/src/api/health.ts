@@ -4,6 +4,7 @@ export interface ServiceHealth {
 }
 
 export interface HealthStatus {
+  database?: ServiceHealth;
   forge: ServiceHealth;
   ci: ServiceHealth;
 }

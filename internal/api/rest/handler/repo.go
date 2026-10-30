@@ -21,7 +21,7 @@ func (h *RepoHandler) GetAllRepos(w http.ResponseWriter, r *http.Request) {
 	repos, err := h.service.GetRepos(r.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get repos")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 
