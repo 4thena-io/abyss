@@ -29,6 +29,9 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ### Fixed
 
+- 🐛 Temporary database startup failures now retry with capped exponential
+  backoff while the UI and liveness endpoint remain available. Migrations run
+  once per initialization; configuration and migration errors remain explicit.
 - 🐛 App/project/template/team settings screens showed the Delete and Save
   controls to users who weren't the resource's creator (or team owner) or an
   admin, even though the backend already rejected those actions with a 403.
