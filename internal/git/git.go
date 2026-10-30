@@ -14,10 +14,11 @@ import (
 )
 
 type GitClient struct {
-	token  string
-	name   string
-	email  string
-	branch string
+	token           string
+	name            string
+	email           string
+	branch          string
+	resolveIdentity func() (string, string, error)
 }
 
 func New(token, name, email, branch string) *GitClient {
@@ -25,6 +26,19 @@ func New(token, name, email, branch string) *GitClient {
 		branch = "main"
 	}
 	return &GitClient{token: token, name: name, email: email, branch: branch}
+}
+
+// NewWithIdentity resolves authorship on demand; startup outages never disable git.
+func NewWithIdentity(token, branch string, resolve func() (string, string, error)) *GitClient {
+	c := New(token, "", "", branch)
+	c.resolveIdentity = resolve
+	return c
+}
+func (c *GitClient) identity() (string, string, error) {
+	if c.resolveIdentity != nil {
+		return c.resolveIdentity()
+	}
+	return c.name, c.email, nil
 }
 
 // Clone clones a repository to a local path on the configured branch.
@@ -76,10 +90,14 @@ func (c *GitClient) InitAndPush(localPath, remoteURL, commitMsg string) error {
 	}
 
 	// Commit
+	name, email, err := c.identity()
+	if err != nil {
+		return fmt.Errorf("failed to resolve commit identity: %w", err)
+	}
 	_, err = worktree.Commit(commitMsg, &gogit.CommitOptions{
 		Author: &object.Signature{
-			Name:  c.name,
-			Email: c.email,
+			Name:  name,
+			Email: email,
 			When:  time.Now(),
 		},
 	})
@@ -143,10 +161,14 @@ func (c *GitClient) AddCommitPush(localPath, commitMsg string) error {
 		return fmt.Errorf("failed to add files: %w", err)
 	}
 
+	name, email, err := c.identity()
+	if err != nil {
+		return fmt.Errorf("failed to resolve commit identity: %w", err)
+	}
 	_, err = worktree.Commit(commitMsg, &gogit.CommitOptions{
 		Author: &object.Signature{
-			Name:  c.name,
-			Email: c.email,
+			Name:  name,
+			Email: email,
 			When:  time.Now(),
 		},
 	})
