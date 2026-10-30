@@ -1,6 +1,6 @@
 module github.com/4thena-io/abyss
 
-go 1.26.0
+go 1.26.10
 
 require (
 	code.gitea.io/sdk/gitea v0.25.1
