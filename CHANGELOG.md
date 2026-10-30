@@ -12,6 +12,9 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ### Added
 
+- 📝 YAML issue forms for bug reports and feature requests, plus a Markdown
+  pull request template with testing and review prompts.
+
 - ✨ Separate `/api/live` and `/api/ready` probes, database status in health
   diagnostics, and a database outage banner in the UI.
 - ✨ Docs sidebar is now a proper tree instead of a flat, one-level-deep
