@@ -31,6 +31,12 @@ const dismissed = ref<Set<string>>(new Set());
 const alerts = computed(() => {
   if (!status.value) return [];
   const list: { key: string; message: string }[] = [];
+  if (status.value.database && !status.value.database.ok)
+    list.push({
+      key: 'database',
+      message:
+        'Database is temporarily unavailable — some actions cannot complete. Your session has not been cleared.',
+    });
   if (!status.value.forge.ok)
     list.push({
       key: 'forge',
@@ -47,6 +53,7 @@ const alerts = computed(() => {
 // Auto-restore dismissed alerts when the service comes back up, so the next
 // outage shows the banner again.
 watch(status, (next) => {
+  if (next?.database?.ok) dismissed.value.delete('database');
   if (next?.forge.ok) dismissed.value.delete('forge');
   if (next?.ci.ok) dismissed.value.delete('ci');
 });
