@@ -73,7 +73,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create app")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 
@@ -169,7 +169,7 @@ func (h *AppHandler) GetAppBuilds(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get app builds")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 
@@ -202,7 +202,7 @@ func (h *AppHandler) RepairApp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Error().Err(err).Msg("failed to repair app webhook")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -227,7 +227,7 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("failed to delete app")
-		response.InternalError(w)
+		response.FromError(w, err)
 		return
 	}
 

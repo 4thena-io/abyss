@@ -158,8 +158,12 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) (*S
 		handler.NewUIHandler(),
 	)
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
 	initialized = true
-	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r), nil
+	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, middleware.DatabaseAvailable(sqlDB.PingContext)(r)), nil
 }
 
 func ensureWebhookSecret(db *gorm.DB) (string, error) {
