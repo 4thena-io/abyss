@@ -65,7 +65,7 @@ func (c *WoodpeckerCi) DeleteRepo(ctx context.Context, ciRepoID int64, slug stri
 	if err != nil {
 		return fmt.Errorf("failed to delete ci repo: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_, _ = io.Copy(io.Discard, resp.Body)
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("failed to delete ci repo: %s", resp.Status)
