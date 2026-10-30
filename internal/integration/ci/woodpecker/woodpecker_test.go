@@ -2,6 +2,7 @@ package woodpecker
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,6 +46,12 @@ func TestWoodpeckerCi_DeleteRepo(t *testing.T) {
 		if r.Method != http.MethodDelete || r.URL.Path != "/api/repos/7" {
 			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
 		}
+		if got := r.URL.Query().Get("remove"); got != "true" {
+			t.Errorf("expected remove=true for permanent deletion, got %q", got)
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer token" {
+			t.Errorf("unexpected authorization header: %q", got)
+		}
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer srv.Close()
@@ -56,6 +63,42 @@ func TestWoodpeckerCi_DeleteRepo(t *testing.T) {
 
 	if err := ci.DeleteRepo(context.Background(), 7, "acme/my-app"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestWoodpeckerCi_DeleteRepo_PropagatesError(t *testing.T) {
+	for _, status := range []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusInternalServerError} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(status)
+			}))
+			defer srv.Close()
+
+			ci, err := NewWoodpeckerCi(srv.URL+"/", "token")
+			if err != nil {
+				t.Fatalf("failed to create ci client: %v", err)
+			}
+			if err := ci.DeleteRepo(context.Background(), 7, "acme/my-app"); err == nil {
+				t.Fatal("expected a deletion error")
+			}
+		})
+	}
+}
+
+func TestWoodpeckerCi_DeleteRepo_CanceledContext(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("canceled request should not reach the server")
+	}))
+	defer srv.Close()
+
+	ci, err := NewWoodpeckerCi(srv.URL, "token")
+	if err != nil {
+		t.Fatalf("failed to create ci client: %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := ci.DeleteRepo(ctx, 7, "acme/my-app"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context cancellation, got %v", err)
 	}
 }
 
