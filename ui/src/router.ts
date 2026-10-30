@@ -12,8 +12,11 @@ import Setup from './views/Setup.vue';
 import Login from './views/Login.vue';
 import Settings from './views/Settings.vue';
 import UserProfile from './views/UserProfile.vue';
+import ServiceUnavailable from './views/ServiceUnavailable.vue';
+import { checkAuthenticated, checkConfigured } from './api/session';
 
 const routes = [
+  { path: '/unavailable', component: ServiceUnavailable },
   { path: '/setup', component: Setup },
   { path: '/login', component: Login },
   { path: '/', component: Home },
@@ -40,45 +43,39 @@ let authChecked: boolean | null = null;
 
 async function isConfigured(): Promise<boolean> {
   if (setupChecked !== null) return setupChecked;
-  try {
-    const res = await fetch('/api/setup/status');
-    const data = await res.json();
-    setupChecked = data.configured as boolean;
-  } catch {
-    setupChecked = false;
-  }
-  return setupChecked!;
+  setupChecked = await checkConfigured();
+  return setupChecked;
 }
 
 async function isAuthenticated(): Promise<boolean> {
   if (authChecked !== null) return authChecked;
-  try {
-    const res = await fetch('/api/me');
-    authChecked = res.ok;
-  } catch {
-    authChecked = false;
-  }
-  return authChecked!;
+  authChecked = await checkAuthenticated();
+  return authChecked;
 }
 
 router.beforeEach(async (to) => {
-  const configured = await isConfigured();
+  if (to.path === '/unavailable') return true;
+  try {
+    const configured = await isConfigured();
 
-  if (to.path === '/setup') {
-    return configured ? '/login' : true;
-  }
+    if (to.path === '/setup') {
+      return configured ? '/login' : true;
+    }
 
-  if (!configured) return '/setup';
+    if (!configured) return '/setup';
 
-  if (to.path === '/login') {
+    if (to.path === '/login') {
+      const authenticated = await isAuthenticated();
+      return authenticated ? '/' : true;
+    }
+
     const authenticated = await isAuthenticated();
-    return authenticated ? '/' : true;
+    if (!authenticated) return '/login';
+
+    return true;
+  } catch {
+    return '/unavailable';
   }
-
-  const authenticated = await isAuthenticated();
-  if (!authenticated) return '/login';
-
-  return true;
 });
 
 export default router;

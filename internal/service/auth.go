@@ -7,6 +7,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/4thena-io/abyss/internal/auth"
 	"github.com/4thena-io/abyss/internal/integration/forge"
@@ -96,6 +97,8 @@ func (s *AuthService) AuthURL(state string) string {
 // access token. This is a server-to-server request — the client_secret never
 // leaves the server. The code is single-use and short-lived.
 func (s *AuthService) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	token, err := s.oauthConfig().Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code: %w", err)
@@ -107,7 +110,7 @@ func (s *AuthService) Exchange(ctx context.Context, code string) (*oauth2.Token,
 // the forge. This is separate from GetAuthenticatedUser which uses the bot token.
 func (s *AuthService) GetForgeUser(ctx context.Context, token *oauth2.Token) (*model.ForgeUser, error) {
 	if s.forge == nil {
-		return nil, fmt.Errorf("forge is unavailable")
+		return nil, forge.ErrUnavailable
 	}
 	return s.forge.GetUserByToken(ctx, token.AccessToken)
 }
@@ -116,11 +119,11 @@ func (s *AuthService) GetForgeUser(ctx context.Context, token *oauth2.Token) (*m
 // The very first user to log in becomes admin — no selection needed.
 func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.ForgeUser) (*model.User, error) {
 	if s.forge == nil {
-		return nil, fmt.Errorf("forge is unavailable")
+		return nil, forge.ErrUnavailable
 	}
 	member, err := s.forge.IsMemberOfOwner(ctx, s.owner, forgeUser.Username)
 	if err != nil {
-		return nil, err
+		return nil, &AuthStageError{Stage: "membership", Err: err}
 	}
 	if !member {
 		return nil, ErrUnauthorized
@@ -128,13 +131,13 @@ func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.Forg
 
 	user, err := s.userRepository.GetByForgeID(ctx, forgeUser.ID)
 	if err != nil {
-		return nil, err
+		return nil, &AuthStageError{Stage: "database", Err: err}
 	}
 	if user != nil {
 		user.AvatarURL = forgeUser.AvatarURL
 		user.Email = forgeUser.Email
 		if err := s.userRepository.Update(ctx, user); err != nil {
-			return nil, err
+			return nil, &AuthStageError{Stage: "database", Err: err}
 		}
 		return user, nil
 	}
@@ -142,7 +145,7 @@ func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.Forg
 	// First user ever = admin
 	count, err := s.userRepository.Count(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &AuthStageError{Stage: "database", Err: err}
 	}
 
 	user = &model.User{
@@ -153,7 +156,7 @@ func (s *AuthService) GetOrCreateUser(ctx context.Context, forgeUser *model.Forg
 		AvatarURL: forgeUser.AvatarURL,
 	}
 	if err := s.userRepository.Save(ctx, user); err != nil {
-		return nil, err
+		return nil, &AuthStageError{Stage: "database", Err: err}
 	}
 	return user, nil
 }

@@ -3,7 +3,9 @@ package gitea
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	gt "code.gitea.io/sdk/gitea"
 	"github.com/4thena-io/abyss/internal/model"
@@ -15,7 +17,7 @@ type GiteaForge struct {
 }
 
 func NewGiteaForge(url, secret string) (*GiteaForge, error) {
-	client, err := gt.NewClient(url, gt.SetToken(secret))
+	client, err := gt.NewClient(url, gt.SetToken(secret), gt.SetHTTPClient(&http.Client{Timeout: 5 * time.Second}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gitea client: %w", err)
 	}
@@ -45,7 +47,7 @@ func (f *GiteaForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUser
 }
 
 func (f *GiteaForge) GetUserByToken(ctx context.Context, token string) (*model.ForgeUser, error) {
-	client, err := gt.NewClient(f.url, gt.SetToken(token))
+	client, err := gt.NewClient(f.url, gt.SetToken(token), gt.SetHTTPClient(&http.Client{Timeout: 5 * time.Second}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user client: %w", err)
 	}

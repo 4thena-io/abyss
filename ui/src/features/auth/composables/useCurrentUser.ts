@@ -16,12 +16,17 @@ let fetched = false;
 export function useCurrentUser() {
   async function fetch() {
     if (fetched) return;
-    fetched = true;
     try {
       const res = await window.fetch('/api/me');
-      if (res.ok) user.value = await res.json();
+      if (res.ok) {
+        user.value = await res.json();
+        fetched = true;
+      } else if (res.status === 401) {
+        user.value = null;
+        fetched = true;
+      }
     } catch {
-      // ignore
+      // Leave the result uncached so recovery can retry without logging out.
     }
   }
 

@@ -3,7 +3,9 @@ package forgejo
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	fg "codeberg.org/mvdkleijn/forgejo-sdk/forgejo"
 	"github.com/4thena-io/abyss/internal/model"
@@ -15,7 +17,7 @@ type ForgejoForge struct {
 }
 
 func NewForgejoForge(url, secret string) (*ForgejoForge, error) {
-	client, err := fg.NewClient(url, fg.SetToken(secret))
+	client, err := fg.NewClient(url, fg.SetToken(secret), fg.SetHTTPClient(&http.Client{Timeout: 5 * time.Second}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Forgejo client: %w", err)
 	}
@@ -45,7 +47,7 @@ func (f *ForgejoForge) GetAuthenticatedUser(ctx context.Context) (*model.ForgeUs
 }
 
 func (f *ForgejoForge) GetUserByToken(ctx context.Context, token string) (*model.ForgeUser, error) {
-	client, err := fg.NewClient(f.url, fg.SetToken(token))
+	client, err := fg.NewClient(f.url, fg.SetToken(token), fg.SetHTTPClient(&http.Client{Timeout: 5 * time.Second}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user client: %w", err)
 	}
