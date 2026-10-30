@@ -59,7 +59,7 @@ func (c *DroneCi) ActivateRepo(ctx context.Context, forgeRemoteID int64, slug st
 	}, nil
 }
 
-// DeleteRepo removes a repository from CI using the slug (owner/repo).
+// DeleteRepo permanently removes a repository from CI using the slug (owner/repo).
 // The ciRepoID parameter is ignored by Drone.
 func (c *DroneCi) DeleteRepo(ctx context.Context, ciRepoID int64, slug string) error {
 	owner, repo, err := parseSlug(slug)
@@ -67,7 +67,7 @@ func (c *DroneCi) DeleteRepo(ctx context.Context, ciRepoID int64, slug string) e
 		return err
 	}
 
-	return c.client.RepoDisable(owner, repo)
+	return c.client.RepoDelete(owner, repo)
 }
 
 // GetBuilds returns builds for a repository using the slug (owner/repo).

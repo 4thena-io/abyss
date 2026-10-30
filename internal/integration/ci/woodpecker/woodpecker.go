@@ -3,6 +3,9 @@ package woodpecker
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 
 	"github.com/4thena-io/abyss/internal/model"
 	"go.woodpecker-ci.org/woodpecker/v3/woodpecker-go/woodpecker"
@@ -10,8 +13,9 @@ import (
 )
 
 type WoodpeckerCi struct {
-	client woodpecker.Client
-	host   string
+	client     woodpecker.Client
+	httpClient *http.Client
+	host       string
 }
 
 func NewWoodpeckerCi(url, token string) (*WoodpeckerCi, error) {
@@ -22,10 +26,12 @@ func NewWoodpeckerCi(url, token string) (*WoodpeckerCi, error) {
 			AccessToken: token,
 		},
 	)
+	url = strings.TrimRight(url, "/")
 	client := woodpecker.NewClient(url, auth)
 	return &WoodpeckerCi{
-		client,
-		url,
+		client:     client,
+		httpClient: auth,
+		host:       url,
 	}, nil
 }
 
@@ -46,10 +52,25 @@ func (c *WoodpeckerCi) ActivateRepo(ctx context.Context, forgeRemoteID int64, sl
 	}, nil
 }
 
-// DeleteRepo removes a repository from CI using the CI repo ID.
+// DeleteRepo permanently removes a repository and its CI data using the CI repo ID.
 // The slug parameter is ignored by Woodpecker.
 func (c *WoodpeckerCi) DeleteRepo(ctx context.Context, ciRepoID int64, slug string) error {
-	return c.client.RepoDel(ciRepoID)
+	// The SDK's RepoDel omits remove=true and only deactivates the repository.
+	url := fmt.Sprintf("%s/api/repos/%d?remove=true", c.host, ciRepoID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create ci repo deletion request: %w", err)
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to delete ci repo: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("failed to delete ci repo: %s", resp.Status)
+	}
+	return nil
 }
 
 // GetBuilds returns pipelines for a repository using the CI repo ID.
