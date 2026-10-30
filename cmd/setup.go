@@ -22,14 +22,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Server {
+func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) (*Server, error) {
 	db, err := database.NewConnection(cfg.Database)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to connect to database")
+		return nil, err
 	}
-	if err := database.RunMigrations(db); err != nil {
-		log.Fatal().Err(err).Msg("failed to run migrations")
-	}
+
+	initialized := false
+	defer func() {
+		if !initialized {
+			if sqlDB, err := db.DB(); err == nil {
+				_ = sqlDB.Close()
+			}
+		}
+	}()
 
 	setupHandler := handler.NewSetupHandler(configPath, cfg.Auth.ClientID != "", cfg, restartCh)
 
@@ -70,12 +76,12 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 	if cfg.Auth.ClientID != "" {
 		jwtSecret, err := ensureJWTSecret(db)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to provision jwt secret")
+			return nil, fmt.Errorf("failed to provision jwt secret: %w", err)
 		}
 
 		webhookSecret, err = ensureWebhookSecret(db)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to provision webhook secret")
+			return nil, fmt.Errorf("failed to provision webhook secret: %w", err)
 		}
 
 		if cfg.RootURL != "" {
@@ -152,7 +158,8 @@ func setup(cfg *config.Config, configPath string, restartCh chan<- struct{}) *Se
 		handler.NewUIHandler(),
 	)
 
-	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r)
+	initialized = true
+	return newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, r), nil
 }
 
 func ensureWebhookSecret(db *gorm.DB) (string, error) {

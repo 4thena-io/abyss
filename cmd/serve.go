@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/4thena-io/abyss/internal/api/rest/handler"
 	"github.com/4thena-io/abyss/internal/config"
 	"github.com/4thena-io/abyss/internal/logger"
 	"github.com/rs/zerolog/log"
@@ -35,7 +36,18 @@ func serveCmd(configPath *string) *cobra.Command {
 			}
 
 			restartCh := make(chan struct{}, 1)
-			srv := setup(cfg, *configPath, restartCh)
+			startup := &startupHandler{ui: handler.NewUIHandler()}
+			srv := newServer(Config{Host: cfg.Server.Host, Port: cfg.Server.Port}, startup)
+			initCtx, stopInit := context.WithCancel(cmd.Context())
+			defer stopInit()
+			initErr := make(chan error, 1)
+			go func() {
+				if err := startup.initialize(initCtx, func() (*Server, error) {
+					return setup(cfg, *configPath, restartCh)
+				}); err != nil {
+					initErr <- err
+				}
+			}()
 
 			go func() {
 				if err := srv.start(); err != nil && err != http.ErrServerClosed {
@@ -47,7 +59,13 @@ func serveCmd(configPath *string) *cobra.Command {
 			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 			select {
+			case err := <-initErr:
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				_ = srv.shutdown(ctx)
+				return err
 			case <-quit:
+				stopInit()
 				log.Info().Msg("shutting down server")
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
