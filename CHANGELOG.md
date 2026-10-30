@@ -29,6 +29,9 @@ From here on, new changes should be added under `[Unreleased]` as they land.
 
 ### Fixed
 
+- 🐛 Forge clients now initialize on demand and recover after temporary outages
+  without a restart. OAuth identity lookup no longer depends on startup bot
+  availability, and git commit authorship is resolved when needed.
 - 🐛 Temporary database startup failures now retry with capped exponential
   backoff while the UI and liveness endpoint remain available. Migrations run
   once per initialization; configuration and migration errors remain explicit.
